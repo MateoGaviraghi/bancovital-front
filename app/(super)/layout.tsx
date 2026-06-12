@@ -5,8 +5,11 @@ import { redirect } from 'next/navigation';
 
 export default async function SuperLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
-  if (!user) redirect('/login');
-  if (user.role !== 'super') redirect('/');
+  if (!user) redirect('/auth/set-password'); // fallback — set-password global covers this
+  if (user.role !== 'super') {
+    // Non-super user tried to access /super — send them to root (no slug known here)
+    redirect('/');
+  }
 
   return (
     <div className="flex min-h-screen bg-[var(--color-bg)]">

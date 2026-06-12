@@ -1,7 +1,18 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const PUBLIC_PATHS = ['/login', '/forgot-password'];
+// Multi-tenant route map:
+//   /                    public product placeholder
+//   /login               global login (super admin + fallback)
+//   /auth/*              set-password (Supabase invite links, fixed URL)
+//   /{slug}/login        tenant-branded login
+//   /{slug}/**           tenant app (session required)
+//   /super/**            super panel (session required; role enforced by layout/API)
+function isPublicPath(pathname: string): boolean {
+  if (pathname === '/' || pathname === '/login') return true;
+  if (pathname.startsWith('/auth/')) return true;
+  return /^\/[^/]+\/login$/.test(pathname);
+}
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
@@ -30,14 +41,23 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
-  if (!user && !isPublic) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  if (!user && !isPublicPath(pathname)) {
+    // Keep the visitor inside their lab's login when the path carries a slug
+    const seg = pathname.split('/')[1];
+    const target = seg && seg !== 'super' ? `/${seg}/login` : '/login';
+    return NextResponse.redirect(new URL(target, request.url));
   }
 
-  if (user && isPublic) {
-    return NextResponse.redirect(new URL('/', request.url));
+  if (user) {
+    if (pathname === '/login') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    const tenantLogin = pathname.match(/^\/([^/]+)\/login$/);
+    if (tenantLogin) {
+      // Already authenticated — go to the lab home (app layout corrects foreign slugs)
+      return NextResponse.redirect(new URL(`/${tenantLogin[1]}`, request.url));
+    }
   }
 
   return response;

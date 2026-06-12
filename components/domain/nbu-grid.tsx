@@ -163,8 +163,7 @@ export function NbuGrid({ selected, onChange }: Props) {
                         {hasChildren && (
                           <span className="flex items-center gap-1 text-[var(--color-info)] text-[11px]">
                             <GitBranch className="h-3 w-3 shrink-0" strokeWidth={2} />
-                            Se agregarán automáticamente:{' '}
-                            {p.children.map((c) => c.name).join(', ')}
+                            Se agregarán automáticamente: {p.children.map((c) => c.name).join(', ')}
                           </span>
                         )}
                         {!p.isElaborated && (

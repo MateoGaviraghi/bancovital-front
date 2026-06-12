@@ -19,7 +19,7 @@ import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { Ban, CheckCircle2, Loader2, Pencil, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -43,6 +43,7 @@ const REVERTIBLE: OrderStatus[] = ['confirmada', 'en_proceso', 'resultados_carga
 
 export function OrderActions({ order, userRole }: Props) {
   const router = useRouter();
+  const { slug } = useParams<{ slug: string }>();
   const [finalizeOpen, setFinalizeOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [revertOpen, setRevertOpen] = useState(false);
@@ -102,7 +103,7 @@ export function OrderActions({ order, userRole }: Props) {
     <div className="flex flex-wrap items-center gap-2">
       {canEdit && (
         <Button asChild variant="outline">
-          <Link href={`/ordenes/${order.id}/editar`}>
+          <Link href={`/${slug}/ordenes/${order.id}/editar`}>
             <Pencil className="h-4 w-4" strokeWidth={2} />
             Editar
           </Link>
@@ -143,7 +144,9 @@ export function OrderActions({ order, userRole }: Props) {
         tone="warning"
         confirmLabel="Volver a borrador"
         loading={revertMut.isPending}
-        onConfirm={async () => { await revertMut.mutateAsync(); }}
+        onConfirm={async () => {
+          await revertMut.mutateAsync();
+        }}
       />
 
       <ConfirmDialog

@@ -90,9 +90,10 @@ export function ResultRow({
     notes !== initial.notes;
 
   // Report dirty state to parent
+  // biome-ignore lint/correctness/useExhaustiveDependencies: onDirtyChange and id are stable; only dirty drives this
   useEffect(() => {
     onDirtyChange(line.orderPractice.id, dirty);
-  }, [dirty]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dirty]);
 
   // Live flag preview
   const [flag, setFlag] = useState<string | null>(null);
@@ -139,13 +140,14 @@ export function ResultRow({
   });
 
   // Respond to "save all" trigger from parent
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally only fires on saveTrigger change; other deps are read from closure
   useEffect(() => {
     if (saveTrigger > 0 && dirty && !mutation.isPending) {
       // Skip silently if neither value is filled — don't block other rows
       const hasValue = valueNumeric.trim() || valueText.trim();
       if (hasValue) mutation.mutate();
     }
-  }, [saveTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [saveTrigger]);
 
   return (
     <li className="space-y-3 px-5 py-4">

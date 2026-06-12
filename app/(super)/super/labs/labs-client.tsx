@@ -130,8 +130,7 @@ function formToBaseDto(f: FormState): CreateLaboratorioDto {
 function validateForm(f: FormState): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!f.slug.trim()) errors.slug = 'Requerido';
-  else if (!/^[a-z0-9-]+$/.test(f.slug.trim()))
-    errors.slug = 'Solo minúsculas, números y guiones';
+  else if (!/^[a-z0-9-]+$/.test(f.slug.trim())) errors.slug = 'Solo minúsculas, números y guiones';
   if (!f.legalName.trim()) errors.legalName = 'Requerido';
   return errors;
 }
@@ -210,8 +209,13 @@ function LaboratorioDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField label="Slug" htmlFor="slug" required error={errors.slug}
-              description="Identificador único: minúsculas, números y guiones">
+            <FormField
+              label="Slug"
+              htmlFor="slug"
+              required
+              error={errors.slug}
+              description="Identificador único: minúsculas, números y guiones"
+            >
               <Input
                 id="slug"
                 value={form.slug}
@@ -232,31 +236,93 @@ function LaboratorioDialog({
               />
             </FormField>
             <FormField label="Nombre corto" htmlFor="shortName">
-              <Input id="shortName" value={form.shortName} onChange={set('shortName')} placeholder="Lab. SF" className={inputCls} disabled={isPending} />
+              <Input
+                id="shortName"
+                value={form.shortName}
+                onChange={set('shortName')}
+                placeholder="Lab. SF"
+                className={inputCls}
+                disabled={isPending}
+              />
             </FormField>
             <FormField label="CUIT" htmlFor="cuit">
-              <Input id="cuit" value={form.cuit} onChange={set('cuit')} placeholder="30-00000000-0" className={inputCls} disabled={isPending} />
+              <Input
+                id="cuit"
+                value={form.cuit}
+                onChange={set('cuit')}
+                placeholder="30-00000000-0"
+                className={inputCls}
+                disabled={isPending}
+              />
             </FormField>
             <FormField label="Dirección" htmlFor="streetAddress">
-              <Input id="streetAddress" value={form.streetAddress} onChange={set('streetAddress')} placeholder="San Martín 123" className={inputCls} disabled={isPending} />
+              <Input
+                id="streetAddress"
+                value={form.streetAddress}
+                onChange={set('streetAddress')}
+                placeholder="San Martín 123"
+                className={inputCls}
+                disabled={isPending}
+              />
             </FormField>
             <FormField label="Ciudad" htmlFor="city">
-              <Input id="city" value={form.city} onChange={set('city')} className={inputCls} disabled={isPending} />
+              <Input
+                id="city"
+                value={form.city}
+                onChange={set('city')}
+                className={inputCls}
+                disabled={isPending}
+              />
             </FormField>
             <FormField label="Provincia" htmlFor="province">
-              <Input id="province" value={form.province} onChange={set('province')} className={inputCls} disabled={isPending} />
+              <Input
+                id="province"
+                value={form.province}
+                onChange={set('province')}
+                className={inputCls}
+                disabled={isPending}
+              />
             </FormField>
             <FormField label="Teléfono" htmlFor="phone">
-              <Input id="phone" value={form.phone} onChange={set('phone')} placeholder="+54 342 000-0000" className={inputCls} disabled={isPending} />
+              <Input
+                id="phone"
+                value={form.phone}
+                onChange={set('phone')}
+                placeholder="+54 342 000-0000"
+                className={inputCls}
+                disabled={isPending}
+              />
             </FormField>
             <FormField label="Email" htmlFor="email">
-              <Input id="email" type="email" value={form.email} onChange={set('email')} placeholder="lab@ejemplo.com" className={inputCls} disabled={isPending} />
+              <Input
+                id="email"
+                type="email"
+                value={form.email}
+                onChange={set('email')}
+                placeholder="lab@ejemplo.com"
+                className={inputCls}
+                disabled={isPending}
+              />
             </FormField>
             <FormField label="Bioquímico firmante" htmlFor="signingProfessionalName">
-              <Input id="signingProfessionalName" value={form.signingProfessionalName} onChange={set('signingProfessionalName')} placeholder="Dr. Juan Pérez" className={inputCls} disabled={isPending} />
+              <Input
+                id="signingProfessionalName"
+                value={form.signingProfessionalName}
+                onChange={set('signingProfessionalName')}
+                placeholder="Dr. Juan Pérez"
+                className={inputCls}
+                disabled={isPending}
+              />
             </FormField>
             <FormField label="Matrícula firmante" htmlFor="signingProfessionalMp">
-              <Input id="signingProfessionalMp" value={form.signingProfessionalMp} onChange={set('signingProfessionalMp')} placeholder="12345" className={inputCls} disabled={isPending} />
+              <Input
+                id="signingProfessionalMp"
+                value={form.signingProfessionalMp}
+                onChange={set('signingProfessionalMp')}
+                placeholder="12345"
+                className={inputCls}
+                disabled={isPending}
+              />
             </FormField>
             {isEdit && (
               <FormField label="Estado" htmlFor="estado">
@@ -279,7 +345,12 @@ function LaboratorioDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={isPending}>
@@ -311,7 +382,10 @@ function InviteUserDialog({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (open) { setForm(EMPTY_INVITE); setErrors({}); }
+    if (open) {
+      setForm(EMPTY_INVITE);
+      setErrors({});
+    }
   }, [open]);
 
   const set = (key: keyof InviteForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -332,13 +406,17 @@ function InviteUserDialog({
     const errs: Record<string, string> = {};
     if (!form.email.trim()) errs.email = 'Requerido';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Email inválido';
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
 
     const dto: InviteUserDto = {
       email: form.email.trim(),
       role: form.role,
       displayName: form.displayName.trim() || undefined,
-      matricula: form.role === 'bioquimico' && form.matricula.trim() ? form.matricula.trim() : undefined,
+      matricula:
+        form.role === 'bioquimico' && form.matricula.trim() ? form.matricula.trim() : undefined,
       redirectTo: `${window.location.origin}/auth/set-password`,
     };
     inviteMut.mutate(dto);
@@ -399,7 +477,12 @@ function InviteUserDialog({
             </FormField>
           )}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={inviteMut.isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={inviteMut.isPending}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={inviteMut.isPending}>
@@ -569,19 +652,25 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
 
       <InviteUserDialog
         open={invitingLab !== null}
-        onOpenChange={(o) => { if (!o) setInvitingLab(null); }}
+        onOpenChange={(o) => {
+          if (!o) setInvitingLab(null);
+        }}
         lab={invitingLab}
       />
 
       <ConfirmDialog
         open={deletingLab !== null}
-        onOpenChange={(o) => { if (!o) setDeletingLab(null); }}
+        onOpenChange={(o) => {
+          if (!o) setDeletingLab(null);
+        }}
         title={`¿Eliminar "${deletingLab?.legalName}"?`}
         description="Esta acción no se puede deshacer. Se eliminarán todos los datos del laboratorio."
         tone="danger"
         confirmLabel="Eliminar"
         loading={deleteMut.isPending}
-        onConfirm={() => { if (deletingLab) deleteMut.mutate(deletingLab.id); }}
+        onConfirm={() => {
+          if (deletingLab) deleteMut.mutate(deletingLab.id);
+        }}
       />
     </div>
   );

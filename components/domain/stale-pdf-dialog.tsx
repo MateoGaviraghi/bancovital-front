@@ -37,8 +37,8 @@ export function StalePdfDialog({ open, onOpenChange, loading, onUseOld, onUpdate
           <AlertDialogHeader className="flex-1">
             <AlertDialogTitle>Informe desactualizado</AlertDialogTitle>
             <AlertDialogDescription>
-              Este informe se generó con datos del laboratorio anteriores a los actuales.
-              ¿Querés imprimirlo con los datos viejos o actualizarlo con los datos nuevos?
+              Este informe se generó con datos del laboratorio anteriores a los actuales. ¿Querés
+              imprimirlo con los datos viejos o actualizarlo con los datos nuevos?
             </AlertDialogDescription>
           </AlertDialogHeader>
         </div>
@@ -49,11 +49,7 @@ export function StalePdfDialog({ open, onOpenChange, loading, onUseOld, onUpdate
           <Button variant="secondary" onClick={onUseOld} disabled={loading}>
             Imprimir con datos viejos
           </Button>
-          <Button
-            onClick={onUpdate}
-            disabled={loading}
-            className="inline-flex items-center gap-2"
-          >
+          <Button onClick={onUpdate} disabled={loading} className="inline-flex items-center gap-2">
             {loading && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
             Actualizar y abrir
           </Button>

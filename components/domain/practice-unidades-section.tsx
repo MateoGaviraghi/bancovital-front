@@ -114,7 +114,9 @@ function UnidadesDialog({
     onError: (err) => {
       const status = axios.isAxiosError(err) ? err.response?.status : undefined;
       if (status === 409) {
-        toast.error('Esta unidad tiene valores cargados en órdenes existentes y no se puede quitar.');
+        toast.error(
+          'Esta unidad tiene valores cargados en órdenes existentes y no se puede quitar.',
+        );
       } else {
         toast.error(apiError(err, 'No se pudo quitar la unidad'));
       }
@@ -183,7 +185,10 @@ function UnidadesDialog({
         {/* Search */}
         <div className="border-[var(--color-border)] border-b px-3 py-2.5">
           <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] px-2.5 py-1.5 focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary-soft)]">
-            <Search className="h-3.5 w-3.5 shrink-0 text-[var(--color-fg-subtle)]" strokeWidth={2} />
+            <Search
+              className="h-3.5 w-3.5 shrink-0 text-[var(--color-fg-subtle)]"
+              strokeWidth={2}
+            />
             <input
               ref={searchRef}
               value={search}
@@ -249,7 +254,9 @@ function UnidadesDialog({
                       </span>
 
                       <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                        <span className="truncate text-[var(--color-fg)] text-sm">{unit.nombre}</span>
+                        <span className="truncate text-[var(--color-fg)] text-sm">
+                          {unit.nombre}
+                        </span>
                         {unit.simbolo && (
                           <span className="shrink-0 font-mono text-[var(--color-fg-muted)] text-xs">
                             {unit.simbolo}
@@ -267,14 +274,13 @@ function UnidadesDialog({
         {/* Create new unit */}
         <div className="border-[var(--color-border)] border-t">
           {showCreate ? (
-            <form
-              onSubmit={handleCreate}
-              className="flex items-end gap-2 px-4 py-3"
-            >
+            <form onSubmit={handleCreate} className="flex items-end gap-2 px-4 py-3">
               <div className="flex-1 space-y-1">
-                <label className="text-[var(--color-fg-muted)] text-xs">Nombre</label>
+                <label htmlFor="new-unidad-nombre" className="text-[var(--color-fg-muted)] text-xs">
+                  Nombre
+                </label>
                 <input
-                  autoFocus
+                  id="new-unidad-nombre"
                   value={newNombre}
                   onChange={(e) => setNewNombre(e.target.value)}
                   placeholder="ej: Glucosa"
@@ -283,8 +289,14 @@ function UnidadesDialog({
                 />
               </div>
               <div className="w-24 space-y-1">
-                <label className="text-[var(--color-fg-muted)] text-xs">Símbolo</label>
+                <label
+                  htmlFor="new-unidad-simbolo"
+                  className="text-[var(--color-fg-muted)] text-xs"
+                >
+                  Símbolo
+                </label>
                 <input
+                  id="new-unidad-simbolo"
                   value={newSimbolo}
                   onChange={(e) => setNewSimbolo(e.target.value)}
                   placeholder="ej: mg/dL"
@@ -307,7 +319,11 @@ function UnidadesDialog({
                 type="button"
                 size="sm"
                 variant="ghost"
-                onClick={() => { setShowCreate(false); setNewNombre(''); setNewSimbolo(''); }}
+                onClick={() => {
+                  setShowCreate(false);
+                  setNewNombre('');
+                  setNewSimbolo('');
+                }}
                 disabled={createMutation.isPending}
               >
                 <X className="h-3.5 w-3.5" strokeWidth={2} />
@@ -362,12 +378,7 @@ export function PracticeUnidadesSection({ practiceId, readOnly = false, onChange
           </p>
         </div>
         {!readOnly && (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setDialogOpen(true)}
-          >
+          <Button type="button" size="sm" variant="outline" onClick={() => setDialogOpen(true)}>
             <Ruler className="h-3.5 w-3.5" strokeWidth={2} />
             Configurar unidades
           </Button>

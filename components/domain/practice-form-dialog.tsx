@@ -30,9 +30,7 @@ function apiError(err: unknown, fallback: string): string {
   return fallback;
 }
 
-type Mode =
-  | { type: 'create' }
-  | { type: 'edit'; practice: Practice };
+type Mode = { type: 'create' } | { type: 'edit'; practice: Practice };
 
 type Props = {
   open: boolean;
@@ -272,6 +270,7 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
             </FormField>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {/* biome-ignore lint/a11y/noLabelWithoutControl: Radix Checkbox renders a <button role="checkbox">, not a native <input> */}
               <label className="flex cursor-pointer items-start gap-2.5">
                 <Checkbox
                   checked={fields.requiresAuthorization}
@@ -280,11 +279,16 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
                   className="mt-0.5"
                 />
                 <span>
-                  <span className="block text-[var(--color-fg)] text-sm font-medium">Requiere autorización</span>
-                  <span className="text-[var(--color-fg-muted)] text-xs">OS debe aprobar antes</span>
+                  <span className="block text-[var(--color-fg)] text-sm font-medium">
+                    Requiere autorización
+                  </span>
+                  <span className="text-[var(--color-fg-muted)] text-xs">
+                    OS debe aprobar antes
+                  </span>
                 </span>
               </label>
 
+              {/* biome-ignore lint/a11y/noLabelWithoutControl: Radix Checkbox renders a <button role="checkbox">, not a native <input> */}
               <label className="flex cursor-pointer items-start gap-2.5">
                 <Checkbox
                   checked={fields.isSpecialAct}
@@ -293,11 +297,16 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
                   className="mt-0.5"
                 />
                 <span>
-                  <span className="block text-[var(--color-fg)] text-sm font-medium">Acto especial</span>
-                  <span className="text-[var(--color-fg-muted)] text-xs">Facturación diferenciada</span>
+                  <span className="block text-[var(--color-fg)] text-sm font-medium">
+                    Acto especial
+                  </span>
+                  <span className="text-[var(--color-fg-muted)] text-xs">
+                    Facturación diferenciada
+                  </span>
                 </span>
               </label>
 
+              {/* biome-ignore lint/a11y/noLabelWithoutControl: Radix Checkbox renders a <button role="checkbox">, not a native <input> */}
               <label className="flex cursor-pointer items-start gap-2.5">
                 <Checkbox
                   checked={fields.isElaborated}
@@ -306,11 +315,16 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
                   className="mt-0.5"
                 />
                 <span>
-                  <span className="block text-[var(--color-fg)] text-sm font-medium">Elaborada por el lab</span>
-                  <span className="text-[var(--color-fg-muted)] text-xs">Se procesa internamente</span>
+                  <span className="block text-[var(--color-fg)] text-sm font-medium">
+                    Elaborada por el lab
+                  </span>
+                  <span className="text-[var(--color-fg-muted)] text-xs">
+                    Se procesa internamente
+                  </span>
                 </span>
               </label>
 
+              {/* biome-ignore lint/a11y/noLabelWithoutControl: Radix Checkbox renders a <button role="checkbox">, not a native <input> */}
               <label className="flex cursor-pointer items-start gap-2.5">
                 <Checkbox
                   checked={fields.active}
@@ -320,7 +334,9 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
                 />
                 <span>
                   <span className="block text-[var(--color-fg)] text-sm font-medium">Activa</span>
-                  <span className="text-[var(--color-fg-muted)] text-xs">Disponible en órdenes</span>
+                  <span className="text-[var(--color-fg-muted)] text-xs">
+                    Disponible en órdenes
+                  </span>
                 </span>
               </label>
             </div>
@@ -328,7 +344,12 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
         </form>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
             Cancelar
           </Button>
           <Button type="submit" form="practice-form" disabled={isPending}>

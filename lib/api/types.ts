@@ -29,6 +29,7 @@ export interface MeResponse {
   userId: string;
   email: string;
   role: UserRole;
+  labSlug: string | null;
 }
 
 // ─────────────── Lab config ───────────────

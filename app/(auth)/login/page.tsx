@@ -1,13 +1,19 @@
 'use client';
 
+import { getApiClient } from '@/lib/api/client';
+import type { MeResponse } from '@/lib/api/types';
 import { getSupabase } from '@/lib/supabase-browser';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
-export default function LoginPage() {
+// Global, brand-neutral login: used by super admins and as a fallback when
+// the visitor doesn't know their lab URL. Lab users get redirected to their
+// own tenant after sign-in via /me.
+export default function GlobalLoginPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,8 +29,15 @@ export default function LoginPage() {
         toast.error(error.message);
         return;
       }
-      toast.success('Bienvenido');
-      router.replace('/');
+      const { data: me } = await getApiClient().get<MeResponse>('/me');
+      if (me.role === 'super') {
+        router.replace('/super/labs');
+      } else if (me.labSlug) {
+        router.replace(`/${me.labSlug}`);
+      } else {
+        toast.error('Tu usuario no tiene un laboratorio asignado.');
+        return;
+      }
       router.refresh();
     } catch {
       toast.error('No se pudo iniciar sesión');
@@ -35,21 +48,15 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm">
-      {/* Mobile-only brand header */}
-      <div className="mb-8 flex flex-col items-center md:hidden">
-        <div
-          className="flex h-14 w-14 items-center justify-center rounded-xl text-xl font-bold text-white mb-3"
-          style={{ background: 'linear-gradient(135deg, #0db5b0, #0a9490)' }}
-        >
-          AV
-        </div>
-        <span className="font-bold text-[var(--color-fg)] text-xl tracking-tight">Laboratorio AV Diagnóstico</span>
-        <span className="mt-0.5 text-[var(--color-fg-muted)] text-xs tracking-widest uppercase">
-          Laboratorio de Análisis Clínicos
-        </span>
+      <div className="mb-8 text-center">
+        <h1 className="font-bold text-[var(--color-fg)] text-xl tracking-tight">
+          Sistema de gestión de laboratorios
+        </h1>
+        <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
+          Si sos parte de un laboratorio, ingresá desde la URL de tu laboratorio.
+        </p>
       </div>
 
-      {/* Card */}
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-8 shadow-[var(--shadow-md)]">
         <div className="mb-7">
           <h2 className="font-semibold text-[var(--color-fg)] text-xl">Iniciar sesión</h2>
@@ -60,10 +67,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <label
-              htmlFor="email"
-              className="block font-medium text-[var(--color-fg)] text-xs"
-            >
+            <label htmlFor="email" className="block font-medium text-[var(--color-fg)] text-xs">
               Email
             </label>
             <input
@@ -80,10 +84,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label
-              htmlFor="password"
-              className="block font-medium text-[var(--color-fg)] text-xs"
-            >
+            <label htmlFor="password" className="block font-medium text-[var(--color-fg)] text-xs">
               Contraseña
             </label>
             <input
@@ -101,8 +102,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            style={{ background: 'linear-gradient(135deg, #0db5b0 0%, #0a9490 100%)' }}
+            className="mt-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] font-semibold text-sm text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
             {loading ? 'Ingresando…' : 'Ingresar'}

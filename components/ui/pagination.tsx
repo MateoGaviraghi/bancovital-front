@@ -49,6 +49,7 @@ export function Pagination({ page, pageSize, total, buildHref }: Props) {
 
       {pages.map((p, i) =>
         p === '...' ? (
+          // biome-ignore lint/suspicious/noArrayIndexKey: ellipsis separators are static display-only elements with no state
           <span key={`e${i}`} className="px-1 text-[var(--color-fg-muted)] text-sm">
             …
           </span>

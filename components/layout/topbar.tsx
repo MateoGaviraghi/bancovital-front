@@ -29,7 +29,7 @@ function getInitials(name: string): string {
   return letters.toUpperCase();
 }
 
-export function Topbar({ user }: { user: SessionUser }) {
+export function Topbar({ user, slug }: { user: SessionUser; slug?: string }) {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
   const initials = getInitials(user.displayName ?? user.email);
@@ -43,7 +43,8 @@ export function Topbar({ user }: { user: SessionUser }) {
         toast.error(error.message);
         return;
       }
-      router.replace('/login');
+      const loginPath = slug ? `/${slug}/login` : '/login';
+      router.replace(loginPath);
       router.refresh();
     } finally {
       setSigningOut(false);
