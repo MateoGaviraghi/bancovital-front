@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/home/sfs/Projects/lab-back/src/modules/super",
+      "/home/sfs/Projects/lab-back/src/modules/users/dto",
+      "/home/sfs/Projects/lab-back/src/modules/users"
+    ]
+  }
+}

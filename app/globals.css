@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  /* === COLOR SYSTEM === */
+
+  /* Surfaces */
+  --color-bg: #f4f7f9;
+  --color-bg-elevated: #ffffff;
+  --color-bg-subtle: #edf1f5;
+
+  /* Borders */
+  --color-border: #dde4ea;
+  --color-border-strong: #b8c4ce;
+  --color-border-emphasis: #7a98ab;
+
+  /* Text */
+  --color-fg: #1a2b3c;
+  --color-fg-muted: #4a6279;
+  --color-fg-subtle: #8ba3b5;
+  --color-fg-inverse: #ffffff;
+
+  /* Primary (brand teal — AV Diagnóstico) */
+  --color-primary: #0db5b0;
+  --color-primary-hover: #0a9490;
+  --color-primary-soft: #e4f7f6;
+  --color-primary-foreground: #ffffff;
+
+  /* Semantic */
+  --color-success: #15803d;
+  --color-success-soft: #dcfce7;
+  --color-warning: #b45309;
+  --color-warning-soft: #fef3c7;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fee2e2;
+  --color-danger-foreground: #ffffff;
+  --color-info: #1e40af;
+  --color-info-soft: #dbeafe;
+
+  /* === SPACING & RADIUS === */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+
+  /* === SHADOWS === */
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.1), 0 1px 2px -1px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.1), 0 4px 6px -4px rgb(15 23 42 / 0.06);
+
+  /* === TYPOGRAPHY === */
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Monaco, Consolas, monospace;
+
+  /* === MOTION === */
+  --ease-out-app: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+}
+
+/* === GLOBAL RESETS === */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.4286;
+  letter-spacing: -0.005em;
+  font-feature-settings: "cv11", "ss01", "ss03";
+  margin: 0;
+}
+
+/* === UTILS === */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Force light scheme on date/time inputs */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  color-scheme: light;
+}
