@@ -51,4 +51,16 @@ export const queries = {
     list: () => ['laboratorios'] as const,
     detail: (id: number) => ['laboratorios', id] as const,
   },
+
+  plans: {
+    list: () => ['plans'] as const,
+    detail: (id: number) => ['plans', id] as const,
+  },
+
+  consumo: {
+    /** Consumo del ciclo actual del lab autenticado (tenant view). */
+    ciclo: () => ['consumo', 'ciclo'] as const,
+    /** Resumen de consumo de todos los labs (super view). */
+    resumen: () => ['consumo', 'resumen'] as const,
+  },
 };

@@ -1,5 +1,6 @@
 'use client';
 
+import { ConsumoWidget } from '@/components/domain/consumo-widget';
 import type { AppRole } from '@/lib/auth/session';
 import { cn } from '@/lib/cn';
 import { useTenant } from '@/lib/tenant/tenant-context';
@@ -274,6 +275,8 @@ export function Sidebar({
           </>
         )}
       </nav>
+
+      <ConsumoWidget />
 
       <div className="border-[var(--color-border)] border-t px-4 py-3">
         <p className="text-[10px] text-[var(--color-fg-subtle)]">v0.1 · Phase 1</p>

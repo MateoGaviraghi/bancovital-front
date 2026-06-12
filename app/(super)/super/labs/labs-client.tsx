@@ -1,6 +1,7 @@
 'use client';
 
 import { ConfirmDialog } from '@/components/domain/confirm-dialog';
+import { MoneyDisplay } from '@/components/domain/money-display';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,17 +24,19 @@ import { apiClient } from '@/lib/api/client';
 import { queries } from '@/lib/api/queries';
 import type {
   AdminUser,
+  ConsumoResumen,
   CreateLaboratorioDto,
   EstadoLab,
   InviteUserDto,
   Laboratorio,
+  Plan,
   UpdateLaboratorioDto,
   UserRole,
 } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Building2, Loader2, Mail, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Building2, Layers, Loader2, Mail, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -60,6 +63,219 @@ const ESTADO_PILL: Record<EstadoLab, { label: string; cls: string }> = {
     cls: 'border-[var(--color-fg-subtle)]/20 bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]',
   },
 };
+
+// ─── Consumo mini-bar ──────────────────────────────────────────────
+
+function ConsumoCelda({ resumen }: { resumen: ConsumoResumen | undefined }) {
+  if (!resumen || resumen.plan === null) {
+    return (
+      <span className="inline-flex items-center rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-2 py-0.5 text-[10px] text-[var(--color-fg-muted)]">
+        Sin plan
+      </span>
+    );
+  }
+
+  const pct = resumen.porcentaje ?? 0;
+  const barColor =
+    pct >= 100
+      ? 'bg-[var(--color-danger)]'
+      : pct >= 80
+        ? 'bg-[var(--color-warning)]'
+        : 'bg-[var(--color-primary)]';
+
+  return (
+    <div className="min-w-[140px]">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="truncate text-xs text-[var(--color-fg)]">{resumen.plan.nombre}</span>
+        {resumen.excedentes > 0 && (
+          <span className="shrink-0 rounded-md border border-[var(--color-danger)]/20 bg-[var(--color-danger-soft)] px-1.5 py-px text-[10px] font-medium text-[var(--color-danger)]">
+            +{resumen.excedentes} exc.
+          </span>
+        )}
+      </div>
+      <div
+        className="h-1 w-full overflow-hidden rounded-full bg-[var(--color-bg-subtle)]"
+        role="progressbar"
+        tabIndex={0}
+        aria-valuenow={Math.min(pct, 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${resumen.usadas} de ${resumen.cupoEfectivo ?? '?'} órdenes`}
+      >
+        <div
+          className={cn('h-full rounded-full transition-[width]', barColor)}
+          style={{ width: `${Math.min(pct, 100)}%` }}
+        />
+      </div>
+      <p className="mt-0.5 tabular font-mono text-[10px] text-[var(--color-fg-muted)]">
+        {resumen.usadas} / {resumen.cupoEfectivo ?? '?'}
+      </p>
+    </div>
+  );
+}
+
+// ─── Assign plan dialog ────────────────────────────────────────
+
+function AssignPlanDialog({
+  open,
+  onOpenChange,
+  lab,
+  currentPlanId,
+  onSuccess,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  lab: Laboratorio | null;
+  currentPlanId: number | null;
+  onSuccess: () => void;
+}) {
+  const qc = useQueryClient();
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [confirmRemove, setConfirmRemove] = useState(false);
+
+  const { data: plans = [] } = useQuery({
+    queryKey: queries.plans.list(),
+    queryFn: () => apiClient.get<Plan[]>('/super/plans').then((r) => r.data),
+    enabled: open,
+  });
+
+  useEffect(() => {
+    if (open) {
+      setSelectedPlanId(currentPlanId ? String(currentPlanId) : '');
+      setConfirmRemove(false);
+    }
+  }, [open, currentPlanId]);
+
+  const assignMut = useMutation({
+    mutationFn: (planId: number) =>
+      apiClient.put(`/super/labs/${lab!.id}/subscription`, { planId }),
+    onSuccess: () => {
+      toast.success('Plan asignado correctamente');
+      qc.invalidateQueries({ queryKey: queries.consumo.resumen() });
+      qc.invalidateQueries({ queryKey: queries.laboratorios.list() });
+      onOpenChange(false);
+      onSuccess();
+    },
+    onError: (err) => toast.error(apiError(err, 'Error al asignar plan')),
+  });
+
+  const removeMut = useMutation({
+    mutationFn: () => apiClient.delete(`/super/labs/${lab!.id}/subscription`),
+    onSuccess: () => {
+      toast.success('Plan removido');
+      qc.invalidateQueries({ queryKey: queries.consumo.resumen() });
+      qc.invalidateQueries({ queryKey: queries.laboratorios.list() });
+      setConfirmRemove(false);
+      onOpenChange(false);
+      onSuccess();
+    },
+    onError: (err) => toast.error(apiError(err, 'Error al quitar plan')),
+  });
+
+  const selectedPlan = plans.find((p) => String(p.id) === selectedPlanId) ?? null;
+  const isPending = assignMut.isPending || removeMut.isPending;
+
+  return (
+    <>
+      <Dialog open={open && !confirmRemove} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Asignar plan — {lab?.shortName ?? lab?.legalName}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            <FormField label="Plan" htmlFor="assign-plan">
+              <Select value={selectedPlanId} onValueChange={setSelectedPlanId} disabled={isPending}>
+                <SelectTrigger id="assign-plan">
+                  <SelectValue placeholder="Seleccioná un plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {plans.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+
+            {selectedPlan && (
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-4 text-sm">
+                <p className="mb-2 font-medium text-[var(--color-fg)]">{selectedPlan.nombre}</p>
+                <ul className="space-y-1 text-[var(--color-fg-muted)] text-xs">
+                  <li>
+                    Cupo:{' '}
+                    <span className="font-medium text-[var(--color-fg)]">
+                      {selectedPlan.cupoOrdenesMes.toLocaleString('es-AR')} órdenes/mes
+                    </span>
+                  </li>
+                  <li>
+                    Precio mensual:{' '}
+                    <span className="font-medium text-[var(--color-fg)]">
+                      <MoneyDisplay value={selectedPlan.precioMensual} />
+                    </span>
+                  </li>
+                  <li>
+                    Por excedente:{' '}
+                    <span className="font-medium text-[var(--color-fg)]">
+                      <MoneyDisplay value={selectedPlan.precioOrdenExcedente} /> / orden
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            {currentPlanId !== null && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmRemove(true)}
+                disabled={isPending}
+                className="mr-auto"
+              >
+                <X className="h-4 w-4" strokeWidth={2} />
+                Quitar plan
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={isPending || !selectedPlanId}
+              onClick={() => {
+                if (selectedPlanId) assignMut.mutate(Number.parseInt(selectedPlanId, 10));
+              }}
+            >
+              {assignMut.isPending && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
+              Asignar plan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={confirmRemove}
+        onOpenChange={(o) => {
+          if (!o) setConfirmRemove(false);
+        }}
+        title="¿Quitar el plan?"
+        description={`El laboratorio "${lab?.shortName ?? lab?.legalName}" quedará sin plan asignado. Las órdenes futuras no se contabilizarán en ningún cupo.`}
+        tone="warning"
+        confirmLabel="Quitar plan"
+        loading={removeMut.isPending}
+        onConfirm={() => removeMut.mutate()}
+      />
+    </>
+  );
+}
 
 // ─── Form state ────────────────────────────────────────────────────
 
@@ -507,10 +723,21 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
     initialData: initialLabs,
   });
 
+  // Consumo resumen — single query for all labs; degrades silently on fetch failure
+  const { data: consumoList = [] } = useQuery({
+    queryKey: queries.consumo.resumen(),
+    queryFn: () => apiClient.get<ConsumoResumen[]>('/super/consumo').then((r) => r.data),
+    staleTime: 60_000,
+    retry: false,
+  });
+
+  const consumoByLabId = new Map(consumoList.map((c) => [c.labId, c]));
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLab, setEditingLab] = useState<Laboratorio | null>(null);
   const [deletingLab, setDeletingLab] = useState<Laboratorio | null>(null);
   const [invitingLab, setInvitingLab] = useState<Laboratorio | null>(null);
+  const [assigningLab, setAssigningLab] = useState<Laboratorio | null>(null);
 
   const deleteMut = useMutation({
     mutationFn: (id: number) => apiClient.delete(`/super/labs/${id}`),
@@ -574,12 +801,15 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                 <th className="px-5 py-2.5 text-left font-medium">Razón social</th>
                 <th className="px-5 py-2.5 text-left font-medium">Ciudad</th>
                 <th className="px-5 py-2.5 text-left font-medium">Estado</th>
+                <th className="px-5 py-2.5 text-left font-medium">Plan / Consumo</th>
                 <th className="px-5 py-2.5 text-right font-medium">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {labs.map((lab) => {
                 const pill = ESTADO_PILL[lab.estado];
+                const resumen = consumoByLabId.get(lab.id);
+                const currentPlanId = resumen?.plan?.id ?? null;
                 return (
                   <tr
                     key={lab.id}
@@ -608,14 +838,25 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                       </span>
                     </td>
                     <td className="px-5 py-3">
+                      <ConsumoCelda resumen={resumen} />
+                    </td>
+                    <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setAssigningLab(lab)}
+                          className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
+                        >
+                          <Layers className="h-3.5 w-3.5" strokeWidth={2} />
+                          {currentPlanId ? 'Plan' : 'Asignar plan'}
+                        </button>
                         <button
                           type="button"
                           onClick={() => setInvitingLab(lab)}
                           className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
                         >
                           <Mail className="h-3.5 w-3.5" strokeWidth={2} />
-                          Invitar usuario
+                          Invitar
                         </button>
                         <button
                           type="button"
@@ -656,6 +897,20 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
           if (!o) setInvitingLab(null);
         }}
         lab={invitingLab}
+      />
+
+      <AssignPlanDialog
+        open={assigningLab !== null}
+        onOpenChange={(o) => {
+          if (!o) setAssigningLab(null);
+        }}
+        lab={assigningLab}
+        currentPlanId={
+          assigningLab ? (consumoByLabId.get(assigningLab.id)?.plan?.id ?? null) : null
+        }
+        onSuccess={() => {
+          qc.invalidateQueries({ queryKey: queries.consumo.resumen() });
+        }}
       />
 
       <ConfirmDialog
