@@ -127,7 +127,9 @@ function ChildrenManager({ practice }: { practice: Practice }) {
   });
 
   function invalidateChildren() {
-    qc.invalidateQueries({ queryKey: ['practices', 'own-children', practice.id, practice.nbuCode] });
+    qc.invalidateQueries({
+      queryKey: ['practices', 'own-children', practice.id, practice.nbuCode],
+    });
   }
 
   const addMutation = useMutation({
@@ -223,7 +225,10 @@ function ChildrenManager({ practice }: { practice: Practice }) {
           {q && (
             <button
               type="button"
-              onClick={() => { setQ(''); inputRef.current?.focus(); }}
+              onClick={() => {
+                setQ('');
+                inputRef.current?.focus();
+              }}
               className="shrink-0 text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)]"
             >
               <X className="h-3.5 w-3.5" strokeWidth={2} />
@@ -263,7 +268,10 @@ function ChildrenManager({ practice }: { practice: Practice }) {
                         </span>
                       </span>
                       {addMutation.isPending && addMutation.variables === p.id ? (
-                        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-[var(--color-fg-subtle)]" strokeWidth={2} />
+                        <Loader2
+                          className="h-3.5 w-3.5 shrink-0 animate-spin text-[var(--color-fg-subtle)]"
+                          strokeWidth={2}
+                        />
                       ) : (
                         <span className="shrink-0 text-[var(--color-primary)] text-xs font-medium">
                           Agregar
@@ -299,11 +307,7 @@ export function PracticeHierarchySection({ practice }: { practice: Practice }) {
         </p>
       </div>
 
-      {isChild ? (
-        <ParentIndicator practice={practice} />
-      ) : (
-        <ChildrenManager practice={practice} />
-      )}
+      {isChild ? <ParentIndicator practice={practice} /> : <ChildrenManager practice={practice} />}
     </section>
   );
 }

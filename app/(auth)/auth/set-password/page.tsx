@@ -5,10 +5,7 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
 
-type TokenState =
-  | { status: 'checking' }
-  | { status: 'invalid' }
-  | { status: 'ready' };
+type TokenState = { status: 'checking' } | { status: 'invalid' } | { status: 'ready' };
 
 const inputCls =
   'block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-3 py-2 text-sm text-[var(--color-fg)] shadow-[var(--shadow-xs)] outline-none transition-colors placeholder:text-[var(--color-fg-subtle)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60';
@@ -68,12 +65,33 @@ export default function SetPasswordPage() {
 
     setSaving(true);
     try {
-      const { error } = await getSupabase().auth.updateUser({ password });
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.updateUser({ password });
       if (error) {
         setSubmitError(error.message);
         return;
       }
-      router.replace('/');
+
+      // After setting password, fetch the user's labSlug from /api/me to redirect properly
+      try {
+        const meRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me`, {
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token ?? ''}`,
+          },
+        });
+        if (meRes.ok) {
+          const me = await meRes.json();
+          if (me.labSlug) {
+            router.replace(`/${me.labSlug}`);
+            return;
+          }
+        }
+      } catch {
+        // API unavailable — fall through to /super as last resort for null labSlug
+      }
+
+      // labSlug null means super admin
+      router.replace('/super');
     } catch {
       setSubmitError('No se pudo guardar la contraseña');
     } finally {
@@ -110,7 +128,10 @@ export default function SetPasswordPage() {
       {tokenState.status === 'ready' && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="password" className="block text-xs font-medium text-[var(--color-fg-muted)]">
+            <label
+              htmlFor="password"
+              className="block text-xs font-medium text-[var(--color-fg-muted)]"
+            >
               Nueva contraseña
             </label>
             <input
@@ -128,7 +149,10 @@ export default function SetPasswordPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="confirm" className="block text-xs font-medium text-[var(--color-fg-muted)]">
+            <label
+              htmlFor="confirm"
+              className="block text-xs font-medium text-[var(--color-fg-muted)]"
+            >
               Confirmar contraseña
             </label>
             <input

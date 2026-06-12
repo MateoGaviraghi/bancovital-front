@@ -9,7 +9,7 @@ import type { CreateDoctorDto, Doctor } from '@/lib/api/types';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -59,6 +59,7 @@ function apiError(err: unknown, fallback: string): string {
 
 export function DoctorForm({ doctor }: { doctor?: Doctor }) {
   const router = useRouter();
+  const { slug } = useParams<{ slug: string }>();
   const isEdit = doctor != null;
 
   const {
@@ -79,7 +80,7 @@ export function DoctorForm({ doctor }: { doctor?: Doctor }) {
     },
     onSuccess: () => {
       toast.success(isEdit ? 'Médico actualizado' : 'Médico creado');
-      router.push('/medicos');
+      router.push(`/${slug}/medicos`);
       router.refresh();
     },
     onError: (err) => toast.error(apiError(err, 'Error al guardar médico')),

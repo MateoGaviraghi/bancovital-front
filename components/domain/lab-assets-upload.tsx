@@ -130,10 +130,7 @@ function AssetUploader({
           onChange={(e) => pick(e.target.files?.[0] ?? null)}
           className="block w-full max-w-xs text-[var(--color-fg-muted)] text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[var(--color-bg-subtle)] file:px-3 file:py-1.5 file:font-medium file:text-[var(--color-fg)] file:text-sm hover:file:bg-[var(--color-bg-subtle)]/80 disabled:cursor-not-allowed disabled:opacity-50"
         />
-        <Button
-          onClick={() => mutation.mutate()}
-          disabled={!file || mutation.isPending}
-        >
+        <Button onClick={() => mutation.mutate()} disabled={!file || mutation.isPending}>
           {mutation.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
           ) : (
@@ -152,9 +149,8 @@ export function LabAssetsUpload({ config }: { config: LabConfig }) {
       <div className="max-w-xl">
         <h2 className="font-semibold text-[var(--color-fg)] text-base">Logo y firma</h2>
         <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
-          Imágenes usadas en los informes. PNG, JPG o WEBP, hasta 5 MB. Los informes nuevos
-          saldrán con estas imágenes; los ya emitidos se actualizan al regenerarlos (botón de
-          abajo).
+          Imágenes usadas en los informes. PNG, JPG o WEBP, hasta 5 MB. Los informes nuevos saldrán
+          con estas imágenes; los ya emitidos se actualizan al regenerarlos (botón de abajo).
         </p>
       </div>
 

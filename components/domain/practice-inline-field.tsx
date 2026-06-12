@@ -64,7 +64,7 @@ export function PracticeInlineField({
       let msg = 'No se pudo guardar';
       if (axios.isAxiosError(err)) {
         const m = err.response?.data?.message;
-        msg = Array.isArray(m) ? m.join('. ') : (typeof m === 'string' ? m : msg);
+        msg = Array.isArray(m) ? m.join('. ') : typeof m === 'string' ? m : msg;
       }
       toast.error(msg);
     } finally {
@@ -94,7 +94,10 @@ export function PracticeInlineField({
             ) : (
               <dd className="text-[var(--color-fg-subtle)] text-sm italic">{placeholder}</dd>
             )}
-            <Pencil className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-fg-subtle)] opacity-0 transition-opacity group-hover:opacity-100" strokeWidth={2} />
+            <Pencil
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-fg-subtle)] opacity-0 transition-opacity group-hover:opacity-100"
+              strokeWidth={2}
+            />
           </button>
         )}
       </div>
@@ -119,7 +122,9 @@ export function PracticeInlineField({
               <X className="h-3.5 w-3.5" strokeWidth={2.5} />
               Cancelar
             </Button>
-            <span className="text-[var(--color-fg-subtle)] text-xs">⌘Enter para guardar · Esc para cancelar</span>
+            <span className="text-[var(--color-fg-subtle)] text-xs">
+              ⌘Enter para guardar · Esc para cancelar
+            </span>
           </div>
         </div>
       )}

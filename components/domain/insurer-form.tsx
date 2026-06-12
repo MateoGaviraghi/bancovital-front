@@ -9,7 +9,7 @@ import type { CreateInsurerDto, Insurer } from '@/lib/api/types';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -49,6 +49,7 @@ function apiError(err: unknown, fallback: string): string {
 
 export function InsurerForm({ insurer }: { insurer?: Insurer }) {
   const router = useRouter();
+  const { slug } = useParams<{ slug: string }>();
   const isEdit = insurer != null;
 
   const {
@@ -74,7 +75,7 @@ export function InsurerForm({ insurer }: { insurer?: Insurer }) {
     },
     onSuccess: () => {
       toast.success(isEdit ? 'Obra social actualizada' : 'Obra social creada');
-      router.push('/obras-sociales');
+      router.push(`/${slug}/obras-sociales`);
       router.refresh();
     },
     onError: (err) => toast.error(apiError(err, 'Error al guardar')),

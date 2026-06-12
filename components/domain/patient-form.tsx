@@ -16,7 +16,7 @@ import type { CreatePatientDto, Patient, Sex } from '@/lib/api/types';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -75,6 +75,7 @@ function apiError(err: unknown, fallback: string): string {
 
 export function PatientForm({ patient }: { patient?: Patient }) {
   const router = useRouter();
+  const { slug } = useParams<{ slug: string }>();
   const isEdit = patient != null;
 
   const {
@@ -99,7 +100,7 @@ export function PatientForm({ patient }: { patient?: Patient }) {
     },
     onSuccess: () => {
       toast.success(isEdit ? 'Paciente actualizado' : 'Paciente creado');
-      router.push('/pacientes');
+      router.push(`/${slug}/pacientes`);
       router.refresh();
     },
     onError: (err) => toast.error(apiError(err, 'Error al guardar paciente')),

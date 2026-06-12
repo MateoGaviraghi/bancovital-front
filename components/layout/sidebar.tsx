@@ -2,14 +2,15 @@
 
 import type { AppRole } from '@/lib/auth/session';
 import { cn } from '@/lib/cn';
+import { useTenant } from '@/lib/tenant/tenant-context';
 import {
   BookOpen,
   Building2,
   ChevronDown,
   ClipboardList,
   DollarSign,
-  FileText,
   FilePlus,
+  FileText,
   FlaskConical,
   Home,
   LayoutDashboard,
@@ -23,18 +24,12 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export type SidebarBranding = {
-  legalName: string;
-  shortName: string | null;
-  city: string;
-  logoUrl: string | null;
-};
-
 // ─── Types ───────────────────────────────────────────────────
 
 type Leaf = {
   kind: 'leaf';
-  href: string;
+  /** Path relative to the slug root, e.g. "" (home) or "/ordenes" */
+  path: string;
   label: string;
   icon: LucideIcon;
   roles?: AppRole[];
@@ -45,7 +40,7 @@ type Group = {
   label: string;
   icon: LucideIcon;
   basePath: string;
-  children: { href: string; label: string; icon: LucideIcon; roles?: AppRole[] }[];
+  children: { path: string; label: string; icon: LucideIcon; roles?: AppRole[] }[];
   roles?: AppRole[];
 };
 
@@ -54,15 +49,15 @@ type Entry = Leaf | Group;
 // ─── Nav structure ───────────────────────────────────────────
 
 const PRIMARY: Entry[] = [
-  { kind: 'leaf', href: '/', label: 'Inicio', icon: Home },
+  { kind: 'leaf', path: '', label: 'Inicio', icon: Home },
   {
     kind: 'group',
     label: 'Órdenes',
     icon: ClipboardList,
     basePath: '/ordenes',
     children: [
-      { href: '/ordenes', label: 'Ver órdenes', icon: ClipboardList },
-      { href: '/ordenes/nueva', label: 'Nueva orden', icon: FilePlus, roles: ['admin', 'bioquimico'] },
+      { path: '/ordenes', label: 'Ver órdenes', icon: ClipboardList },
+      { path: '/ordenes/nueva', label: 'Nueva orden', icon: FilePlus },
     ],
   },
   {
@@ -71,8 +66,8 @@ const PRIMARY: Entry[] = [
     icon: Users,
     basePath: '/pacientes',
     children: [
-      { href: '/pacientes', label: 'Ver pacientes', icon: Users },
-      { href: '/pacientes/nuevo', label: 'Nuevo paciente', icon: UserPlus },
+      { path: '/pacientes', label: 'Ver pacientes', icon: Users },
+      { path: '/pacientes/nuevo', label: 'Nuevo paciente', icon: UserPlus },
     ],
   },
   {
@@ -81,8 +76,8 @@ const PRIMARY: Entry[] = [
     icon: Stethoscope,
     basePath: '/medicos',
     children: [
-      { href: '/medicos', label: 'Ver médicos', icon: Stethoscope },
-      { href: '/medicos/nuevo', label: 'Nuevo médico', icon: UserPlus, roles: ['admin'] },
+      { path: '/medicos', label: 'Ver médicos', icon: Stethoscope },
+      { path: '/medicos/nuevo', label: 'Nuevo médico', icon: UserPlus },
     ],
   },
   {
@@ -91,12 +86,12 @@ const PRIMARY: Entry[] = [
     icon: FlaskConical,
     basePath: '/practicas',
     children: [
-      { href: '/practicas', label: 'Catálogo', icon: BookOpen },
-      { href: '/practicas/propias', label: 'Propias', icon: Building2, roles: ['admin'] },
+      { path: '/practicas', label: 'Catálogo', icon: BookOpen },
+      { path: '/practicas/propias', label: 'Propias', icon: Building2, roles: ['admin'] },
     ],
   },
-  { kind: 'leaf', href: '/obras-sociales', label: 'Obras sociales', icon: ShieldCheck },
-  { kind: 'leaf', href: '/reportes', label: 'Reportes', icon: TrendingUp },
+  { kind: 'leaf', path: '/obras-sociales', label: 'Obras sociales', icon: ShieldCheck },
+  { kind: 'leaf', path: '/reportes', label: 'Reportes', icon: TrendingUp },
 ];
 
 const ADMIN: Entry[] = [
@@ -106,38 +101,42 @@ const ADMIN: Entry[] = [
     icon: LayoutDashboard,
     basePath: '/admin',
     children: [
-      { href: '/admin', label: 'Panel', icon: LayoutDashboard },
-      { href: '/admin/usuarios', label: 'Usuarios', icon: Users },
-      { href: '/admin/valor-ub', label: 'Valor UB', icon: DollarSign },
-      { href: '/admin/config-lab', label: 'Config. laboratorio', icon: Building2 },
+      { path: '/admin', label: 'Panel', icon: LayoutDashboard },
+      { path: '/admin/usuarios', label: 'Usuarios', icon: Users },
+      { path: '/admin/valor-ub', label: 'Valor UB', icon: DollarSign },
+      { path: '/admin/config-lab', label: 'Config. laboratorio', icon: Building2 },
     ],
   },
-  { kind: 'leaf', href: '/configuracion/pdf', label: 'Config. PDF', icon: FileText },
+  { kind: 'leaf', path: '/configuracion/pdf', label: 'Config. PDF', icon: FileText },
 ];
 
 // ─── Components ──────────────────────────────────────────────
 
 function leafIsActive(href: string, pathname: string): boolean {
-  // Links with query params can't be determined active by pathname alone — skip them
   if (href.includes('?')) return false;
-  if (href === '/') return pathname === '/';
-  return pathname === href;
+  // Exact match for root; prefix match for others
+  if (href === pathname) return true;
+  // Strip trailing slash for comparison
+  return false;
 }
 
 function LeafLink({
   item,
+  slug,
   pathname,
   indent = false,
 }: {
-  item: { href: string; label: string; icon: LucideIcon };
+  item: { path: string; label: string; icon: LucideIcon };
+  slug: string;
   pathname: string;
   indent?: boolean;
 }) {
   const Icon = item.icon;
-  const active = leafIsActive(item.href, pathname);
+  const href = `/${slug}${item.path}`;
+  const active = leafIsActive(href, pathname);
   return (
     <Link
-      href={item.href}
+      href={href}
       className={cn(
         'flex items-center gap-2 rounded-md py-1.5 text-sm transition-colors',
         indent ? 'px-2' : 'px-2.5',
@@ -152,16 +151,23 @@ function LeafLink({
   );
 }
 
-function GroupItem({ group, pathname, userRole }: { group: Group; pathname: string; userRole: AppRole }) {
-  const isInSection = pathname.startsWith(group.basePath);
+function GroupItem({
+  group,
+  slug,
+  pathname,
+  userRole,
+}: {
+  group: Group;
+  slug: string;
+  pathname: string;
+  userRole: AppRole;
+}) {
+  const isInSection = pathname.startsWith(`/${slug}${group.basePath}`);
   const Icon = group.icon;
-  const visibleChildren = group.children.filter(
-    (c) => !c.roles || c.roles.includes(userRole),
-  );
+  const visibleChildren = group.children.filter((c) => !c.roles || c.roles.includes(userRole));
   if (visibleChildren.length === 0) return null;
 
   return (
-    // open prop sets initial state server-side; browser handles toggle natively (no JS/hydration needed)
     <details open={isInSection} className="group/details">
       <summary
         className={cn(
@@ -180,47 +186,60 @@ function GroupItem({ group, pathname, userRole }: { group: Group; pathname: stri
       </summary>
       <div className="mt-0.5 ml-3.5 space-y-0.5 border-[var(--color-border)] border-l pl-3">
         {visibleChildren.map((child) => (
-          <LeafLink key={child.href} item={child} pathname={pathname} indent />
+          <LeafLink key={child.path} item={child} slug={slug} pathname={pathname} indent />
         ))}
       </div>
     </details>
   );
 }
 
-function NavEntry({ entry, pathname, userRole }: { entry: Entry; pathname: string; userRole: AppRole }) {
+function NavEntry({
+  entry,
+  slug,
+  pathname,
+  userRole,
+}: {
+  entry: Entry;
+  slug: string;
+  pathname: string;
+  userRole: AppRole;
+}) {
   if (entry.kind === 'leaf') {
     if (entry.roles && !entry.roles.includes(userRole)) return null;
-    return <LeafLink item={entry} pathname={pathname} />;
+    return <LeafLink item={entry} slug={slug} pathname={pathname} />;
   }
-  return <GroupItem group={entry} pathname={pathname} userRole={userRole} />;
+  return <GroupItem group={entry} slug={slug} pathname={pathname} userRole={userRole} />;
 }
 
 // ─── Sidebar ─────────────────────────────────────────────────
 
 export function Sidebar({
   userRole,
-  branding,
+  slug,
 }: {
   userRole: AppRole;
-  branding: SidebarBranding;
+  slug: string;
 }) {
   const pathname = usePathname();
-  const displayName = branding.shortName || branding.legalName;
-  const logoSrc =
-    branding.logoUrl && /^https?:\/\//.test(branding.logoUrl)
-      ? branding.logoUrl
-      : '/labo.jpeg';
+  const { branding } = useTenant();
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-[var(--color-border)] border-r bg-[var(--color-bg-elevated)] md:flex">
       <div className="flex h-14 items-center gap-2.5 border-[var(--color-border)] border-b px-5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-primary-soft)]">
-          <img src={logoSrc} alt={displayName} className="h-full w-full object-contain" />
+          {branding.logoUrl ? (
+            // biome-ignore lint/performance/noImgElement: logo is a short-lived signed URL, next/image adds no value here
+            <img src={branding.logoUrl} alt="" className="h-full w-full object-contain" />
+          ) : (
+            <span className="text-sm font-bold text-[var(--color-primary)] uppercase">
+              {branding.name.slice(0, 2)}
+            </span>
+          )}
         </div>
         <div className="min-w-0 leading-tight">
-          <p className="truncate font-semibold text-[var(--color-fg)] text-sm">{displayName}</p>
+          <p className="truncate font-semibold text-[var(--color-fg)] text-sm">{branding.name}</p>
           <p className="truncate text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wide">
-            Laboratorio · {branding.city}
+            {branding.tagline ?? 'Laboratorio'}
           </p>
         </div>
       </div>
@@ -231,8 +250,9 @@ export function Sidebar({
         </p>
         {PRIMARY.map((entry) => (
           <NavEntry
-            key={entry.kind === 'leaf' ? entry.href : entry.basePath}
+            key={entry.kind === 'leaf' ? entry.path : entry.basePath}
             entry={entry}
+            slug={slug}
             pathname={pathname}
             userRole={userRole}
           />
@@ -245,8 +265,9 @@ export function Sidebar({
             </p>
             {ADMIN.map((entry) => (
               <NavEntry
-                key={entry.kind === 'leaf' ? entry.href : entry.basePath}
+                key={entry.kind === 'leaf' ? entry.path : entry.basePath}
                 entry={entry}
+                slug={slug}
                 pathname={pathname}
                 userRole={userRole}
               />
