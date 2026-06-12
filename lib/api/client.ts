@@ -26,7 +26,9 @@ export function getApiClient(): AxiosInstance {
     (res) => res,
     (err) => {
       if (err.response?.status === 401 && typeof window !== 'undefined') {
-        window.location.href = '/login';
+        // Send lab users back to their own branded login
+        const seg = window.location.pathname.split('/')[1];
+        window.location.href = seg && seg !== 'super' ? `/${seg}/login` : '/login';
       }
       return Promise.reject(err);
     },
