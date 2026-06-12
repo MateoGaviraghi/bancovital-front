@@ -228,7 +228,6 @@ export function Sidebar({
       <div className="flex h-14 items-center gap-2.5 border-[var(--color-border)] border-b px-5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-primary-soft)]">
           {branding.logoUrl ? (
-            // biome-ignore lint/performance/noImgElement: logo is a short-lived signed URL, next/image adds no value here
             <img src={branding.logoUrl} alt="" className="h-full w-full object-contain" />
           ) : (
             <span className="text-sm font-bold text-[var(--color-primary)] uppercase">

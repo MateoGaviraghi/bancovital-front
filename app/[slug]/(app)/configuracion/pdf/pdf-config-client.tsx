@@ -102,7 +102,6 @@ function FondoSection() {
           </div>
         ) : previewSrc ? (
           <div className="flex items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-3">
-            {/* biome-ignore lint/performance/noImgElement: signed URL / object URL preview */}
             <img
               src={previewSrc}
               alt="Vista previa del fondo"

@@ -276,9 +276,11 @@ function UnidadesDialog({
           {showCreate ? (
             <form onSubmit={handleCreate} className="flex items-end gap-2 px-4 py-3">
               <div className="flex-1 space-y-1">
-                <label className="text-[var(--color-fg-muted)] text-xs">Nombre</label>
+                <label htmlFor="new-unidad-nombre" className="text-[var(--color-fg-muted)] text-xs">
+                  Nombre
+                </label>
                 <input
-                  autoFocus
+                  id="new-unidad-nombre"
                   value={newNombre}
                   onChange={(e) => setNewNombre(e.target.value)}
                   placeholder="ej: Glucosa"
@@ -287,8 +289,14 @@ function UnidadesDialog({
                 />
               </div>
               <div className="w-24 space-y-1">
-                <label className="text-[var(--color-fg-muted)] text-xs">Símbolo</label>
+                <label
+                  htmlFor="new-unidad-simbolo"
+                  className="text-[var(--color-fg-muted)] text-xs"
+                >
+                  Símbolo
+                </label>
                 <input
+                  id="new-unidad-simbolo"
                   value={newSimbolo}
                   onChange={(e) => setNewSimbolo(e.target.value)}
                   placeholder="ej: mg/dL"

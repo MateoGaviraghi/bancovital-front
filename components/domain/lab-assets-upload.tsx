@@ -112,7 +112,6 @@ function AssetUploader({
             previewBg === 'light' ? 'bg-white' : 'bg-[var(--color-bg-subtle)]'
           }`}
         >
-          {/* biome-ignore lint/performance/noImgElement: object URL preview, not a remote asset */}
           <img
             src={previewUrl}
             alt={`Vista previa de ${title.toLowerCase()}`}

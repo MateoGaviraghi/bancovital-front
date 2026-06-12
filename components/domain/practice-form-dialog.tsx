@@ -270,6 +270,7 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
             </FormField>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {/* biome-ignore lint/a11y/noLabelWithoutControl: Radix Checkbox renders a <button role="checkbox">, not a native <input> */}
               <label className="flex cursor-pointer items-start gap-2.5">
                 <Checkbox
                   checked={fields.requiresAuthorization}
@@ -287,6 +288,7 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
                 </span>
               </label>
 
+              {/* biome-ignore lint/a11y/noLabelWithoutControl: Radix Checkbox renders a <button role="checkbox">, not a native <input> */}
               <label className="flex cursor-pointer items-start gap-2.5">
                 <Checkbox
                   checked={fields.isSpecialAct}
@@ -304,6 +306,7 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
                 </span>
               </label>
 
+              {/* biome-ignore lint/a11y/noLabelWithoutControl: Radix Checkbox renders a <button role="checkbox">, not a native <input> */}
               <label className="flex cursor-pointer items-start gap-2.5">
                 <Checkbox
                   checked={fields.isElaborated}
@@ -321,6 +324,7 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
                 </span>
               </label>
 
+              {/* biome-ignore lint/a11y/noLabelWithoutControl: Radix Checkbox renders a <button role="checkbox">, not a native <input> */}
               <label className="flex cursor-pointer items-start gap-2.5">
                 <Checkbox
                   checked={fields.active}
