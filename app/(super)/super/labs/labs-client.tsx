@@ -4,6 +4,7 @@ import { ConfirmDialog } from '@/components/domain/confirm-dialog';
 import { MoneyDisplay } from '@/components/domain/money-display';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -36,7 +38,7 @@ import type {
 import { cn } from '@/lib/cn';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Building2, Layers, Loader2, Mail, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Building2, Layers, Loader2, Mail, Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -712,6 +714,84 @@ function InviteUserDialog({
   );
 }
 
+// ─── Purge confirm dialog ──────────────────────────────────────────
+
+function PurgeDialog({
+  open,
+  onOpenChange,
+  lab,
+  onConfirm,
+  loading,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  lab: Laboratorio | null;
+  onConfirm: () => void;
+  loading: boolean;
+}) {
+  const [confirmed, setConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (open) setConfirmed(false);
+  }, [open]);
+
+  const labName = lab?.shortName ?? lab?.legalName ?? '';
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-[var(--color-danger)]">
+            ¿Borrar definitivamente "{labName}"?
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-1">
+          <p className="rounded-md border border-[var(--color-danger)]/20 bg-[var(--color-danger-soft)] px-4 py-3 text-sm text-[var(--color-danger)]">
+            Esta acción es <strong>IRREVERSIBLE</strong>. Se eliminarán para siempre{' '}
+            <strong>TODOS</strong> los datos del laboratorio: pacientes, órdenes y resultados.
+          </p>
+
+          <div className="flex items-start gap-2.5">
+            <Checkbox
+              id="purge-confirm"
+              checked={confirmed}
+              onCheckedChange={(v) => setConfirmed(v === true)}
+              disabled={loading}
+            />
+            <Label
+              htmlFor="purge-confirm"
+              className="cursor-pointer text-sm leading-snug text-[var(--color-fg)]"
+            >
+              Entiendo que es irreversible y quiero borrar todos los datos
+            </Label>
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={!confirmed || loading}
+            onClick={onConfirm}
+          >
+            {loading && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
+            Borrar todo
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Main client component ─────────────────────────────────────────
 
 export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
@@ -735,18 +815,55 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLab, setEditingLab] = useState<Laboratorio | null>(null);
-  const [deletingLab, setDeletingLab] = useState<Laboratorio | null>(null);
+  const [deactivatingLab, setDeactivatingLab] = useState<Laboratorio | null>(null);
+  const [reactivatingLab, setReactivatingLab] = useState<Laboratorio | null>(null);
+  const [purgingLab, setPurgingLab] = useState<Laboratorio | null>(null);
   const [invitingLab, setInvitingLab] = useState<Laboratorio | null>(null);
   const [assigningLab, setAssigningLab] = useState<Laboratorio | null>(null);
 
-  const deleteMut = useMutation({
+  function refreshLabs() {
+    qc.invalidateQueries({ queryKey: queries.laboratorios.list() });
+  }
+
+  // Desactivar: DELETE /api/super/labs/:id → estado='inactivo'
+  const deactivateMut = useMutation({
     mutationFn: (id: number) => apiClient.delete(`/super/labs/${id}`),
     onSuccess: () => {
-      toast.success('Laboratorio eliminado');
-      setDeletingLab(null);
-      qc.invalidateQueries({ queryKey: queries.laboratorios.list() });
+      toast.success('Laboratorio desactivado');
+      setDeactivatingLab(null);
+      refreshLabs();
     },
-    onError: (err) => toast.error(apiError(err, 'Error al eliminar laboratorio')),
+    onError: (err) => toast.error(apiError(err, 'Error al desactivar laboratorio')),
+  });
+
+  // Reactivar: POST /api/super/labs/:id/reactivate
+  const reactivateMut = useMutation({
+    mutationFn: (id: number) => apiClient.post(`/super/labs/${id}/reactivate`),
+    onSuccess: () => {
+      toast.success('Laboratorio reactivado');
+      setReactivatingLab(null);
+      refreshLabs();
+    },
+    onError: (err) => toast.error(apiError(err, 'Error al reactivar laboratorio')),
+  });
+
+  // Purgar: DELETE /api/super/labs/:id/purge
+  const purgeMut = useMutation({
+    mutationFn: (id: number) => apiClient.delete(`/super/labs/${id}/purge`),
+    onSuccess: () => {
+      toast.success('Laboratorio eliminado');
+      setPurgingLab(null);
+      refreshLabs();
+    },
+    onError: (err) => {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        toast.error(
+          apiError(err, 'Solo se puede borrar definitivamente un laboratorio desactivado'),
+        );
+      } else {
+        toast.error(apiError(err, 'Error al borrar laboratorio'));
+      }
+    },
   });
 
   function openCreate() {
@@ -760,7 +877,7 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
   }
 
   function handleDialogSuccess() {
-    qc.invalidateQueries({ queryKey: queries.laboratorios.list() });
+    refreshLabs();
   }
 
   return (
@@ -810,10 +927,14 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                 const pill = ESTADO_PILL[lab.estado];
                 const resumen = consumoByLabId.get(lab.id);
                 const currentPlanId = resumen?.plan?.id ?? null;
+                const isInactivo = lab.estado === 'inactivo';
                 return (
                   <tr
                     key={lab.id}
-                    className="border-[var(--color-border)] border-b last:border-b-0 hover:bg-[var(--color-bg-subtle)]"
+                    className={cn(
+                      'border-[var(--color-border)] border-b last:border-b-0 hover:bg-[var(--color-bg-subtle)]',
+                      isInactivo && 'opacity-60',
+                    )}
                   >
                     <td className="tabular px-5 py-3 font-mono text-xs text-[var(--color-fg-muted)]">
                       {lab.slug}
@@ -842,38 +963,63 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setAssigningLab(lab)}
-                          className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
-                        >
-                          <Layers className="h-3.5 w-3.5" strokeWidth={2} />
-                          {currentPlanId ? 'Plan' : 'Asignar plan'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setInvitingLab(lab)}
-                          className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
-                        >
-                          <Mail className="h-3.5 w-3.5" strokeWidth={2} />
-                          Invitar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openEdit(lab)}
-                          className="flex items-center gap-1 text-[var(--color-primary)] text-xs hover:underline"
-                        >
-                          <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingLab(lab)}
-                          className="flex items-center gap-1 text-[var(--color-danger)] text-xs hover:underline"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
-                          Eliminar
-                        </button>
+                        {!isInactivo && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setAssigningLab(lab)}
+                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
+                            >
+                              <Layers className="h-3.5 w-3.5" strokeWidth={2} />
+                              {currentPlanId ? 'Plan' : 'Asignar plan'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setInvitingLab(lab)}
+                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
+                            >
+                              <Mail className="h-3.5 w-3.5" strokeWidth={2} />
+                              Invitar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openEdit(lab)}
+                              className="flex items-center gap-1 text-[var(--color-primary)] text-xs hover:underline"
+                            >
+                              <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeactivatingLab(lab)}
+                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+                              Desactivar
+                            </button>
+                          </>
+                        )}
+
+                        {isInactivo && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setReactivatingLab(lab)}
+                              className="flex items-center gap-1 text-[var(--color-primary)] text-xs hover:underline"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" strokeWidth={2} />
+                              Reactivar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPurgingLab(lab)}
+                              className="flex items-center gap-1 text-[var(--color-danger)] text-xs hover:underline"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+                              Borrar definitivamente
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -913,18 +1059,48 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
         }}
       />
 
+      {/* Desactivar (activo o suspendido → inactivo) */}
       <ConfirmDialog
-        open={deletingLab !== null}
+        open={deactivatingLab !== null}
         onOpenChange={(o) => {
-          if (!o) setDeletingLab(null);
+          if (!o) setDeactivatingLab(null);
         }}
-        title={`¿Eliminar "${deletingLab?.legalName}"?`}
-        description="Esta acción no se puede deshacer. Se eliminarán todos los datos del laboratorio."
-        tone="danger"
-        confirmLabel="Eliminar"
-        loading={deleteMut.isPending}
+        title={`¿Desactivar "${deactivatingLab?.shortName ?? deactivatingLab?.legalName}"?`}
+        description="El laboratorio dejará de estar accesible para sus usuarios. Se conservan todos los datos y podés reactivarlo cuando quieras."
+        tone="warning"
+        confirmLabel="Desactivar"
+        loading={deactivateMut.isPending}
         onConfirm={() => {
-          if (deletingLab) deleteMut.mutate(deletingLab.id);
+          if (deactivatingLab) deactivateMut.mutate(deactivatingLab.id);
+        }}
+      />
+
+      {/* Reactivar (inactivo → activo) */}
+      <ConfirmDialog
+        open={reactivatingLab !== null}
+        onOpenChange={(o) => {
+          if (!o) setReactivatingLab(null);
+        }}
+        title={`¿Reactivar "${reactivatingLab?.shortName ?? reactivatingLab?.legalName}"?`}
+        description="El laboratorio volvera a estar accesible para sus usuarios."
+        tone="info"
+        confirmLabel="Reactivar"
+        loading={reactivateMut.isPending}
+        onConfirm={() => {
+          if (reactivatingLab) reactivateMut.mutate(reactivatingLab.id);
+        }}
+      />
+
+      {/* Purge (inactivo → borrado total) */}
+      <PurgeDialog
+        open={purgingLab !== null}
+        onOpenChange={(o) => {
+          if (!o) setPurgingLab(null);
+        }}
+        lab={purgingLab}
+        loading={purgeMut.isPending}
+        onConfirm={() => {
+          if (purgingLab) purgeMut.mutate(purgingLab.id);
         }}
       />
     </div>
