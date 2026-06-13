@@ -10,7 +10,7 @@
 | F1 Tenancy + theming | ✅ COMPLETA — en producción 2026-06-12 (`bancovital-front.vercel.app/{slug}/login` verificado con theming dinámico). Ambiente dev: Vercel Preview (branch dev) → back-dev Railway |
 | F2 Planes y cuotas (UI) | Pendiente |
 | F3 Contratación (`/contratar/{token}`) | Implementada 2026-06-13 (commit `3db0247` en dev) — página pública con stepper 4 pasos (propuesta/plan/facturación/OTP+firma signature_pad), tema Nodo scoped, `/super/contracts` completo. QA e2e del flujo 9/9. Pendiente: QA visual Mateo + Resend key para OTP real + merge main |
-| F4 Landing + booking | Pendiente |
+| F4 Landing + booking | Implementada en dev 2026-06-13 (front eaad3ef, back 40006e0). Landing en `/` (anon) + flujo de reserva + super/reuniones. Google Calendar ENCHUFABLE (falta OAuth creds para activar disponibilidad real + Meet; sin creds funciona con horarios config + emails Resend). Visual distintivo → F8. Pendiente: QA + merge main |
 | F5 Super power-ups (UI) | Pendiente |
 | F6 Personalización admin | Pendiente |
 | F7 Portal paciente | Pendiente |

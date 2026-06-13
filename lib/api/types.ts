@@ -773,5 +773,23 @@ export interface ReunionItem {
   slotFin: string;
   meetLink: string | null;
   estado: ReunionEstado;
+  asistenciaConfirmada: boolean;
   createdAt: string;
+}
+
+/** Returned by GET /api/public/bookings/by-token/{token} */
+export interface BookingPublicDetail {
+  nombre: string;
+  slotInicio: string;
+  slotFin: string;
+  estado: 'confirmada' | 'cancelada';
+  meetLink: string | null;
+  asistenciaConfirmada: boolean;
+}
+
+/** Returned by POST .../confirm and POST .../cancel */
+export interface BookingActionResponse {
+  ok: boolean;
+  estado: 'confirmada' | 'cancelada';
+  asistenciaConfirmada?: boolean;
 }
