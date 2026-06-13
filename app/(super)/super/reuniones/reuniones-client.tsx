@@ -143,6 +143,9 @@ export function ReunionesClient({ initialReuniones }: Props) {
                   Estado
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-[var(--color-fg-muted)] text-xs uppercase tracking-wide">
+                  Asistencia
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-[var(--color-fg-muted)] text-xs uppercase tracking-wide">
                   Acciones
                 </th>
               </tr>
@@ -179,6 +182,18 @@ export function ReunionesClient({ initialReuniones }: Props) {
                       )}
                     >
                       {ESTADO_LABELS[r.estado]}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={cn(
+                        'inline-flex items-center rounded-[var(--radius-pill)] px-2 py-0.5 text-xs font-medium',
+                        r.asistenciaConfirmada
+                          ? 'bg-[var(--color-success-soft)] text-[var(--color-success)]'
+                          : 'bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]',
+                      )}
+                    >
+                      {r.asistenciaConfirmada ? 'Confirmada' : 'Pendiente'}
                     </span>
                   </td>
                   <td className="px-4 py-3">

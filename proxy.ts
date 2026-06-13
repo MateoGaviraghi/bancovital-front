@@ -13,6 +13,8 @@ function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith('/auth/')) return true;
   // Public contracting pages — no session required
   if (pathname === '/contratar' || pathname.startsWith('/contratar/')) return true;
+  // Public meeting confirm/cancel pages (from email links) — no session required
+  if (pathname === '/reunion' || pathname.startsWith('/reunion/')) return true;
   return /^\/[^/]+\/login$/.test(pathname);
 }
 
