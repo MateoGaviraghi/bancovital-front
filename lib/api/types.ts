@@ -730,3 +730,48 @@ export interface CreateContratoResponse {
 export interface ResendContratoResponse {
   contractUrl: string;
 }
+
+// ─────────────── Reuniones / Bookings ───────────────
+
+export interface BookingSlot {
+  inicio: string;
+  fin: string;
+}
+
+export interface BookingAvailabilityResponse {
+  date: string;
+  slots: BookingSlot[];
+}
+
+export interface CreateBookingDto {
+  nombre: string;
+  email: string;
+  empresa?: string;
+  telefono?: string;
+  mensaje?: string;
+  slotInicio: string;
+}
+
+export interface CreateBookingResponse {
+  ok: boolean;
+  reunionId: string;
+  slotInicio: string;
+  slotFin: string;
+  meetLink: string | null;
+}
+
+export type ReunionEstado = 'confirmada' | 'cancelada' | 'pendiente';
+
+export interface ReunionItem {
+  id: string;
+  nombre: string;
+  email: string;
+  empresa: string | null;
+  telefono: string | null;
+  mensaje: string | null;
+  slotInicio: string;
+  slotFin: string;
+  meetLink: string | null;
+  estado: ReunionEstado;
+  createdAt: string;
+}
