@@ -629,3 +629,104 @@ export interface ConsumoResumen {
   excedentes: number;
   porcentaje: number | null;
 }
+
+// ─────────────── Contracts ───────────────
+
+export type ContratoEstado = 'enviado' | 'firmado' | 'vencido' | 'anulado';
+
+export interface ContratoPublicPlan {
+  id: number;
+  nombre: string;
+  cupoOrdenesMes: number;
+  precioMensual: string;
+  precioOrdenExcedente: string;
+}
+
+/** Returned by GET /api/public/contracts/{token} */
+export interface ContratoPublicDetail {
+  estado: ContratoEstado;
+  expiraAt: string;
+  razonSocial: string;
+  nombreContacto: string;
+  emailFirmanteOfuscado: string;
+  propuesta: { descripcion: string; notas?: string };
+  planSugeridoId: number | null;
+  planes: ContratoPublicPlan[];
+  pdfUrl: string;
+}
+
+export interface OtpRequestResponse {
+  ok: boolean;
+}
+
+export interface OtpVerifyDto {
+  codigo: string;
+}
+
+export interface OtpVerifyResponse {
+  ok: boolean;
+}
+
+export interface DatosFacturacion {
+  domicilioFiscal: string;
+  cuit?: string;
+  condicionIva?: string;
+}
+
+export interface SignContratoDto {
+  planId: number;
+  firmaDataUrl: string;
+  datosFacturacion: DatosFacturacion;
+  aceptaTerminos: true;
+}
+
+export interface SignContratoResponse {
+  ok: boolean;
+  labSlug: string;
+}
+
+/** Returned by GET /api/super/contracts */
+export interface ContratoSuperListItem {
+  id: number;
+  token: string;
+  razonSocial: string;
+  nombreContacto: string;
+  emailFirmante: string;
+  telefono: string | null;
+  cuit: string | null;
+  estado: ContratoEstado;
+  planSugeridoId: number | null;
+  planElegidoId: number | null;
+  planElegidoNombre: string | null;
+  expiraAt: string;
+  firmadoAt: string | null;
+  contractUrl: string;
+  propuesta: { descripcion: string; notas?: string };
+  createdAt: string;
+}
+
+/** Returned by GET /api/super/contracts/:id */
+export interface ContratoSuperDetail extends ContratoSuperListItem {
+  pdfOriginalUrl: string | null;
+  pdfFirmadoUrl: string | null;
+  evidencia: Record<string, unknown> | null;
+}
+
+export interface CreateContratoDto {
+  razonSocial: string;
+  nombreContacto: string;
+  cuit?: string;
+  emailFirmante: string;
+  telefono?: string;
+  propuesta: { descripcion: string; notas?: string };
+  planSugeridoId?: number;
+}
+
+export interface CreateContratoResponse {
+  id: number;
+  contractUrl: string;
+}
+
+export interface ResendContratoResponse {
+  contractUrl: string;
+}

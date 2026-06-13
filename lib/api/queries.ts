@@ -63,4 +63,13 @@ export const queries = {
     /** Resumen de consumo de todos los labs (super view). */
     resumen: () => ['consumo', 'resumen'] as const,
   },
+
+  contracts: {
+    /** Public contract detail by token (no auth). */
+    public: (token: string) => ['contracts', 'public', token] as const,
+    /** Super: list of all contracts. */
+    superList: () => ['contracts', 'super', 'list'] as const,
+    /** Super: single contract detail. */
+    superDetail: (id: number) => ['contracts', 'super', id] as const,
+  },
 };

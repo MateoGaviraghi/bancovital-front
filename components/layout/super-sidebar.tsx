@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/cn';
-import { Building2, Layers } from 'lucide-react';
+import { Building2, FileSignature, Layers } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -9,6 +9,8 @@ export function SuperSidebar() {
   const pathname = usePathname();
   const labsActive = pathname === '/super/labs' || pathname.startsWith('/super/labs/');
   const plansActive = pathname === '/super/plans' || pathname.startsWith('/super/plans/');
+  const contractsActive =
+    pathname === '/super/contracts' || pathname.startsWith('/super/contracts/');
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-[var(--color-border)] border-r bg-[var(--color-bg-elevated)] md:flex">
@@ -51,6 +53,18 @@ export function SuperSidebar() {
         >
           <Layers className="h-4 w-4 shrink-0" strokeWidth={2} />
           <span className="truncate">Planes</span>
+        </Link>
+        <Link
+          href="/super/contracts"
+          className={cn(
+            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
+            contractsActive
+              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
+              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
+          )}
+        >
+          <FileSignature className="h-4 w-4 shrink-0" strokeWidth={2} />
+          <span className="truncate">Contratos</span>
         </Link>
       </nav>
 

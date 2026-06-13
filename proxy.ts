@@ -11,6 +11,8 @@ import { type NextRequest, NextResponse } from 'next/server';
 function isPublicPath(pathname: string): boolean {
   if (pathname === '/' || pathname === '/login') return true;
   if (pathname.startsWith('/auth/')) return true;
+  // Public contracting pages — no session required
+  if (pathname === '/contratar' || pathname.startsWith('/contratar/')) return true;
   return /^\/[^/]+\/login$/.test(pathname);
 }
 
