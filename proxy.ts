@@ -51,16 +51,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(target, request.url));
   }
 
-  if (user) {
-    if (pathname === '/login') {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-    const tenantLogin = pathname.match(/^\/([^/]+)\/login$/);
-    if (tenantLogin) {
-      // Already authenticated — go to the lab home (app layout corrects foreign slugs)
-      return NextResponse.redirect(new URL(`/${tenantLogin[1]}`, request.url));
-    }
-  }
+  // Intentionally NOT redirecting authenticated users away from login pages.
+  // A stale Supabase session without a usable app role would otherwise be
+  // bounced off /login by the middleware yet rejected by the app pages (no
+  // role) — trapping the user on a placeholder with no way to re-authenticate.
+  // Letting login pages always render lets a fresh sign-in overwrite the bad
+  // session. Routing of *valid* sessions to their home is handled by the pages.
 
   return response;
 }
