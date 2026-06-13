@@ -7,7 +7,7 @@
 
 | Fase | Estado |
 |---|---|
-| F1 Tenancy + theming | Implementada 2026-06-12 (commit en dev) — pendiente deploy + QA. Requiere back F1 deployado ANTES del push (sino el fetch de branding 404ea todos los slugs) |
+| F1 Tenancy + theming | ✅ COMPLETA — en producción 2026-06-12 (`bancovital-front.vercel.app/{slug}/login` verificado con theming dinámico). Ambiente dev: Vercel Preview (branch dev) → back-dev Railway |
 | F2 Planes y cuotas (UI) | Pendiente |
 | F3 Contratación (`/contratar/{token}`) | Pendiente |
 | F4 Landing + booking | Pendiente |

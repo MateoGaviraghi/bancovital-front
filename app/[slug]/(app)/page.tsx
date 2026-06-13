@@ -1,3 +1,4 @@
+import { ConsumoCard } from '@/components/domain/consumo-card';
 import { MoneyDisplay } from '@/components/domain/money-display';
 import { StatusPill } from '@/components/domain/status-pill';
 import { PageHeader } from '@/components/layout/page-header';
@@ -109,6 +110,10 @@ export default async function HomePage({
         <KpiCard icon={TrendingUp} label="Órdenes totales" value={orders.length} />
         <KpiCard icon={Users} label="Pacientes" value={patientCount} />
         <KpiCard icon={FlaskConical} label="Prácticas en catálogo" value={practiceCount} />
+      </div>
+
+      <div className="mb-6">
+        <ConsumoCard />
       </div>
 
       <section className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-[var(--shadow-xs)]">

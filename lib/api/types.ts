@@ -584,3 +584,48 @@ export interface InviteUserDto {
 export interface SetRoleDto {
   role: UserRole;
 }
+
+// ─────────────── Plans & consumo ───────────────
+
+export interface Plan {
+  id: number;
+  nombre: string;
+  cupoOrdenesMes: number;
+  precioMensual: string;
+  precioOrdenExcedente: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePlanDto {
+  nombre: string;
+  cupoOrdenesMes: number;
+  precioMensual: string;
+  precioOrdenExcedente: string;
+}
+
+export type UpdatePlanDto = Partial<CreatePlanDto>;
+
+export interface ConsumoCiclo {
+  periodo: string;
+  plan: { id: number; nombre: string; cupoOrdenesMes: number; precioOrdenExcedente: string } | null;
+  cupoBase: number | null;
+  rollover: number;
+  cupoEfectivo: number | null;
+  usadas: number;
+  excedentes: number;
+  restantes: number | null;
+  porcentaje: number | null;
+}
+
+export interface ConsumoResumen {
+  labId: number;
+  slug: string;
+  nombre: string;
+  plan: { id: number; nombre: string } | null;
+  periodo: string;
+  cupoEfectivo: number | null;
+  usadas: number;
+  excedentes: number;
+  porcentaje: number | null;
+}
