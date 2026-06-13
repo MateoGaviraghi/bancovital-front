@@ -72,4 +72,11 @@ export const queries = {
     /** Super: single contract detail. */
     superDetail: (id: number) => ['contracts', 'super', id] as const,
   },
+
+  bookings: {
+    /** Public: available slots for a given date. */
+    availability: (date: string) => ['bookings', 'availability', date] as const,
+    /** Super: list of all meeting bookings. */
+    superList: () => ['bookings', 'super', 'list'] as const,
+  },
 };
