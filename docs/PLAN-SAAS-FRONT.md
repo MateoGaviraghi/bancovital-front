@@ -64,7 +64,15 @@
 
 - `/r/{token}` público brandeado por lab: valida DNI → descarga su informe (signed URL). Sin cuenta, sin app. El QR viene impreso en el PDF del informe (lo genera el back).
 
-## F8 — /mejorar-web + polish
+## F8 — REDISEÑO TOTAL (decisión Mateo 2026-06-13: TODO el diseño se hace acá, en una pasada)
 
-- Pasada superficie por superficie: login tenant → dashboard → listados → forms → super. SIEMPRE después del theming dinámico (antes = retrabajo).
-- Principios UI de todo el proyecto: funcional primero, jerarquía clara, estados explícitos (cargando/vacío/error accionable), confirmación solo en lo destructivo, alertas que dicen QUÉ pasó y QUÉ hacer. Estética profesional suma — nada genérico.
+Hasta F8 todo sale funcional/plano A PROPÓSITO (no retrabajar antes de tener la estructura). Mateo marcó lo actual como "genérico/vergüenza" → F8 NO puede salir genérico. Skills obligatorias: web-distintiva, impeccable, gsap-scrolltrigger, ui-animation, ui-ux-pro-max.
+
+Alcance (cada superficie sale de "corporativo plantilla" a distintivo):
+1. **`/contratar/[token]`** — página de firma con identidad Nodo real (logo image, no texto "NODO"). Es lo que ve un cliente que va a pagar: máxima prioridad.
+2. **PDF del contrato** (back: `src/pdf/templates/contrato.tsx`) — rediseño premium: tipografía, layout, logo real, bloque de firma con jerarquía.
+3. **Logo real** — logoUrl ya está cableado (sidebar/login/PDF lo muestran si existe); asegurar flujo fácil de subir logo del lab + meter logo Nodo en superficies de contratación.
+4. **App interna** — super (labs/plans/contracts), dashboard lab, forms, tablas, login tenant.
+5. **Landing (F4)** entra en la pasada de coherencia final.
+
+Anti-genérico = requisito duro: nada de Inter/slate/rounded-2xl/hero centrado/3-col grid por defecto. Mantener: jerarquía clara, estados explícitos, confirmación solo en destructivo, alertas accionables.
