@@ -731,6 +731,61 @@ export interface ResendContratoResponse {
   contractUrl: string;
 }
 
+// ─────────────── Super: impersonation, metrics, audit ───────────────
+
+/** Returned by POST /api/super/impersonate/:labId */
+export interface ImpersonateResponse {
+  labId: number;
+  slug: string;
+  nombre: string;
+}
+
+export interface SuperMetricsLabs {
+  activos: number;
+  suspendidos: number;
+  inactivos: number;
+}
+
+export interface SuperMetricsOrdenesMes {
+  periodo: string;
+  total: number;
+  excedentes: number;
+}
+
+export interface SuperMetricsTopLab {
+  labId: number;
+  nombre: string;
+  usadas: number;
+  cupoEfectivo: number | null;
+  excedentes: number;
+  porcentaje: number | null;
+}
+
+/** Returned by GET /api/super/metrics */
+export interface SuperMetrics {
+  labs: SuperMetricsLabs;
+  mrr: number;
+  ordenesPorMes: SuperMetricsOrdenesMes[];
+  topLabsUso: SuperMetricsTopLab[];
+}
+
+export interface AuditEntry {
+  id: number | string;
+  labId: number | null;
+  labNombre: string | null;
+  actorEmail: string | null;
+  action: string;
+  entity: string | null;
+  entityId: string | number | null;
+  createdAt: string;
+}
+
+/** Returned by GET /api/super/audit */
+export interface AuditResponse {
+  data: AuditEntry[];
+  total: number;
+}
+
 // ─────────────── Reuniones / Bookings ───────────────
 
 export interface BookingSlot {

@@ -1,18 +1,30 @@
 'use client';
 
 import { cn } from '@/lib/cn';
-import { Building2, Calendar, FileSignature, Layers } from 'lucide-react';
+import {
+  Building2,
+  Calendar,
+  FileSignature,
+  Layers,
+  LayoutDashboard,
+  ScrollText,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export function SuperSidebar() {
   const pathname = usePathname();
+  const metricsActive =
+    pathname === '/super' ||
+    pathname === '/super/metrics' ||
+    pathname.startsWith('/super/metrics/');
   const labsActive = pathname === '/super/labs' || pathname.startsWith('/super/labs/');
   const plansActive = pathname === '/super/plans' || pathname.startsWith('/super/plans/');
   const contractsActive =
     pathname === '/super/contracts' || pathname.startsWith('/super/contracts/');
   const reunionesActive =
     pathname === '/super/reuniones' || pathname.startsWith('/super/reuniones/');
+  const auditActive = pathname === '/super/audit' || pathname.startsWith('/super/audit/');
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-[var(--color-border)] border-r bg-[var(--color-bg-elevated)] md:flex">
@@ -32,6 +44,18 @@ export function SuperSidebar() {
         <p className="px-2 pb-1 font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wide">
           Administración
         </p>
+        <Link
+          href="/super/metrics"
+          className={cn(
+            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
+            metricsActive
+              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
+              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
+          )}
+        >
+          <LayoutDashboard className="h-4 w-4 shrink-0" strokeWidth={2} />
+          <span className="truncate">Métricas</span>
+        </Link>
         <Link
           href="/super/labs"
           className={cn(
@@ -79,6 +103,18 @@ export function SuperSidebar() {
         >
           <Calendar className="h-4 w-4 shrink-0" strokeWidth={2} />
           <span className="truncate">Reuniones</span>
+        </Link>
+        <Link
+          href="/super/audit"
+          className={cn(
+            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
+            auditActive
+              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
+              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
+          )}
+        >
+          <ScrollText className="h-4 w-4 shrink-0" strokeWidth={2} />
+          <span className="truncate">Auditoría</span>
         </Link>
       </nav>
 
