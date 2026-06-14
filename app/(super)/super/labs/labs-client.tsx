@@ -13,6 +13,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,6 +51,7 @@ import axios from 'axios';
 import {
   AlertTriangle,
   Building2,
+  ChevronDown,
   Download,
   Layers,
   Loader2,
@@ -1063,130 +1071,119 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                       <OnboardingBadge labId={lab.id} />
                     </td>
                     <td className="px-5 py-3">
-                      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5">
-                        {!isInactivo && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleImpersonate(lab)}
-                              disabled={impersonatingId === lab.id}
-                              className="flex items-center gap-1 font-medium text-[var(--color-primary)] text-xs hover:underline disabled:opacity-60"
-                            >
-                              {impersonatingId === lab.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
-                              ) : (
-                                <LogIn className="h-3.5 w-3.5" strokeWidth={2} />
-                              )}
-                              Entrar como
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setAssigningLab(lab)}
-                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
-                            >
-                              <Layers className="h-3.5 w-3.5" strokeWidth={2} />
-                              {currentPlanId ? 'Plan' : 'Asignar plan'}
-                            </button>
-                            <Link
-                              href={`/super/labs/${lab.id}/cuenta`}
-                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
-                            >
-                              <Wallet className="h-3.5 w-3.5" strokeWidth={2} />
-                              Estado de cuenta
-                            </Link>
-                            <button
-                              type="button"
-                              onClick={() => setMorosoLab(lab)}
-                              className={cn(
-                                'flex items-center gap-1 text-xs hover:underline',
-                                lab.moroso
-                                  ? 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]'
-                                  : 'text-[var(--color-danger)]',
-                              )}
-                            >
-                              <AlertTriangle className="h-3.5 w-3.5" strokeWidth={2} />
-                              {lab.moroso ? 'Quitar moroso' : 'Marcar moroso'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setInvitingLab(lab)}
-                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
-                            >
-                              <Mail className="h-3.5 w-3.5" strokeWidth={2} />
-                              Invitar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleExport(lab)}
-                              disabled={exportingId === lab.id}
-                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline disabled:opacity-60"
-                            >
-                              {exportingId === lab.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
-                              ) : (
-                                <Download className="h-3.5 w-3.5" strokeWidth={2} />
-                              )}
-                              Exportar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => openEdit(lab)}
-                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
-                            >
-                              <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
-                              Editar
-                            </button>
-                            {lab.estado === 'activo' && (
-                              <button
-                                type="button"
-                                onClick={() => setSuspendingLab(lab)}
-                                className="flex items-center gap-1 text-[var(--color-warning)] text-xs hover:underline"
-                              >
-                                <PauseCircle className="h-3.5 w-3.5" strokeWidth={2} />
-                                Suspender
-                              </button>
-                            )}
-                            {lab.estado === 'suspendido' && (
-                              <button
-                                type="button"
-                                onClick={() => setReactivatingLab(lab)}
-                                className="flex items-center gap-1 text-[var(--color-success)] text-xs hover:underline"
-                              >
-                                <RotateCcw className="h-3.5 w-3.5" strokeWidth={2} />
-                                Reactivar
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => setDeactivatingLab(lab)}
-                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
-                              Desactivar
-                            </button>
-                          </>
-                        )}
+                      <div className="flex justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="min-h-[44px]">
+                              Acciones
+                              <ChevronDown className="h-3.5 w-3.5" strokeWidth={2} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="min-w-[12rem]">
+                            {!isInactivo && (
+                              <>
+                                <DropdownMenuItem
+                                  onSelect={() => handleImpersonate(lab)}
+                                  disabled={impersonatingId === lab.id}
+                                >
+                                  {impersonatingId === lab.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                                  ) : (
+                                    <LogIn className="h-4 w-4" strokeWidth={2} />
+                                  )}
+                                  Entrar como
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setAssigningLab(lab)}>
+                                  <Layers className="h-4 w-4" strokeWidth={2} />
+                                  {currentPlanId ? 'Plan' : 'Asignar plan'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/super/labs/${lab.id}/cuenta`}>
+                                    <Wallet className="h-4 w-4" strokeWidth={2} />
+                                    Estado de cuenta
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setInvitingLab(lab)}>
+                                  <Mail className="h-4 w-4" strokeWidth={2} />
+                                  Invitar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    handleExport(lab);
+                                  }}
+                                  disabled={exportingId === lab.id}
+                                >
+                                  {exportingId === lab.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                                  ) : (
+                                    <Download className="h-4 w-4" strokeWidth={2} />
+                                  )}
+                                  Exportar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => openEdit(lab)}>
+                                  <Pencil className="h-4 w-4" strokeWidth={2} />
+                                  Editar
+                                </DropdownMenuItem>
 
-                        {isInactivo && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setReactivatingLab(lab)}
-                              className="flex items-center gap-1 text-[var(--color-primary)] text-xs hover:underline"
-                            >
-                              <RotateCcw className="h-3.5 w-3.5" strokeWidth={2} />
-                              Reactivar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setPurgingLab(lab)}
-                              className="flex items-center gap-1 text-[var(--color-danger)] text-xs hover:underline"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
-                              Borrar definitivamente
-                            </button>
-                          </>
-                        )}
+                                <DropdownMenuSeparator />
+
+                                <DropdownMenuItem
+                                  onSelect={() => setMorosoLab(lab)}
+                                  className={cn(
+                                    !lab.moroso &&
+                                      'text-[var(--color-danger)] focus:text-[var(--color-danger)]',
+                                  )}
+                                >
+                                  <AlertTriangle className="h-4 w-4" strokeWidth={2} />
+                                  {lab.moroso ? 'Quitar moroso' : 'Marcar moroso'}
+                                </DropdownMenuItem>
+                                {lab.estado === 'activo' && (
+                                  <DropdownMenuItem
+                                    onSelect={() => setSuspendingLab(lab)}
+                                    className="text-[var(--color-warning)] focus:text-[var(--color-warning)]"
+                                  >
+                                    <PauseCircle className="h-4 w-4" strokeWidth={2} />
+                                    Suspender
+                                  </DropdownMenuItem>
+                                )}
+                                {lab.estado === 'suspendido' && (
+                                  <DropdownMenuItem
+                                    onSelect={() => setReactivatingLab(lab)}
+                                    className="text-[var(--color-success)] focus:text-[var(--color-success)]"
+                                  >
+                                    <RotateCcw className="h-4 w-4" strokeWidth={2} />
+                                    Reactivar
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                  onSelect={() => setDeactivatingLab(lab)}
+                                  className="text-[var(--color-danger)] focus:text-[var(--color-danger)]"
+                                >
+                                  <Trash2 className="h-4 w-4" strokeWidth={2} />
+                                  Desactivar
+                                </DropdownMenuItem>
+                              </>
+                            )}
+
+                            {isInactivo && (
+                              <>
+                                <DropdownMenuItem onSelect={() => setReactivatingLab(lab)}>
+                                  <RotateCcw className="h-4 w-4" strokeWidth={2} />
+                                  Reactivar
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onSelect={() => setPurgingLab(lab)}
+                                  className="text-[var(--color-danger)] focus:text-[var(--color-danger)]"
+                                >
+                                  <Trash2 className="h-4 w-4" strokeWidth={2} />
+                                  Borrar definitivamente
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </td>
                   </tr>
