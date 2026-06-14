@@ -902,7 +902,7 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
     mutationFn: ({ id, moroso }: { id: number; moroso: boolean }) =>
       apiClient.patch<Laboratorio>(`/super/labs/${id}/moroso`, { moroso }).then((r) => r.data),
     onSuccess: (_d, vars) => {
-      toast.success(vars.moroso ? 'Laboratorio marcado como moroso' : 'Marca de moroso quitada');
+      toast.success(vars.moroso ? 'Laboratorio marcado como deudor' : 'Marca de deudor quitada');
       setMorosoLab(null);
       refreshLabs();
     },
@@ -1059,7 +1059,7 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                         {lab.moroso && (
                           <span className="inline-flex items-center gap-1 rounded-md border border-[var(--color-danger)]/20 bg-[var(--color-danger-soft)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-danger)] uppercase tracking-wide">
                             <AlertTriangle className="h-3 w-3" strokeWidth={2} />
-                            Moroso
+                            Deudor
                           </span>
                         )}
                       </div>
@@ -1136,7 +1136,7 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                                   )}
                                 >
                                   <AlertTriangle className="h-4 w-4" strokeWidth={2} />
-                                  {lab.moroso ? 'Quitar moroso' : 'Marcar moroso'}
+                                  {lab.moroso ? 'Quitar deudor' : 'Marcar como deudor'}
                                 </DropdownMenuItem>
                                 {lab.estado === 'activo' && (
                                   <DropdownMenuItem
@@ -1247,16 +1247,16 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
         }}
         title={
           morosoLab?.moroso
-            ? `¿Quitar la marca de moroso a "${morosoLab?.shortName ?? morosoLab?.legalName}"?`
-            : `¿Marcar como moroso a "${morosoLab?.shortName ?? morosoLab?.legalName}"?`
+            ? `¿Quitar la marca de deudor a "${morosoLab?.shortName ?? morosoLab?.legalName}"?`
+            : `¿Marcar como deudor a "${morosoLab?.shortName ?? morosoLab?.legalName}"?`
         }
         description={
           morosoLab?.moroso
-            ? 'El laboratorio dejará de figurar como moroso.'
-            : 'El laboratorio quedará señalado como moroso. Esto es solo informativo para el panel super.'
+            ? 'El laboratorio dejará de figurar como deudor.'
+            : 'El laboratorio quedará señalado como deudor. Esto es solo informativo para el panel super.'
         }
         tone={morosoLab?.moroso ? 'info' : 'warning'}
-        confirmLabel={morosoLab?.moroso ? 'Quitar moroso' : 'Marcar moroso'}
+        confirmLabel={morosoLab?.moroso ? 'Quitar deudor' : 'Marcar como deudor'}
         loading={morosoMut.isPending}
         onConfirm={() => {
           if (morosoLab) morosoMut.mutate({ id: morosoLab.id, moroso: !morosoLab.moroso });
