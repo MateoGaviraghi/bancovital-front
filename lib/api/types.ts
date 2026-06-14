@@ -51,6 +51,8 @@ export interface LabConfig {
   signingSignaturePath: string | null;
   logoPath: string | null;
   shortName: string | null;
+  primaryColor: string | null;
+  tagline: string | null;
   estado: EstadoLab;
   createdAt: string;
   updatedAt: string;
@@ -74,6 +76,10 @@ export interface UpdateLabConfigDto {
   signingSignaturePath?: string | null;
   logoPath?: string | null;
   shortName?: string | null;
+  /** Color primario de marca en hex (#rrggbb). */
+  primaryColor?: string;
+  /** Eslogan corto del lab (máx 120). */
+  tagline?: string;
 }
 
 // ─────────────── Patients ───────────────
@@ -501,6 +507,8 @@ export interface PreferenciaPdf {
 }
 
 export interface UpdatePreferenciaPdfDto {
+  /** Dibujar la imagen de fondo (membrete) en el PDF. */
+  usarFondo?: boolean;
   marginTop?: number;
   marginBottom?: number;
   marginLeft?: number;
@@ -511,6 +519,37 @@ export interface FondoSignedUrlResponse {
   url: string | null;
   expiresInSeconds: number;
 }
+
+// ─────────────── Sedes / ubicaciones ───────────────
+
+export interface Sede {
+  id: number;
+  labId: number;
+  nombre: string;
+  direccion: string;
+  localidad: string | null;
+  telefono: string | null;
+  email: string | null;
+  horarios: string | null;
+  principal: boolean;
+  orden: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface CreateSedeDto {
+  nombre: string;
+  direccion: string;
+  localidad?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  horarios?: string | null;
+  principal?: boolean;
+  orden?: number;
+}
+
+export type UpdateSedeDto = Partial<CreateSedeDto>;
 
 // ─────────────── Reports ───────────────
 

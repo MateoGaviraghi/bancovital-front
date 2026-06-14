@@ -30,6 +30,25 @@ export interface TenantBranding {
   tagline: string | null;
 }
 
+/**
+ * Same primary-token derivation as {@link buildThemeStyle}, but as a CSS-var map
+ * usable as an inline `style` on ANY container. Setting these vars on a wrapper
+ * scopes the theme to that subtree only (it overrides `:root` for descendants),
+ * so a live preview can repaint without touching the real app chrome.
+ * Only validated hex is interpolated — never raw user input.
+ */
+export function themePreviewVars(primaryColor: string | null | undefined): Record<string, string> {
+  const raw = primaryColor ?? DEFAULT_PRIMARY;
+  const hex = HEX_RE.test(raw) ? raw : DEFAULT_PRIMARY;
+  const foreground = relativeLuminance(hex) < 0.179 ? '#ffffff' : '#1a2b3c';
+  return {
+    '--color-primary': hex,
+    '--color-primary-hover': `color-mix(in oklab, ${hex} 85%, black)`,
+    '--color-primary-soft': `color-mix(in oklab, ${hex} 12%, white)`,
+    '--color-primary-foreground': foreground,
+  };
+}
+
 export function buildThemeStyle(primaryColor: string | null | undefined): string {
   const raw = primaryColor ?? DEFAULT_PRIMARY;
   // Security: only use validated hex; fall back to default otherwise
