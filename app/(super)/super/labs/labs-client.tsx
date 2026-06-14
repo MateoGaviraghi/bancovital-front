@@ -29,6 +29,7 @@ import type {
   ConsumoResumen,
   CreateLaboratorioDto,
   EstadoLab,
+  ImpersonateResponse,
   InviteUserDto,
   Laboratorio,
   Plan,
@@ -36,9 +37,23 @@ import type {
   UserRole,
 } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
+import { setImpersonate } from '@/lib/impersonate';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Building2, Layers, Loader2, Mail, Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react';
+import {
+  Building2,
+  Download,
+  Layers,
+  Loader2,
+  LogIn,
+  Mail,
+  PauseCircle,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -817,9 +832,12 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
   const [editingLab, setEditingLab] = useState<Laboratorio | null>(null);
   const [deactivatingLab, setDeactivatingLab] = useState<Laboratorio | null>(null);
   const [reactivatingLab, setReactivatingLab] = useState<Laboratorio | null>(null);
+  const [suspendingLab, setSuspendingLab] = useState<Laboratorio | null>(null);
   const [purgingLab, setPurgingLab] = useState<Laboratorio | null>(null);
   const [invitingLab, setInvitingLab] = useState<Laboratorio | null>(null);
   const [assigningLab, setAssigningLab] = useState<Laboratorio | null>(null);
+  const [impersonatingId, setImpersonatingId] = useState<number | null>(null);
+  const [exportingId, setExportingId] = useState<number | null>(null);
 
   function refreshLabs() {
     qc.invalidateQueries({ queryKey: queries.laboratorios.list() });
@@ -865,6 +883,60 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
       }
     },
   });
+
+  // Suspender: POST /super/labs/:id/suspend → estado='suspendido'
+  const suspendMut = useMutation({
+    mutationFn: (id: number) =>
+      apiClient.post<Laboratorio>(`/super/labs/${id}/suspend`).then((r) => r.data),
+    onSuccess: () => {
+      toast.success('Laboratorio suspendido');
+      setSuspendingLab(null);
+      refreshLabs();
+    },
+    onError: (err) => toast.error(apiError(err, 'Error al suspender laboratorio')),
+  });
+
+  // Impersonation: POST /super/impersonate/:id → enter as lab, set cookies, go to /{slug}
+  const impersonateMut = useMutation({
+    mutationFn: (id: number) =>
+      apiClient.post<ImpersonateResponse>(`/super/impersonate/${id}`).then((r) => r.data),
+    onSuccess: (data) => {
+      setImpersonate(data.labId, data.nombre);
+      // Full navigation so SSR layouts re-resolve /me under the impersonation cookie.
+      window.location.href = `/${data.slug}`;
+    },
+    onError: (err) => {
+      setImpersonatingId(null);
+      toast.error(apiError(err, 'No se pudo entrar como laboratorio'));
+    },
+  });
+
+  function handleImpersonate(lab: Laboratorio) {
+    setImpersonatingId(lab.id);
+    impersonateMut.mutate(lab.id);
+  }
+
+  // Export: GET /super/labs/:id/export → download JSON as {slug}-export.json
+  async function handleExport(lab: Laboratorio) {
+    setExportingId(lab.id);
+    try {
+      const { data } = await apiClient.get(`/super/labs/${lab.id}/export`);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${lab.slug}-export.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Datos exportados');
+    } catch (err) {
+      toast.error(apiError(err, 'Error al exportar datos'));
+    } finally {
+      setExportingId(null);
+    }
+  }
 
   function openCreate() {
     setEditingLab(null);
@@ -962,9 +1034,22 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                       <ConsumoCelda resumen={resumen} />
                     </td>
                     <td className="px-5 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5">
                         {!isInactivo && (
                           <>
+                            <button
+                              type="button"
+                              onClick={() => handleImpersonate(lab)}
+                              disabled={impersonatingId === lab.id}
+                              className="flex items-center gap-1 font-medium text-[var(--color-primary)] text-xs hover:underline disabled:opacity-60"
+                            >
+                              {impersonatingId === lab.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+                              ) : (
+                                <LogIn className="h-3.5 w-3.5" strokeWidth={2} />
+                              )}
+                              Entrar como
+                            </button>
                             <button
                               type="button"
                               onClick={() => setAssigningLab(lab)}
@@ -983,12 +1068,45 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                             </button>
                             <button
                               type="button"
+                              onClick={() => handleExport(lab)}
+                              disabled={exportingId === lab.id}
+                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline disabled:opacity-60"
+                            >
+                              {exportingId === lab.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+                              ) : (
+                                <Download className="h-3.5 w-3.5" strokeWidth={2} />
+                              )}
+                              Exportar
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => openEdit(lab)}
-                              className="flex items-center gap-1 text-[var(--color-primary)] text-xs hover:underline"
+                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
                             >
                               <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
                               Editar
                             </button>
+                            {lab.estado === 'activo' && (
+                              <button
+                                type="button"
+                                onClick={() => setSuspendingLab(lab)}
+                                className="flex items-center gap-1 text-[var(--color-warning)] text-xs hover:underline"
+                              >
+                                <PauseCircle className="h-3.5 w-3.5" strokeWidth={2} />
+                                Suspender
+                              </button>
+                            )}
+                            {lab.estado === 'suspendido' && (
+                              <button
+                                type="button"
+                                onClick={() => setReactivatingLab(lab)}
+                                className="flex items-center gap-1 text-[var(--color-success)] text-xs hover:underline"
+                              >
+                                <RotateCcw className="h-3.5 w-3.5" strokeWidth={2} />
+                                Reactivar
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => setDeactivatingLab(lab)}
@@ -1075,14 +1193,30 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
         }}
       />
 
-      {/* Reactivar (inactivo → activo) */}
+      {/* Suspender (activo → suspendido) */}
+      <ConfirmDialog
+        open={suspendingLab !== null}
+        onOpenChange={(o) => {
+          if (!o) setSuspendingLab(null);
+        }}
+        title={`¿Suspender "${suspendingLab?.shortName ?? suspendingLab?.legalName}"?`}
+        description="El laboratorio quedará suspendido. Podés reactivarlo cuando quieras; los datos se conservan."
+        tone="warning"
+        confirmLabel="Suspender"
+        loading={suspendMut.isPending}
+        onConfirm={() => {
+          if (suspendingLab) suspendMut.mutate(suspendingLab.id);
+        }}
+      />
+
+      {/* Reactivar (suspendido/inactivo → activo) */}
       <ConfirmDialog
         open={reactivatingLab !== null}
         onOpenChange={(o) => {
           if (!o) setReactivatingLab(null);
         }}
         title={`¿Reactivar "${reactivatingLab?.shortName ?? reactivatingLab?.legalName}"?`}
-        description="El laboratorio volvera a estar accesible para sus usuarios."
+        description="El laboratorio volverá a estar accesible para sus usuarios."
         tone="info"
         confirmLabel="Reactivar"
         loading={reactivateMut.isPending}

@@ -1,5 +1,6 @@
 'use client';
 
+import { IMPERSONATE_HEADER, getImpersonateLab } from '@/lib/impersonate';
 import { getSupabase } from '@/lib/supabase-browser';
 import axios, { type AxiosInstance } from 'axios';
 
@@ -50,6 +51,12 @@ export function getApiClient(): AxiosInstance {
     const token = data.session?.access_token ?? readAccessTokenFromCookie();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Super impersonation: attach the impersonated labId so /me and guards
+    // resolve to that lab. Cookie is set/cleared by the impersonation flow.
+    const impersonateLab = getImpersonateLab();
+    if (impersonateLab) {
+      config.headers[IMPERSONATE_HEADER] = impersonateLab;
     }
     return config;
   });

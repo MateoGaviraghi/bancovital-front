@@ -79,4 +79,11 @@ export const queries = {
     /** Super: list of all meeting bookings. */
     superList: () => ['bookings', 'super', 'list'] as const,
   },
+
+  super: {
+    /** Super: aggregate metrics dashboard. */
+    metrics: () => ['super', 'metrics'] as const,
+    /** Super: audit log (paginated, optionally filtered by lab). */
+    audit: (filters: Record<string, unknown> = {}) => ['super', 'audit', filters] as const,
+  },
 };

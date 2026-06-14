@@ -1,4 +1,5 @@
 import { ConsumoBanners } from '@/components/domain/consumo-banners';
+import { ImpersonateBanner } from '@/components/domain/impersonate-banner';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { getServerApi } from '@/lib/api/server';
@@ -42,14 +43,19 @@ export default async function TenantAppLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[var(--color-bg)]">
-      <Sidebar userRole={user.role} slug={slug} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar user={user} slug={slug} />
-        <ConsumoBanners />
-        <main className="flex-1 overflow-auto">
-          <div className="mx-auto w-full max-w-[1440px] px-6 py-8 lg:px-8">{children}</div>
-        </main>
+    <div className="flex min-h-screen flex-col bg-[var(--color-bg)]">
+      <ImpersonateBanner />
+      <div className="flex min-h-0 flex-1">
+        {/* Effective role: under impersonation /me returns 'admin' so the super
+            gets the full lab sidebar; otherwise it's the lab user's real role. */}
+        <Sidebar userRole={me?.role ?? user.role} slug={slug} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Topbar user={user} slug={slug} />
+          <ConsumoBanners />
+          <main className="flex-1 overflow-auto">
+            <div className="mx-auto w-full max-w-[1440px] px-6 py-8 lg:px-8">{children}</div>
+          </main>
+        </div>
       </div>
     </div>
   );
