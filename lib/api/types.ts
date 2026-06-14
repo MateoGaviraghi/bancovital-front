@@ -551,6 +551,19 @@ export interface CreateSedeDto {
 
 export type UpdateSedeDto = Partial<CreateSedeDto>;
 
+// ─────────────── Portal del paciente (F7) ───────────────
+
+/** Metadata pública del informe (para tematizar la página del QR). Sin PII. */
+export interface PublicInformeMeta {
+  labName: string;
+  shortName: string | null;
+  logoUrl: string | null;
+  primaryColor: string | null;
+  tagline: string | null;
+  protocolNumber: string;
+  emitidaAt: string | null;
+}
+
 // ─────────────── Reports ───────────────
 
 export interface SignedUrlResponse {
