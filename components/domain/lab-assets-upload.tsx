@@ -146,21 +146,15 @@ export function LabAssetsUpload({ config }: { config: LabConfig }) {
   return (
     <section className="mt-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-[var(--shadow-xs)]">
       <div className="max-w-xl">
-        <h2 className="font-semibold text-[var(--color-fg)] text-base">Logo y firma</h2>
+        <h2 className="font-semibold text-[var(--color-fg)] text-base">Firma del profesional</h2>
         <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
-          Imágenes usadas en los informes. PNG, JPG o WEBP, hasta 5 MB. Los informes nuevos saldrán
-          con estas imágenes; los ya emitidos se actualizan al regenerarlos (botón de abajo).
+          Imagen de la firma insertada al pie de los informes. PNG, JPG o WEBP, hasta 5 MB. Los
+          informes nuevos saldrán con esta firma; los ya emitidos se actualizan al regenerarlos
+          (botón de abajo).
         </p>
       </div>
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <AssetUploader
-          title="Logo del laboratorio"
-          description="Aparece en el encabezado de cada informe."
-          endpoint="/lab-config/logo"
-          alreadyLoaded={config.logoPath != null}
-          previewBg="dark"
-        />
         <AssetUploader
           title="Firma del profesional"
           description="Se inserta en la zona de firma del informe."

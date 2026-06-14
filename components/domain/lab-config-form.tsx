@@ -23,7 +23,6 @@ type FormValues = {
   email: string;
   signingProfessionalName: string;
   signingProfessionalMp: string;
-  logoPath: string;
   signingSignaturePath: string;
 };
 
@@ -39,7 +38,6 @@ function toFormValues(c: LabConfig): FormValues {
     email: c.email ?? '',
     signingProfessionalName: c.signingProfessionalName,
     signingProfessionalMp: c.signingProfessionalMp,
-    logoPath: c.logoPath ?? '',
     signingSignaturePath: c.signingSignaturePath ?? '',
   };
 }
@@ -57,7 +55,6 @@ function toPayload(v: FormValues): UpdateLabConfigDto {
     email: nullable(v.email),
     signingProfessionalName: v.signingProfessionalName.trim(),
     signingProfessionalMp: v.signingProfessionalMp.trim(),
-    logoPath: nullable(v.logoPath),
     signingSignaturePath: nullable(v.signingSignaturePath),
   };
 }
@@ -193,15 +190,6 @@ export function LabConfigForm({ config }: { config: LabConfig }) {
               placeholder="signatures/firma.png"
               {...register('signingSignaturePath')}
             />
-          </FormField>
-        </div>
-      </section>
-
-      <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-[var(--shadow-xs)]">
-        <h2 className="mb-4 font-semibold text-[var(--color-fg)] text-base">Branding</h2>
-        <div className="grid grid-cols-1 gap-4">
-          <FormField label="URL del logo" htmlFor="logoPath">
-            <Input id="logoPath" placeholder="https://…" {...register('logoPath')} />
           </FormField>
         </div>
       </section>

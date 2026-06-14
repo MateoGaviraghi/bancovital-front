@@ -4,6 +4,13 @@ export const queries = {
 
   labConfig: ['lab-config'] as const,
 
+  preferenciaPdf: ['preferencia-pdf'] as const,
+
+  sedes: {
+    list: () => ['sedes'] as const,
+    detail: (id: number) => ['sedes', id] as const,
+  },
+
   patients: {
     list: (filters: Record<string, unknown> = {}) => ['patients', filters] as const,
     detail: (id: number) => ['patients', id] as const,

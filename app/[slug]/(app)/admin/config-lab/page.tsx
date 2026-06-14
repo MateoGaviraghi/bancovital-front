@@ -1,3 +1,4 @@
+import { BrandingCustomizer } from '@/components/domain/branding-customizer';
 import { LabAssetsUpload } from '@/components/domain/lab-assets-upload';
 import { LabConfigForm } from '@/components/domain/lab-config-form';
 import { RegenerateReportsButton } from '@/components/domain/regenerate-reports-button';
@@ -41,7 +42,11 @@ export default async function ConfigLabPage() {
       />
       {config ? (
         <>
-          <LabConfigForm config={config} />
+          <BrandingCustomizer config={config} />
+
+          <div className="mt-8">
+            <LabConfigForm config={config} />
+          </div>
 
           <LabAssetsUpload config={config} />
 
