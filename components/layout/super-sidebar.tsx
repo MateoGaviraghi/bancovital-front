@@ -7,6 +7,7 @@ import {
   FileSignature,
   Layers,
   LayoutDashboard,
+  Megaphone,
   ScrollText,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -24,6 +25,8 @@ export function SuperSidebar() {
     pathname === '/super/contracts' || pathname.startsWith('/super/contracts/');
   const reunionesActive =
     pathname === '/super/reuniones' || pathname.startsWith('/super/reuniones/');
+  const announcementsActive =
+    pathname === '/super/announcements' || pathname.startsWith('/super/announcements/');
   const auditActive = pathname === '/super/audit' || pathname.startsWith('/super/audit/');
 
   return (
@@ -103,6 +106,18 @@ export function SuperSidebar() {
         >
           <Calendar className="h-4 w-4 shrink-0" strokeWidth={2} />
           <span className="truncate">Reuniones</span>
+        </Link>
+        <Link
+          href="/super/announcements"
+          className={cn(
+            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
+            announcementsActive
+              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
+              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
+          )}
+        >
+          <Megaphone className="h-4 w-4 shrink-0" strokeWidth={2} />
+          <span className="truncate">Anuncios</span>
         </Link>
         <Link
           href="/super/audit"

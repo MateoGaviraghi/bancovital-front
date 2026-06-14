@@ -1,3 +1,4 @@
+import { AnnouncementBanner } from '@/components/domain/announcement-banner';
 import { ConsumoBanners } from '@/components/domain/consumo-banners';
 import { ImpersonateBanner } from '@/components/domain/impersonate-banner';
 import { Sidebar } from '@/components/layout/sidebar';
@@ -51,6 +52,7 @@ export default async function TenantAppLayout({
         <Sidebar userRole={me?.role ?? user.role} slug={slug} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar user={user} slug={slug} />
+          <AnnouncementBanner />
           <ConsumoBanners />
           <main className="flex-1 overflow-auto">
             <div className="mx-auto w-full max-w-[1440px] px-6 py-8 lg:px-8">{children}</div>

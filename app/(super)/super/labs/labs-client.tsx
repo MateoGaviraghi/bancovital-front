@@ -2,6 +2,7 @@
 
 import { ConfirmDialog } from '@/components/domain/confirm-dialog';
 import { MoneyDisplay } from '@/components/domain/money-display';
+import { OnboardingBadge } from '@/components/domain/onboarding-checklist';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -41,6 +42,7 @@ import { setImpersonate } from '@/lib/impersonate';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import {
+  AlertTriangle,
   Building2,
   Download,
   Layers,
@@ -52,8 +54,10 @@ import {
   Plus,
   RotateCcw,
   Trash2,
+  Wallet,
   X,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -836,6 +840,7 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
   const [purgingLab, setPurgingLab] = useState<Laboratorio | null>(null);
   const [invitingLab, setInvitingLab] = useState<Laboratorio | null>(null);
   const [assigningLab, setAssigningLab] = useState<Laboratorio | null>(null);
+  const [morosoLab, setMorosoLab] = useState<Laboratorio | null>(null);
   const [impersonatingId, setImpersonatingId] = useState<number | null>(null);
   const [exportingId, setExportingId] = useState<number | null>(null);
 
@@ -882,6 +887,18 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
         toast.error(apiError(err, 'Error al borrar laboratorio'));
       }
     },
+  });
+
+  // Moroso: PATCH /super/labs/:id/moroso {moroso:boolean}
+  const morosoMut = useMutation({
+    mutationFn: ({ id, moroso }: { id: number; moroso: boolean }) =>
+      apiClient.patch<Laboratorio>(`/super/labs/${id}/moroso`, { moroso }).then((r) => r.data),
+    onSuccess: (_d, vars) => {
+      toast.success(vars.moroso ? 'Laboratorio marcado como moroso' : 'Marca de moroso quitada');
+      setMorosoLab(null);
+      refreshLabs();
+    },
+    onError: (err) => toast.error(apiError(err, 'Error al actualizar estado de morosidad')),
   });
 
   // Suspender: POST /super/labs/:id/suspend → estado='suspendido'
@@ -991,6 +1008,7 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                 <th className="px-5 py-2.5 text-left font-medium">Ciudad</th>
                 <th className="px-5 py-2.5 text-left font-medium">Estado</th>
                 <th className="px-5 py-2.5 text-left font-medium">Plan / Consumo</th>
+                <th className="px-5 py-2.5 text-left font-medium">Onboarding</th>
                 <th className="px-5 py-2.5 text-right font-medium">Acciones</th>
               </tr>
             </thead>
@@ -1021,17 +1039,28 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                     </td>
                     <td className="px-5 py-3 text-[var(--color-fg-muted)]">{lab.city ?? '—'}</td>
                     <td className="px-5 py-3">
-                      <span
-                        className={cn(
-                          'inline-flex items-center rounded-md border px-2 py-0.5 font-medium text-[10px] uppercase tracking-wide',
-                          pill.cls,
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={cn(
+                            'inline-flex items-center rounded-md border px-2 py-0.5 font-medium text-[10px] uppercase tracking-wide',
+                            pill.cls,
+                          )}
+                        >
+                          {pill.label}
+                        </span>
+                        {lab.moroso && (
+                          <span className="inline-flex items-center gap-1 rounded-md border border-[var(--color-danger)]/20 bg-[var(--color-danger-soft)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-danger)] uppercase tracking-wide">
+                            <AlertTriangle className="h-3 w-3" strokeWidth={2} />
+                            Moroso
+                          </span>
                         )}
-                      >
-                        {pill.label}
-                      </span>
+                      </div>
                     </td>
                     <td className="px-5 py-3">
                       <ConsumoCelda resumen={resumen} />
+                    </td>
+                    <td className="px-5 py-3">
+                      <OnboardingBadge labId={lab.id} />
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5">
@@ -1057,6 +1086,26 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                             >
                               <Layers className="h-3.5 w-3.5" strokeWidth={2} />
                               {currentPlanId ? 'Plan' : 'Asignar plan'}
+                            </button>
+                            <Link
+                              href={`/super/labs/${lab.id}/cuenta`}
+                              className="flex items-center gap-1 text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline"
+                            >
+                              <Wallet className="h-3.5 w-3.5" strokeWidth={2} />
+                              Estado de cuenta
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => setMorosoLab(lab)}
+                              className={cn(
+                                'flex items-center gap-1 text-xs hover:underline',
+                                lab.moroso
+                                  ? 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]'
+                                  : 'text-[var(--color-danger)]',
+                              )}
+                            >
+                              <AlertTriangle className="h-3.5 w-3.5" strokeWidth={2} />
+                              {lab.moroso ? 'Quitar moroso' : 'Marcar moroso'}
                             </button>
                             <button
                               type="button"
@@ -1190,6 +1239,30 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
         loading={deactivateMut.isPending}
         onConfirm={() => {
           if (deactivatingLab) deactivateMut.mutate(deactivatingLab.id);
+        }}
+      />
+
+      {/* Marcar / quitar moroso */}
+      <ConfirmDialog
+        open={morosoLab !== null}
+        onOpenChange={(o) => {
+          if (!o) setMorosoLab(null);
+        }}
+        title={
+          morosoLab?.moroso
+            ? `¿Quitar la marca de moroso a "${morosoLab?.shortName ?? morosoLab?.legalName}"?`
+            : `¿Marcar como moroso a "${morosoLab?.shortName ?? morosoLab?.legalName}"?`
+        }
+        description={
+          morosoLab?.moroso
+            ? 'El laboratorio dejará de figurar como moroso.'
+            : 'El laboratorio quedará señalado como moroso. Esto es solo informativo para el panel super.'
+        }
+        tone={morosoLab?.moroso ? 'info' : 'warning'}
+        confirmLabel={morosoLab?.moroso ? 'Quitar moroso' : 'Marcar moroso'}
+        loading={morosoMut.isPending}
+        onConfirm={() => {
+          if (morosoLab) morosoMut.mutate({ id: morosoLab.id, moroso: !morosoLab.moroso });
         }}
       />
 
