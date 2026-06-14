@@ -551,6 +551,8 @@ export interface Laboratorio {
   signingProfessionalName: string | null;
   signingProfessionalMp: string | null;
   estado: EstadoLab;
+  /** True when the lab is flagged as past-due (super-managed). */
+  moroso?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -783,6 +785,91 @@ export interface AuditEntry {
 /** Returned by GET /api/super/audit */
 export interface AuditResponse {
   data: AuditEntry[];
+  total: number;
+}
+
+// ─────────────── Super: estado de cuenta (movimientos) ───────────────
+
+export type MovimientoTipo = 'cargo' | 'pago';
+
+export interface Movimiento {
+  id: number;
+  tipo: MovimientoTipo;
+  /** Decimal string (ARS). */
+  monto: string;
+  concepto: string;
+  notas: string | null;
+  fecha: string;
+  createdAt: string;
+}
+
+/** Returned by GET /api/super/labs/:id/movimientos */
+export interface EstadoCuenta {
+  movimientos: Movimiento[];
+  /** Net balance: totalPagos - totalCargos (negative = lab owes). */
+  balance: number;
+  totalPagos: number;
+  totalCargos: number;
+}
+
+export interface CreateMovimientoDto {
+  tipo: MovimientoTipo;
+  monto: string;
+  concepto: string;
+  notas?: string | null;
+  fecha?: string;
+}
+
+export interface SetMorosoDto {
+  moroso: boolean;
+}
+
+// ─────────────── Super: anuncios ───────────────
+
+export type AnuncioTipo = 'info' | 'advertencia' | 'mantenimiento';
+
+export interface Anuncio {
+  id: number;
+  mensaje: string;
+  tipo: AnuncioTipo;
+  /** null = global; otherwise scoped to a single lab. */
+  labId: number | null;
+  activo: boolean;
+  desde: string | null;
+  hasta: string | null;
+  createdAt: string;
+}
+
+export interface CreateAnuncioDto {
+  mensaje: string;
+  tipo: AnuncioTipo;
+  labId?: number | null;
+  activo?: boolean;
+  desde?: string | null;
+  hasta?: string | null;
+}
+
+export type UpdateAnuncioDto = Partial<CreateAnuncioDto>;
+
+/** Lab-facing item returned by GET /api/announcements (already scoped server-side). */
+export interface AnuncioPublic {
+  id: number;
+  mensaje: string;
+  tipo: AnuncioTipo;
+}
+
+// ─────────────── Super: onboarding checklist ───────────────
+
+export interface OnboardingItem {
+  key: string;
+  label: string;
+  done: boolean;
+}
+
+/** Returned by GET /api/super/labs/:id/onboarding */
+export interface OnboardingChecklist {
+  items: OnboardingItem[];
+  completados: number;
   total: number;
 }
 

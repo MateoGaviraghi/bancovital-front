@@ -85,5 +85,14 @@ export const queries = {
     metrics: () => ['super', 'metrics'] as const,
     /** Super: audit log (paginated, optionally filtered by lab). */
     audit: (filters: Record<string, unknown> = {}) => ['super', 'audit', filters] as const,
+    /** Super: estado de cuenta (movimientos + balance) de un lab. */
+    cuenta: (labId: number) => ['super', 'cuenta', labId] as const,
+    /** Super: lista de anuncios (global + por lab). */
+    announcements: () => ['super', 'announcements'] as const,
+    /** Super: onboarding checklist de un lab. */
+    onboarding: (labId: number) => ['super', 'onboarding', labId] as const,
   },
+
+  /** Lab-facing: anuncios activos para el lab autenticado (global + propio). */
+  announcements: () => ['announcements'] as const,
 };
