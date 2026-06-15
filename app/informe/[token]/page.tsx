@@ -1,5 +1,4 @@
 import type { PublicInformeMeta } from '@/lib/api/types';
-import { themePreviewVars } from '@/lib/tenant/theme';
 import type { Metadata } from 'next';
 import { InformeFlujo } from './informe-flujo';
 
@@ -134,14 +133,9 @@ export default async function InformePage({
     );
   }
 
-  // ── OK: tematizar con el color del lab y renderizar el flujo ──────────────
-  const themeVars = themePreviewVars(result.primaryColor);
-
+  // ── OK: renderizar el flujo (tema fijo bancovital, sin color per-lab) ─────
   return (
-    <div
-      style={themeVars as React.CSSProperties}
-      className="min-h-screen bg-[var(--color-bg-subtle)]"
-    >
+    <div className="min-h-screen bg-[var(--color-bg-subtle)]">
       <main className="mx-auto max-w-md px-5 py-10 sm:py-16">
         {/* ── Header del lab ── */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center">

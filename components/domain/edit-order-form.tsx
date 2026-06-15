@@ -30,7 +30,7 @@ import type {
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { AlertCircle, Loader2, Plus } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -60,7 +60,6 @@ type Props = {
 
 export function EditOrderForm({ order, initialPatient, initialDoctor, initialPractices }: Props) {
   const router = useRouter();
-  const { slug } = useParams<{ slug: string }>();
 
   const isExternalInit = order.referringDoctorId === null && order.referringDoctorName !== null;
 
@@ -97,7 +96,7 @@ export function EditOrderForm({ order, initialPatient, initialDoctor, initialPra
     },
     onSuccess: () => {
       toast.success('Orden actualizada');
-      router.push(`/${slug}/ordenes/${order.id}`);
+      router.push(`/ordenes/${order.id}`);
       router.refresh();
     },
     onError: (err) => toast.error(apiError(err, 'Error al guardar cambios')),
@@ -346,7 +345,7 @@ export function EditOrderForm({ order, initialPatient, initialDoctor, initialPra
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push(`/${slug}/ordenes/${order.id}`)}
+            onClick={() => router.push(`/ordenes/${order.id}`)}
             disabled={mutation.isPending}
           >
             Cancelar

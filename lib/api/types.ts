@@ -29,7 +29,12 @@ export interface MeResponse {
   userId: string;
   email: string;
   role: UserRole;
+  labId: number | null;
+  /** Slug del lab — informativo; ya NO se usa para ruteo (app única bancovital). */
   labSlug: string | null;
+  /** Nombre + logo del lab del usuario, para el header. */
+  labName: string | null;
+  logoUrl: string | null;
 }
 
 // ─────────────── Lab config ───────────────

@@ -8,9 +8,8 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
-// Global, brand-neutral login: used by super admins and as a fallback when
-// the visitor doesn't know their lab URL. Lab users get redirected to their
-// own tenant after sign-in via /me.
+// Login ÚNICO de bancovital. Tras el sign-in se rutea por rol:
+// super → /super, usuario de lab → /inicio (el back scopea por labId del JWT).
 export default function GlobalLoginPage() {
   const router = useRouter();
 
@@ -30,14 +29,7 @@ export default function GlobalLoginPage() {
         return;
       }
       const { data: me } = await getApiClient().get<MeResponse>('/me');
-      if (me.role === 'super') {
-        router.replace('/super/labs');
-      } else if (me.labSlug) {
-        router.replace(`/${me.labSlug}`);
-      } else {
-        toast.error('Tu usuario no tiene un laboratorio asignado.');
-        return;
-      }
+      router.replace(me.role === 'super' ? '/super' : '/inicio');
       router.refresh();
     } catch {
       toast.error('No se pudo iniciar sesión');
@@ -49,11 +41,9 @@ export default function GlobalLoginPage() {
   return (
     <div className="w-full max-w-sm">
       <div className="mb-8 text-center">
-        <h1 className="font-bold text-[var(--color-fg)] text-xl tracking-tight">
-          Sistema de gestión de laboratorios
-        </h1>
+        <h1 className="font-bold text-[var(--color-fg)] text-xl tracking-tight">bancovital</h1>
         <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
-          Si sos parte de un laboratorio, ingresá desde la URL de tu laboratorio.
+          Gestión de laboratorios bioquímicos
         </p>
       </div>
 

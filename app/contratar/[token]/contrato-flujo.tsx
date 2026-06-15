@@ -975,13 +975,7 @@ function StepFirma({
 
 // ─── Success ──────────────────────────────────────────────────────────────
 
-function ContratoExito({
-  emailOfuscado,
-  labSlug,
-}: {
-  emailOfuscado: string;
-  labSlug: string;
-}) {
+function ContratoExito({ emailOfuscado }: { emailOfuscado: string }) {
   return (
     <div
       className="flex flex-col items-center gap-6 rounded-lg border border-[var(--color-border)] bg-white px-8 py-12 text-center shadow-[var(--shadow-sm)]"
@@ -1009,17 +1003,12 @@ function ContratoExito({
           configurar tu acceso.
         </p>
       </div>
-      <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-4 py-3">
-        <p className="text-[var(--color-fg-subtle)] text-xs font-medium mb-0.5">
-          URL de tu sistema
-        </p>
-        <a
-          href={`/${labSlug}`}
-          className="font-mono text-[var(--color-primary)] text-sm hover:underline underline-offset-2"
-        >
-          {typeof window !== 'undefined' ? window.location.origin : ''}/{labSlug}
-        </a>
-      </div>
+      <a
+        href="/login"
+        className="inline-flex h-10 items-center justify-center rounded-md bg-[var(--color-primary)] px-5 font-semibold text-[var(--color-primary-foreground)] text-sm transition-opacity hover:opacity-90"
+      >
+        Acceder a bancovital
+      </a>
     </div>
   );
 }
@@ -1047,7 +1036,7 @@ export function ContratoFlujo({
   const [exito, setExito] = useState<SignContratoResponse | null>(null);
 
   if (exito) {
-    return <ContratoExito emailOfuscado={contrato.emailFirmanteOfuscado} labSlug={exito.labSlug} />;
+    return <ContratoExito emailOfuscado={contrato.emailFirmanteOfuscado} />;
   }
 
   return (

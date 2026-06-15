@@ -921,14 +921,14 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
     onError: (err) => toast.error(apiError(err, 'Error al suspender laboratorio')),
   });
 
-  // Impersonation: POST /super/impersonate/:id → enter as lab, set cookies, go to /{slug}
+  // Impersonation: POST /super/impersonate/:id → set cookies, ir a la app del lab (/inicio)
   const impersonateMut = useMutation({
     mutationFn: (id: number) =>
       apiClient.post<ImpersonateResponse>(`/super/impersonate/${id}`).then((r) => r.data),
     onSuccess: (data) => {
       setImpersonate(data.labId, data.nombre);
-      // Full navigation so SSR layouts re-resolve /me under the impersonation cookie.
-      window.location.href = `/${data.slug}`;
+      // Navegación full para que los layouts SSR re-resuelvan /me bajo la cookie de impersonation.
+      window.location.href = '/inicio';
     },
     onError: (err) => {
       setImpersonatingId(null);
