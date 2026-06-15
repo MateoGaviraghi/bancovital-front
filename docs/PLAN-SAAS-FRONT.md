@@ -2,6 +2,8 @@
 
 > Qué le toca al FRONT en cada fase del plan maestro multi-tenant. El contrato API de cada fase se cierra ANTES de tocar código (lo define el líder técnico en este repo) y el espejo vive en `lib/api/types.ts`. Contraparte backend: `bancovital-back/12-PLAN-SAAS.md`.
 > Aprobado por Mateo el 2026-06-12. Decisiones cerradas: tenancy path-based, firma propia con evidencia, rollover 1 mes, soft-block de cupo, booking propio con Google Calendar, portal paciente confirmado.
+>
+> ⚠️ **CAMBIO DE MODELO (2026-06-15) — app ÚNICA bancovital, SIN slug.** Se abandonó el white-label per-lab: rutas sin `/{slug}` (`app/[slug]` eliminado), login único `/login` (ruteo post-login por rol: super→`/super`, lab→`/inicio`), tema FIJO bancovital (sin theming OKLCH por lab; `lib/tenant/` borrado), branding del lab SOLO en header + membrete del PDF (sin colores por lab). El header arma logo+nombre desde `/me` (`LabProvider`/`useLab`). **Esto SUPERSEDE la tenancy/theming por slug de F1** (login brandeado, CSS vars por lab) **y el color self-service de F6** (queda solo subir logo + eslogan). F1–F7 EN PRODUCCIÓN. Detalle: memoria `arquitectura-tenancy-seguridad.md`. (front commit `65aeb26`, en prod 2026-06-15.)
 
 ## Estado
 
