@@ -1,21 +1,23 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
-// Multi-tenant route map:
-//   /                    public product placeholder
-//   /login               global login (super admin + fallback)
-//   /auth/*              set-password (Supabase invite links, fixed URL)
-//   /{slug}/login        tenant-branded login
-//   /{slug}/**           tenant app (session required)
-//   /super/**            super panel (session required; role enforced by layout/API)
+// Route map (app única bancovital, sin slug):
+//   /                    landing pública
+//   /login               login único
+//   /auth/*              set-password (Supabase invite links)
+//   /contratar/*         contratación pública por token
+//   /reunion/*           confirmar/cancelar reunión (email)
+//   /informe/*           portal del paciente (token + DNI)
+//   /super/**            panel super (sesión; rol enforced por layout/API)
+//   /inicio, /ordenes, … app del lab (sesión; scope por labId del JWT)
 function isPublicPath(pathname: string): boolean {
   if (pathname === '/' || pathname === '/login') return true;
   if (pathname.startsWith('/auth/')) return true;
-  // Public contracting pages — no session required
   if (pathname === '/contratar' || pathname.startsWith('/contratar/')) return true;
-  // Public meeting confirm/cancel pages (from email links) — no session required
   if (pathname === '/reunion' || pathname.startsWith('/reunion/')) return true;
-  return /^\/[^/]+\/login$/.test(pathname);
+  // Portal público del paciente (por token + DNI)
+  if (pathname === '/informe' || pathname.startsWith('/informe/')) return true;
+  return false;
 }
 
 export async function proxy(request: NextRequest) {
@@ -47,10 +49,7 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (!user && !isPublicPath(pathname)) {
-    // Keep the visitor inside their lab's login when the path carries a slug
-    const seg = pathname.split('/')[1];
-    const target = seg && seg !== 'super' ? `/${seg}/login` : '/login';
-    return NextResponse.redirect(new URL(target, request.url));
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // Intentionally NOT redirecting authenticated users away from login pages.

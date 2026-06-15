@@ -72,7 +72,7 @@ export default function SetPasswordPage() {
         return;
       }
 
-      // After setting password, fetch the user's labSlug from /api/me to redirect properly
+      // Tras setear la contraseña, ruteamos por rol (app única bancovital, sin slug).
       try {
         const meRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me`, {
           headers: {
@@ -81,17 +81,15 @@ export default function SetPasswordPage() {
         });
         if (meRes.ok) {
           const me = await meRes.json();
-          if (me.labSlug) {
-            router.replace(`/${me.labSlug}`);
-            return;
-          }
+          router.replace(me.role === 'super' ? '/super' : '/inicio');
+          return;
         }
       } catch {
-        // API unavailable — fall through to /super as last resort for null labSlug
+        // API caída — caemos al fallback.
       }
 
-      // labSlug null means super admin
-      router.replace('/super');
+      // Fallback: a /inicio (el layout de la app redirige a /super si es super).
+      router.replace('/inicio');
     } catch {
       setSubmitError('No se pudo guardar la contraseña');
     } finally {

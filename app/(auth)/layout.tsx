@@ -1,5 +1,4 @@
-// Superseded by app/[slug]/(auth)/layout.tsx.
-// The set-password route (/auth/set-password) is still global under this group.
+// Layout de las pantallas de auth (login único + set-password) — app única bancovital.
 
 export default function GlobalAuthLayout({ children }: { children: React.ReactNode }) {
   return (
