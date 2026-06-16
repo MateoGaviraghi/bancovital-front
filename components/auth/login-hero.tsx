@@ -55,14 +55,6 @@ export function LoginHero() {
       {/* Vignette para legibilidad */}
       <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(15,20,40,0.6),transparent_52%)]" />
 
-      {/* Watermark del logo */}
-      <BvLogo
-        mono
-        alt=""
-        size={460}
-        className="pointer-events-none absolute -right-28 -bottom-32 w-[460px] opacity-[0.05]"
-      />
-
       {/* Contenido */}
       <div className="relative flex h-full flex-col justify-between p-12 text-white">
         <div className="flex items-center gap-3.5">
