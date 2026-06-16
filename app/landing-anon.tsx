@@ -1,6 +1,6 @@
 'use client';
 
-import { IsoMark } from '@/components/brand/iso-mark';
+import { BvLogo } from '@/components/brand/bv-logo';
 import { BookingFlow } from '@/components/domain/booking-flow';
 import { cn } from '@/lib/cn';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -26,7 +26,7 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 const NAV_LINKS = [
   { href: '#caracteristicas', label: 'Características' },
   { href: '#como-funciona', label: 'Cómo funciona' },
-  { href: '#agendar', label: 'Demo' },
+  { href: '#agendar', label: 'Reunión' },
 ];
 
 const MARQUEE = [
@@ -333,10 +333,13 @@ function Header({ scrolled }: { scrolled: boolean }) {
     >
       <div className="mx-auto flex h-[68px] max-w-6xl items-center gap-8 px-6">
         <a href="#inicio" className="flex items-center gap-2.5" aria-label="Banco Vital — inicio">
-          <IsoMark
-            variant={scrolled ? 'gradient' : 'mono'}
-            className={cn('h-8 w-8 shrink-0', !scrolled && 'text-white')}
-          />
+          {scrolled ? (
+            <BvLogo size={30} alt="" priority className="h-[30px] w-[30px]" />
+          ) : (
+            <span className="flex size-9 shrink-0 items-center justify-center bg-white">
+              <BvLogo size={26} alt="" priority className="h-[26px] w-[26px]" />
+            </span>
+          )}
           <span
             className={cn(
               'font-semibold text-lg tracking-tight transition-colors duration-300',
@@ -376,7 +379,7 @@ function Header({ scrolled }: { scrolled: boolean }) {
                 : 'bg-white text-[var(--color-primary)] hover:bg-white/90',
             )}
           >
-            Agendá una demo
+            Agendá una reunión
             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
           </a>
         </div>
@@ -463,7 +466,7 @@ function Hero() {
               href="#agendar"
               className="group inline-flex h-12 items-center gap-2 bg-white px-6 font-medium text-[var(--color-primary)] text-sm transition-transform active:scale-[0.98]"
             >
-              Agendá una demo
+              Agendá una reunión
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
             </a>
             <a
@@ -474,7 +477,7 @@ function Hero() {
             </a>
           </div>
           <p data-hero className="mt-7 text-white/40 text-xs">
-            Sin compromiso · Demo de 30 minutos
+            Sin compromiso · Reunión de 30 minutos
           </p>
         </div>
 
@@ -498,7 +501,7 @@ function AppPreview() {
     <div className="border border-white/12 bg-white/[0.06] shadow-[0_40px_90px_-30px_rgba(0,0,0,0.7)] backdrop-blur-xl">
       <div className="flex items-center gap-2 border-white/10 border-b px-4 py-3">
         <span className="flex h-6 w-6 items-center justify-center bg-white p-1">
-          <IsoMark variant="gradient" className="h-full w-full" />
+          <BvLogo size={16} alt="" className="h-full w-full" />
         </span>
         <span className="font-semibold text-sm text-white">Banco Vital</span>
         <span className="ml-auto h-2 w-2 bg-[var(--color-accent)]" />
@@ -698,7 +701,7 @@ function BookingSection() {
             Reunión sin compromiso
           </div>
           <h2 className="text-balance font-semibold text-[var(--color-fg)] text-4xl leading-[1.05] tracking-[-0.02em] sm:text-5xl">
-            Agendá una demo con nuestro equipo
+            Agendá una reunión con nuestro equipo
           </h2>
           <p className="mt-4 max-w-xl text-[var(--color-fg-muted)] text-base leading-relaxed">
             Contanos tu caso en 30 minutos. Sin costo, sin compromiso. Te mostramos el sistema
@@ -727,7 +730,9 @@ function Footer() {
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-3">
-              <IsoMark variant="mono" className="h-9 w-9 shrink-0 text-white" />
+              <span className="flex size-10 shrink-0 items-center justify-center bg-white">
+                <BvLogo size={28} alt="" className="h-7 w-7" />
+              </span>
               <span className="font-semibold text-3xl tracking-tight">Banco Vital</span>
             </div>
             <p className="mt-4 max-w-xs text-sm text-white/55 leading-relaxed">
@@ -737,7 +742,7 @@ function Footer() {
               href="#agendar"
               className="group mt-7 inline-flex items-center gap-2 border border-white/25 px-5 py-2.5 font-medium text-sm transition-colors hover:bg-white/10"
             >
-              Agendá una demo
+              Agendá una reunión
               <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </a>
           </div>
