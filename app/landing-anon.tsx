@@ -1,6 +1,5 @@
 'use client';
 
-import { BvLogo } from '@/components/brand/bv-logo';
 import { BookingFlow } from '@/components/domain/booking-flow';
 import { cn } from '@/lib/cn';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -332,17 +331,10 @@ function Header({ scrolled }: { scrolled: boolean }) {
       )}
     >
       <div className="mx-auto flex h-[68px] max-w-6xl items-center gap-8 px-6">
-        <a href="#inicio" className="flex items-center gap-2.5" aria-label="Banco Vital — inicio">
-          {scrolled ? (
-            <BvLogo size={30} alt="" priority className="h-[30px] w-[30px]" />
-          ) : (
-            <span className="flex size-9 shrink-0 items-center justify-center bg-white">
-              <BvLogo size={26} alt="" priority className="h-[26px] w-[26px]" />
-            </span>
-          )}
+        <a href="#inicio" aria-label="Banco Vital — inicio">
           <span
             className={cn(
-              'font-semibold text-lg tracking-tight transition-colors duration-300',
+              'font-semibold text-2xl tracking-tight transition-colors duration-300',
               scrolled ? 'text-[var(--color-fg)]' : 'text-white',
             )}
           >
@@ -500,9 +492,7 @@ function AppPreview() {
   return (
     <div className="border border-white/12 bg-white/[0.06] shadow-[0_40px_90px_-30px_rgba(0,0,0,0.7)] backdrop-blur-xl">
       <div className="flex items-center gap-2 border-white/10 border-b px-4 py-3">
-        <span className="flex h-6 w-6 items-center justify-center bg-white p-1">
-          <BvLogo size={16} alt="" className="h-full w-full" />
-        </span>
+        <span className="size-5 shrink-0 bg-[var(--color-primary)]" />
         <span className="font-semibold text-sm text-white">Banco Vital</span>
         <span className="ml-auto h-2 w-2 bg-[var(--color-accent)]" />
       </div>
@@ -729,12 +719,7 @@ function Footer() {
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <div className="flex items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center bg-white">
-                <BvLogo size={28} alt="" className="h-7 w-7" />
-              </span>
-              <span className="font-semibold text-3xl tracking-tight">Banco Vital</span>
-            </div>
+            <span className="font-semibold text-3xl tracking-tight">Banco Vital</span>
             <p className="mt-4 max-w-xs text-sm text-white/55 leading-relaxed">
               El sistema de gestión para laboratorios bioquímicos. De la orden al informe.
             </p>
