@@ -4,7 +4,7 @@ import Image from 'next/image';
 // Logo oficial Banco Vital (isotipo gota+cruz, fondo transparente).
 // El archivo es un PNG embebido en SVG → se sirve con `unoptimized`.
 // `mono` lo pinta blanco (para fondos oscuros / watermark) vía filtro.
-const SRC = '/brief-banco-vital/logo-sin-fondo-banco-vital.svg';
+const SRC = '/brief-banco-vital/logo-banco-vital-sin-fondo.svg';
 
 export function BvLogo({
   size = 32,

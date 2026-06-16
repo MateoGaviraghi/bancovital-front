@@ -65,11 +65,11 @@ export function LoginHero() {
 
       {/* Contenido */}
       <div className="relative flex h-full flex-col justify-between p-12 text-white">
-        <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-1.5 shadow-sm">
-            <BvLogo size={24} alt="" priority className="h-full w-full" />
+        <div className="flex items-center gap-3.5">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white p-2 shadow-sm">
+            <BvLogo size={32} alt="" priority className="h-full w-full" />
           </span>
-          <span className="font-semibold tracking-tight">Banco Vital</span>
+          <span className="font-semibold text-3xl tracking-tight">Banco Vital</span>
         </div>
 
         <div className="max-w-md">

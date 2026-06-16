@@ -46,23 +46,22 @@ export default function GlobalLoginPage() {
     <div className="grid min-h-screen w-full lg:grid-cols-2">
       {/* Formulario */}
       <main className="relative flex items-center justify-center bg-[var(--color-bg-elevated)] px-6 py-12">
-        <span className="absolute top-8 left-8 font-semibold text-[var(--color-fg-subtle)] text-sm tracking-tight">
-          Banco Vital
-        </span>
-
-        <div className="motion-fade-in w-full max-w-[384px]">
-          <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
-            <BvLogo size={32} priority alt="" className="h-8 w-8" />
+        <div className="motion-fade-in w-full max-w-[400px]">
+          <div className="mb-8 flex items-center gap-3">
+            <BvLogo size={56} priority alt="" className="h-14 w-14" />
+            <span className="font-semibold text-[var(--color-fg)] text-3xl tracking-tight">
+              Banco Vital
+            </span>
           </div>
 
-          <h1 className="font-semibold text-[var(--color-fg)] text-2xl tracking-tight">
+          <h1 className="font-semibold text-[var(--color-fg)] text-xl tracking-tight">
             Iniciar sesión
           </h1>
-          <p className="mt-1.5 text-[var(--color-fg-muted)] text-sm">
+          <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
             Ingresá a la plataforma de tu laboratorio.
           </p>
 
-          <div className="my-7 h-px bg-[var(--color-border)]" />
+          <div className="my-6 h-px bg-[var(--color-border)]" />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <FormField label="Email" htmlFor="email">
