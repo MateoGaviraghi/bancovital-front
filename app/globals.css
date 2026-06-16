@@ -1,31 +1,44 @@
 @import "tailwindcss";
 
 @theme {
-  /* === COLOR SYSTEM === */
+  /* ============================================================
+     BANCO VITAL — design tokens (Fase 8, fundación)
+     Marca FIJA del sistema. Banco Vital = producto; Nodo = crédito.
+     Azul navy = primario DOMINANTE (CTAs, activos, nav).
+     Rojo = acento de marca (logo/detalles); NUNCA acción ni error.
+     ============================================================ */
 
-  /* Surfaces */
-  --color-bg: #f4f7f9;
+  /* === SURFACES === */
+  --color-bg: #f6f7fb;
   --color-bg-elevated: #ffffff;
-  --color-bg-subtle: #edf1f5;
+  --color-bg-subtle: #eef0f6;
+  --color-scrim: rgb(20 27 50 / 0.5);
 
-  /* Borders */
-  --color-border: #dde4ea;
-  --color-border-strong: #b8c4ce;
-  --color-border-emphasis: #7a98ab;
+  /* === BORDERS === */
+  --color-border: #e2e5ee;
+  --color-border-strong: #c7ccdb;
+  --color-border-emphasis: #9aa2bd;
 
-  /* Text */
-  --color-fg: #1a2b3c;
-  --color-fg-muted: #4a6279;
-  --color-fg-subtle: #8ba3b5;
+  /* === TEXT === */
+  --color-fg: #1a2138;
+  --color-fg-muted: #525a76;
+  --color-fg-subtle: #646b88;
   --color-fg-inverse: #ffffff;
 
-  /* Primary (brand teal — AV Diagnóstico) */
-  --color-primary: #0db5b0;
-  --color-primary-hover: #0a9490;
-  --color-primary-soft: #e4f7f6;
+  /* === PRIMARY (Banco Vital navy — dominante) === */
+  --color-primary: #1f2b5b;
+  --color-primary-hover: #172044;
+  --color-primary-soft: #eaeef6;
   --color-primary-foreground: #ffffff;
 
-  /* Semantic */
+  /* === ACCENT (Banco Vital rojo — SOLO acento de marca:
+     logo, detalles, highlights. NUNCA color de acción ni de error) === */
+  --color-accent: #cd0f0f;
+  --color-accent-hover: #b00d0d;
+  --color-accent-soft: #fdeaea;
+  --color-accent-foreground: #ffffff;
+
+  /* === SEMANTIC (feedback inequívoco — distintos del rojo de marca) === */
   --color-success: #15803d;
   --color-success-soft: #dcfce7;
   --color-warning: #b45309;
@@ -33,29 +46,32 @@
   --color-danger: #b91c1c;
   --color-danger-soft: #fee2e2;
   --color-danger-foreground: #ffffff;
-  --color-info: #1e40af;
-  --color-info-soft: #dbeafe;
+  --color-info: #0369a1;
+  --color-info-soft: #e0f2fe;
 
-  /* === SPACING & RADIUS === */
+  /* === RADIUS === */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-pill: 999px;
 
-  /* === SHADOWS === */
-  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.05);
-  --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.1), 0 1px 2px -1px rgb(15 23 42 / 0.06);
-  --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.06);
-  --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.1), 0 4px 6px -4px rgb(15 23 42 / 0.06);
+  /* === SHADOWS (navy-tinted) === */
+  --shadow-xs: 0 1px 2px 0 rgb(20 27 50 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(20 27 50 / 0.1), 0 1px 2px -1px rgb(20 27 50 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(20 27 50 / 0.1), 0 2px 4px -2px rgb(20 27 50 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(20 27 50 / 0.1), 0 4px 6px -4px rgb(20 27 50 / 0.06);
 
-  /* === TYPOGRAPHY === */
-  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Monaco, Consolas, monospace;
+  /* === TYPOGRAPHY (Geist Sans/Mono — vía paquete `geist` en layout.tsx) === */
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --font-mono: var(--font-geist-mono), "SF Mono", Menlo, Monaco, Consolas, monospace;
 
   /* === MOTION === */
   --ease-out-app: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 120ms;
   --duration-base: 180ms;
+  --duration-slow: 280ms;
 }
 
 /* === GLOBAL RESETS === */
@@ -78,7 +94,6 @@ body {
   font-size: 14px;
   line-height: 1.4286;
   letter-spacing: -0.005em;
-  font-feature-settings: "cv11", "ss01", "ss03";
   margin: 0;
 }
 
@@ -93,4 +108,55 @@ input[type="date"],
 input[type="time"],
 input[type="datetime-local"] {
   color-scheme: light;
+}
+
+/* === MOTION PRIMITIVES (CSS-only, prefers-reduced-motion aware) === */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes slide-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.motion-fade-in {
+  animation: fade-in var(--duration-base) var(--ease-out-app) both;
+}
+.motion-scale-in {
+  animation: scale-in var(--duration-base) var(--ease-out-soft) both;
+}
+.motion-slide-up {
+  animation: slide-up-in var(--duration-slow) var(--ease-out-soft) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

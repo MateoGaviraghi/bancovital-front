@@ -1,20 +1,9 @@
 import { QueryProvider } from '@/components/providers/query-provider';
+import { GeistMono } from 'geist/font/mono';
+import { GeistSans } from 'geist/font/sans';
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
-const mono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: 'Laboratorio',
@@ -28,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es-AR" className={`${inter.variable} ${mono.variable}`}>
+    <html lang="es-AR" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="font-sans">
         <QueryProvider>{children}</QueryProvider>
         <Toaster position="top-right" richColors closeButton />

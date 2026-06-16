@@ -17,6 +17,9 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === '/reunion' || pathname.startsWith('/reunion/')) return true;
   // Portal público del paciente (por token + DNI)
   if (pathname === '/informe' || pathname.startsWith('/informe/')) return true;
+  // QA del design system (Fase 8): visible sin login en dev/preview.
+  // La page hace notFound() cuando VERCEL_ENV === 'production'.
+  if (pathname === '/showcase' || pathname.startsWith('/showcase/')) return true;
   return false;
 }
 

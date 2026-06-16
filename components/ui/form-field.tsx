@@ -21,6 +21,26 @@ export function FormField({
   className,
   children,
 }: FormFieldProps) {
+  const errorId = htmlFor && error ? `${htmlFor}-error` : undefined;
+  const descriptionId = htmlFor && description && !error ? `${htmlFor}-description` : undefined;
+  const describedBy = errorId ?? descriptionId;
+
+  // Asocia el mensaje de error/ayuda con el control para lectores de pantalla.
+  const child = React.isValidElement(children)
+    ? (children as React.ReactElement<Record<string, unknown>>)
+    : null;
+  const control =
+    child && (describedBy || error)
+      ? React.cloneElement(child, {
+          'aria-describedby':
+            [child.props['aria-describedby'] as string | undefined, describedBy]
+              .filter(Boolean)
+              .join(' ') || undefined,
+          'aria-invalid':
+            (child.props['aria-invalid'] as boolean | undefined) ?? (error ? true : undefined),
+        })
+      : children;
+
   return (
     <div className={cn('space-y-1.5', className)}>
       {label && (
@@ -29,11 +49,17 @@ export function FormField({
           {required && <span className="ml-0.5 text-[var(--color-danger)]">*</span>}
         </Label>
       )}
-      {children}
+      {control}
       {description && !error && (
-        <p className="text-xs text-[var(--color-fg-muted)]">{description}</p>
+        <p id={descriptionId} className="text-xs text-[var(--color-fg-muted)]">
+          {description}
+        </p>
       )}
-      {error && <p className="text-xs font-medium text-[var(--color-danger)]">{error}</p>}
+      {error && (
+        <p id={errorId} role="alert" className="text-xs font-medium text-[var(--color-danger)]">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
