@@ -269,7 +269,7 @@ function ReunionResumen({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <h1 className="font-semibold text-[var(--color-fg)] text-lg">Tu reunión con Nodo</h1>
+      <h1 className="font-semibold text-[var(--color-fg)] text-lg">Tu reunión con Banco Vital</h1>
       <div className="flex items-start gap-2.5 rounded-[var(--radius-md)] border border-[var(--color-primary-soft)] bg-[var(--color-primary-soft)] px-4 py-3">
         <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
         <p className="font-medium text-[var(--color-primary-hover)] text-sm leading-snug">

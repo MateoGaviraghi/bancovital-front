@@ -1007,7 +1007,7 @@ function ContratoExito({ emailOfuscado }: { emailOfuscado: string }) {
         href="/login"
         className="inline-flex h-10 items-center justify-center rounded-md bg-[var(--color-primary)] px-5 font-semibold text-[var(--color-primary-foreground)] text-sm transition-opacity hover:opacity-90"
       >
-        Acceder a bancovital
+        Acceder a Banco Vital
       </a>
     </div>
   );

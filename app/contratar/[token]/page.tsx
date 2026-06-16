@@ -19,8 +19,8 @@ async function fetchContrato(token: string): Promise<ContratoPublicDetail | null
 }
 
 export const metadata: Metadata = {
-  title: 'Contrato de prestación de servicios — Nodo',
-  description: 'Firma tu contrato de servicios con Nodo.',
+  title: 'Contrato de prestación de servicios — Banco Vital',
+  description: 'Firmá tu contrato de servicios de Banco Vital.',
   robots: { index: false, follow: false },
 };
 
@@ -37,38 +37,23 @@ function diasRestantes(iso: string): number {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
-// ─── Nodo brand theme (scoped to /contratar) ───────────────────────────────
-// Values are literals — no user input interpolated here.
-const NODO_THEME = `
-:root {
-  --color-primary: #8b2fef;
-  --color-primary-hover: color-mix(in oklab, #8b2fef 85%, black);
-  --color-primary-soft: color-mix(in oklab, #8b2fef 10%, white);
-  --color-primary-foreground: #ffffff;
-}
-`.trim();
-
 // ─── Static state pages ────────────────────────────────────────────────────
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: CSS literals only — no user data interpolated */}
-      <style dangerouslySetInnerHTML={{ __html: NODO_THEME }} />
-      <div className="min-h-screen bg-[#f8f7ff]">
-        <header className="border-b border-[var(--color-border)] bg-white">
-          <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-6">
-            <span className="font-bold text-[var(--color-primary)] text-xl tracking-tight">
-              NODO
-            </span>
-            <span className="text-[var(--color-fg-muted)] text-xs">
-              Contrato de prestación de servicios
-            </span>
-          </div>
-        </header>
-        <main className="mx-auto max-w-3xl px-6 py-12">{children}</main>
-      </div>
-    </>
+    <div className="min-h-screen bg-[var(--color-bg)]">
+      <header className="border-[var(--color-border)] border-b bg-[var(--color-bg-elevated)]">
+        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
+          <span className="font-semibold text-[var(--color-fg)] text-xl tracking-tight">
+            Banco Vital
+          </span>
+          <span className="text-[var(--color-fg-muted)] text-xs">
+            Contrato de prestación de servicios
+          </span>
+        </div>
+      </header>
+      <main className="mx-auto max-w-3xl px-6 py-12">{children}</main>
+    </div>
   );
 }
 
@@ -134,7 +119,7 @@ export default async function ContratoPage({
             </svg>
           }
           title="Enlace no válido"
-          body="Este enlace de contrato no existe o fue anulado. Contactá a Nodo para recibir uno nuevo."
+          body="Este enlace de contrato no existe o fue anulado. Contactá a Banco Vital para recibir uno nuevo."
         />
       </PageShell>
     );
@@ -189,7 +174,7 @@ export default async function ContratoPage({
             </svg>
           }
           title="Enlace no válido"
-          body="Este enlace de contrato fue anulado. Contactá a Nodo para recibir un presupuesto actualizado."
+          body="Este enlace de contrato fue anulado. Contactá a Banco Vital para recibir un presupuesto actualizado."
         />
       </PageShell>
     );
@@ -218,8 +203,8 @@ export default async function ContratoPage({
           title="Presupuesto vencido"
           body={
             <>
-              Este presupuesto venció el {fmtFecha(result.expiraAt)}. Pedile a Nodo que te envíe uno
-              nuevo.
+              Este presupuesto venció el {fmtFecha(result.expiraAt)}. Pedile a Banco Vital que te
+              envíe uno nuevo.
             </>
           }
         />
