@@ -225,6 +225,17 @@ input[type="datetime-local"] {
   will-change: transform;
 }
 
+/* Marquee horizontal (track duplicado → translateX -50%) */
+@keyframes bv-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.bv-marquee {
+  animation: bv-marquee 34s linear infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
