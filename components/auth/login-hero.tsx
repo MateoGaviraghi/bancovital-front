@@ -1,5 +1,5 @@
 import { BvLogo } from '@/components/brand/bv-logo';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import Link from 'next/link';
 
 // Hero animado del login: aurora navy en movimiento + acento rojo de marca,
@@ -84,18 +84,47 @@ export function LoginHero() {
         </div>
 
         <div className="max-w-sm">
-          <Link
-            href="/"
-            className="group block rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-xl transition-colors hover:bg-white/[0.14]"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-medium">Conocé Banco Vital</span>
-              <ArrowRight className="size-4 text-white/70 transition-transform group-hover:translate-x-0.5" />
+          <div className="bv-float rounded-2xl border border-white/15 bg-white/10 p-5 shadow-[0_24px_60px_-18px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2 font-medium text-sm text-white">
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-white p-0.5">
+                  <BvLogo size={16} alt="" className="h-full w-full" />
+                </span>
+                Banco Vital
+              </span>
+              <span className="rounded-md bg-white/15 px-2 py-0.5 font-medium text-[11px] text-white/80 ring-1 ring-white/15">
+                Plataforma
+              </span>
             </div>
-            <p className="mt-1.5 text-sm text-white/60 leading-relaxed">
-              La plataforma para digitalizar la gestión de tu laboratorio bioquímico.
+
+            <p className="mt-3 text-[15px] text-white/70 leading-relaxed">
+              Gestión integral de tu laboratorio bioquímico, de la orden al informe.
             </p>
-          </Link>
+
+            <div className="mt-4 space-y-2 border-white/10 border-t pt-3.5 text-sm text-white/85">
+              <div className="flex items-center gap-2.5">
+                <Check className="size-4 shrink-0 text-[var(--color-success-soft)]" /> Órdenes,
+                pacientes y resultados
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Check className="size-4 shrink-0 text-[var(--color-success-soft)]" /> Informes con
+                firma y portal del paciente
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Check className="size-4 shrink-0 text-[var(--color-success-soft)]" /> Facturación y
+                obras sociales
+              </div>
+            </div>
+
+            <Link
+              href="/"
+              className="group mt-4 inline-flex items-center gap-1.5 font-medium text-sm text-white"
+            >
+              Conocé la plataforma
+              <ArrowRight className="size-4 text-white/70 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+
           <p className="mt-4 text-white/50 text-xs">
             ¿Necesitás ayuda? Contactá al administrador de tu laboratorio.
           </p>
