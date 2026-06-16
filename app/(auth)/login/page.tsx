@@ -1,9 +1,12 @@
 'use client';
 
+import { IsoLogo } from '@/components/brand/iso-logo';
+import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 import { getApiClient } from '@/lib/api/client';
 import type { MeResponse } from '@/lib/api/types';
 import { getSupabase } from '@/lib/supabase-browser';
-import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
@@ -39,66 +42,81 @@ export default function GlobalLoginPage() {
   }
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="mb-8 text-center">
-        <h1 className="font-bold text-[var(--color-fg)] text-xl tracking-tight">bancovital</h1>
-        <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
-          Gestión de laboratorios bioquímicos
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-8 shadow-[var(--shadow-md)]">
-        <div className="mb-7">
-          <h2 className="font-semibold text-[var(--color-fg)] text-xl">Iniciar sesión</h2>
-          <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
-            Ingresá con tu cuenta para continuar.
+    <div className="grid min-h-screen w-full lg:grid-cols-[1.05fr_1fr]">
+      {/* Panel de marca (solo desktop) */}
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-[var(--color-primary)] p-12 text-white lg:flex">
+        <IsoLogo className="pointer-events-none absolute -right-24 -bottom-20 w-[480px] text-white/[0.05]" />
+        <div className="relative flex items-center gap-3">
+          <IsoLogo className="w-7 text-white" />
+          <span className="font-semibold text-lg tracking-tight">Banco Vital</span>
+        </div>
+        <div className="relative max-w-md motion-slide-up">
+          <div className="mb-6 h-[3px] w-10 rounded-full bg-[var(--color-accent)]" />
+          <h2 className="text-balance font-semibold text-[2rem] leading-[1.15] tracking-tight">
+            Tu laboratorio, ordenado de punta a punta.
+          </h2>
+          <p className="mt-4 text-[15px] text-white/70 leading-relaxed">
+            Órdenes, pacientes, resultados, informes y facturación en un solo lugar.
           </p>
         </div>
+        <p className="relative text-white/45 text-xs">Creado por Nodo</p>
+      </aside>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label htmlFor="email" className="block font-medium text-[var(--color-fg)] text-xs">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              placeholder="usuario@laboratorio.com"
-              className="block w-full rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-fg)] outline-none transition-all placeholder:text-[var(--color-fg-subtle)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-            />
+      {/* Panel del formulario */}
+      <main className="flex items-center justify-center bg-[var(--color-bg-elevated)] px-6 py-12">
+        <div className="motion-fade-in w-full max-w-[360px]">
+          <div className="mb-8 flex items-center gap-2.5 lg:hidden">
+            <IsoLogo gradient className="w-8" />
+            <span className="font-semibold text-[var(--color-fg)] text-lg tracking-tight">
+              Banco Vital
+            </span>
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="password" className="block font-medium text-[var(--color-fg)] text-xs">
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              className="block w-full rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-fg)] outline-none transition-all placeholder:text-[var(--color-fg-subtle)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-            />
+          <div className="mb-7">
+            <h1 className="font-semibold text-[var(--color-fg)] text-2xl tracking-tight">
+              Iniciar sesión
+            </h1>
+            <p className="mt-1.5 text-[var(--color-fg-muted)] text-sm">
+              Ingresá con tu cuenta para continuar.
+            </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] font-semibold text-sm text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
-            {loading ? 'Ingresando…' : 'Ingresar'}
-          </button>
-        </form>
-      </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormField label="Email" htmlFor="email">
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                placeholder="usuario@laboratorio.com"
+              />
+            </FormField>
+
+            <FormField label="Contraseña" htmlFor="password">
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+              />
+            </FormField>
+
+            <Button type="submit" size="lg" loading={loading} className="mt-2 h-11 w-full">
+              {loading ? 'Ingresando…' : 'Ingresar'}
+            </Button>
+          </form>
+
+          <p className="mt-6 text-[var(--color-fg-subtle)] text-xs">
+            ¿Problemas para entrar? Contactá al administrador de tu laboratorio.
+          </p>
+        </div>
+      </main>
     </div>
   );
 }
