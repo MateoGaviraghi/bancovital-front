@@ -43,11 +43,11 @@ function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <header className="border-[var(--color-border)] border-b bg-[var(--color-bg-elevated)]">
-        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
-          <span className="font-semibold text-[var(--color-fg)] text-xl tracking-tight">
+        <div className="mx-auto flex h-[68px] max-w-3xl items-center justify-between px-6">
+          <span className="font-semibold text-[var(--color-fg)] text-2xl tracking-tight">
             Banco Vital
           </span>
-          <span className="text-[var(--color-fg-muted)] text-xs">
+          <span className="hidden font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-[0.16em] sm:block">
             Contrato de prestación de servicios
           </span>
         </div>
@@ -67,12 +67,12 @@ function EstadoCard({
   body: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-5 rounded-lg border border-[var(--color-border)] bg-white px-8 py-12 text-center shadow-[var(--shadow-sm)]">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]">
+    <div className="flex flex-col items-center gap-5 border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-8 py-12 text-center shadow-[var(--shadow-sm)] [&_*]:rounded-none">
+      <div className="flex h-14 w-14 items-center justify-center bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]">
         {icon}
       </div>
       <div>
-        <h1 className="font-semibold text-[var(--color-fg)] text-xl">{title}</h1>
+        <h1 className="font-semibold text-[var(--color-fg)] text-xl tracking-tight">{title}</h1>
         <div className="mt-2 text-[var(--color-fg-muted)] text-sm leading-relaxed">{body}</div>
       </div>
       <p className="text-[var(--color-fg-subtle)] text-xs">

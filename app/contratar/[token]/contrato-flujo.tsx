@@ -1,5 +1,17 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type {
   ContratoPublicDetail,
   ContratoPublicPlan,
@@ -8,7 +20,7 @@ import type {
 } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
 import axios from 'axios';
-import { CheckCircle2, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
+import { Check, CheckCircle2, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import SignaturePad from 'signature_pad';
 
@@ -46,6 +58,44 @@ function fmtCuit(raw: string): string {
   return `${digits.slice(0, 2)}-${digits.slice(2, 10)}-${digits.slice(10)}`;
 }
 
+// ─── Shared building blocks ──────────────────────────────────────────────────
+
+/** Editorial section header — red eyebrow rule + uppercase tag, then title/body.
+ *  Mirrors the approved landing language. */
+function StepHeader({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <header className="mb-6">
+      <div className="mb-3 flex items-center gap-3">
+        <span className="h-px w-8 bg-[var(--color-accent)]" />
+        <span className="font-medium text-[10px] text-[var(--color-accent)] uppercase tracking-[0.18em]">
+          {eyebrow}
+        </span>
+      </div>
+      <h2 className="font-semibold text-[var(--color-fg)] text-xl tracking-tight">{title}</h2>
+      <p className="mt-1.5 text-[var(--color-fg-muted)] text-sm">{description}</p>
+    </header>
+  );
+}
+
+/** Bordered panel matching the landing's sharp surface aesthetic. */
+function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <div
+      className={cn('border border-[var(--color-border)] bg-[var(--color-bg-elevated)]', className)}
+    >
+      {children}
+    </div>
+  );
+}
+
 // ─── Step indicator ────────────────────────────────────────────────────────
 
 const STEPS = ['Propuesta', 'Plan', 'Facturación', 'Firma'];
@@ -53,51 +103,45 @@ const STEPS = ['Propuesta', 'Plan', 'Facturación', 'Firma'];
 function StepIndicator({ current }: { current: number }) {
   return (
     <nav aria-label="Pasos del proceso" className="mb-8">
-      <ol className="flex items-center gap-0">
+      <ol className="flex items-stretch gap-2.5">
         {STEPS.map((label, idx) => {
           const done = idx < current;
           const active = idx === current;
           return (
-            <li key={label} className="flex flex-1 items-center">
-              <div className="flex flex-col items-center gap-1.5">
-                <div
+            <li key={label} className="flex flex-1 flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span
                   className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors duration-200',
+                    'flex h-7 w-7 shrink-0 items-center justify-center border font-mono font-semibold text-xs tabular-nums transition-colors duration-200',
                     done
                       ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
                       : active
-                        ? 'border-[var(--color-primary)] bg-white text-[var(--color-primary)]'
-                        : 'border-[var(--color-border)] bg-white text-[var(--color-fg-subtle)]',
+                        ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                        : 'border-[var(--color-border)] text-[var(--color-fg-subtle)]',
                   )}
                   aria-current={active ? 'step' : undefined}
                 >
                   {done ? (
-                    <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   ) : (
-                    <span>{idx + 1}</span>
+                    String(idx + 1).padStart(2, '0')
                   )}
-                </div>
+                </span>
                 <span
                   className={cn(
-                    'hidden text-center text-[11px] font-medium sm:block',
-                    active
-                      ? 'text-[var(--color-primary)]'
-                      : done
-                        ? 'text-[var(--color-fg-muted)]'
-                        : 'text-[var(--color-fg-subtle)]',
+                    'hidden truncate font-medium text-xs sm:block',
+                    active ? 'text-[var(--color-fg)]' : 'text-[var(--color-fg-subtle)]',
                   )}
                 >
                   {label}
                 </span>
               </div>
-              {idx < STEPS.length - 1 && (
-                <div
-                  className={cn(
-                    'mx-1 h-0.5 flex-1 transition-colors duration-300',
-                    idx < current ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border)]',
-                  )}
-                />
-              )}
+              <span
+                className={cn(
+                  'h-0.5 w-full transition-colors duration-300',
+                  idx <= current ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border)]',
+                )}
+              />
             </li>
           );
         })}
@@ -122,14 +166,15 @@ function StepPropuesta({
   const urgente = diasRestantes <= 3;
   return (
     <section>
-      <h2 className="mb-1 font-semibold text-[var(--color-fg)] text-lg">Propuesta comercial</h2>
-      <p className="mb-6 text-[var(--color-fg-muted)] text-sm">
-        Revisá los detalles antes de seleccionar un plan.
-      </p>
+      <StepHeader
+        eyebrow="Paso 1 · Propuesta"
+        title="Propuesta comercial"
+        description="Revisá los detalles antes de seleccionar un plan."
+      />
 
-      <div className="rounded-lg border border-[var(--color-border)] bg-white divide-y divide-[var(--color-border)]">
+      <Panel className="divide-y divide-[var(--color-border)]">
         <div className="px-5 py-4">
-          <p className="text-[var(--color-fg-subtle)] text-xs uppercase tracking-wide font-medium mb-0.5">
+          <p className="mb-0.5 font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-[0.14em]">
             Cliente
           </p>
           <p className="font-semibold text-[var(--color-fg)]">{contrato.razonSocial}</p>
@@ -137,10 +182,10 @@ function StepPropuesta({
         </div>
 
         <div className="px-5 py-4">
-          <p className="text-[var(--color-fg-subtle)] text-xs uppercase tracking-wide font-medium mb-1.5">
+          <p className="mb-1.5 font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-[0.14em]">
             Descripción de la propuesta
           </p>
-          <p className="text-[var(--color-fg)] text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="whitespace-pre-wrap text-[var(--color-fg)] text-sm leading-relaxed">
             {contrato.propuesta.descripcion}
           </p>
           {contrato.propuesta.notas && (
@@ -150,12 +195,14 @@ function StepPropuesta({
           )}
         </div>
 
-        <div className="flex items-center justify-between px-5 py-3">
+        <div className="flex items-center justify-between gap-4 px-5 py-3.5">
           <div>
-            <p className="text-[var(--color-fg-subtle)] text-xs font-medium">Validez</p>
+            <p className="font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-[0.14em]">
+              Validez
+            </p>
             <p
               className={cn(
-                'text-sm font-medium',
+                'font-medium text-sm',
                 urgente ? 'text-[var(--color-danger)]' : 'text-[var(--color-fg-muted)]',
               )}
             >
@@ -167,27 +214,20 @@ function StepPropuesta({
               )}
             </p>
           </div>
-          <a
-            href={contrato.pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-3 py-1.5 text-[var(--color-fg-muted)] text-xs font-medium hover:bg-[var(--color-border)] transition-colors"
-          >
-            <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
-            Ver contrato (PDF)
-          </a>
+          <Button asChild variant="outline" size="sm">
+            <a href={contrato.pdfUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink strokeWidth={2} />
+              Ver contrato (PDF)
+            </a>
+          </Button>
         </div>
-      </div>
+      </Panel>
 
       <div className="mt-6 flex justify-end">
-        <button
-          type="button"
-          onClick={onNext}
-          className="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-5 py-2.5 font-semibold text-[var(--color-primary-foreground)] text-sm shadow-[var(--shadow-xs)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
-        >
+        <Button onClick={onNext}>
           Seleccionar plan
-          <ChevronRight className="h-4 w-4" strokeWidth={2} />
-        </button>
+          <ChevronRight strokeWidth={2} />
+        </Button>
       </div>
     </section>
   );
@@ -209,9 +249,10 @@ function PlanCard({
   return (
     <label
       className={cn(
-        'relative flex cursor-pointer flex-col rounded-lg border-2 bg-white p-5 transition-all duration-150',
+        'group relative flex cursor-pointer flex-col border bg-[var(--color-bg-elevated)] p-5 transition-colors duration-150',
+        'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--color-primary)] has-[:focus-visible]:ring-offset-2',
         selected
-          ? 'border-[var(--color-primary)] shadow-[0_0_0_3px_var(--color-primary-soft)]'
+          ? 'border-[var(--color-primary)]'
           : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]',
       )}
     >
@@ -223,35 +264,36 @@ function PlanCard({
         onChange={onSelect}
         className="sr-only"
       />
+      {selected && (
+        <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-[var(--color-primary)]" />
+      )}
       {sugerido && (
-        <span className="absolute right-4 top-4 inline-flex rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-primary)] uppercase tracking-wide">
+        <span className="absolute top-0 right-0 bg-[var(--color-accent)] px-2 py-0.5 font-semibold text-[10px] text-white uppercase tracking-[0.1em]">
           Sugerido
         </span>
       )}
-      <p className="font-semibold text-[var(--color-fg)] text-base pr-20">{plan.nombre}</p>
-      <p className="mt-3 tabular font-bold text-[var(--color-fg)] text-2xl">
+      <p className="pr-20 font-semibold text-[var(--color-fg)] text-base">{plan.nombre}</p>
+      <p className="mt-3 font-bold font-mono text-[var(--color-fg)] text-2xl tabular-nums">
         {fmtARS(plan.precioMensual)}
-        <span className="ml-1 text-[var(--color-fg-muted)] text-sm font-normal">/mes</span>
+        <span className="ml-1 font-normal font-sans text-[var(--color-fg-muted)] text-sm">
+          /mes
+        </span>
       </p>
-      <div className="mt-3 space-y-1 text-sm text-[var(--color-fg-muted)]">
+      <div className="mt-3 space-y-1 text-[var(--color-fg-muted)] text-sm">
         <p>
           Cupo:{' '}
-          <span className="font-medium text-[var(--color-fg)]">
+          <span className="font-medium text-[var(--color-fg)] tabular-nums">
             {plan.cupoOrdenesMes.toLocaleString('es-AR')} órdenes/mes
           </span>
         </p>
         <p>
           Excedente:{' '}
-          <span className="font-medium text-[var(--color-fg)]">
+          <span className="font-medium text-[var(--color-fg)] tabular-nums">
             {fmtARS(plan.precioOrdenExcedente)}/orden
           </span>
         </p>
       </div>
-      <div
-        className={cn(
-          'mt-3 flex items-center gap-1.5 rounded-md px-3 py-2 text-[11px] text-[var(--color-fg-muted)] bg-[var(--color-bg-subtle)]',
-        )}
-      >
+      <div className="mt-4 bg-[var(--color-bg-subtle)] px-3 py-2 text-[11px] text-[var(--color-fg-muted)] leading-relaxed">
         Las órdenes no usadas pasan al mes siguiente (vigencia 1 mes). Superado el cupo, el sistema
         no se bloquea: los excedentes se facturan aparte.
       </div>
@@ -276,10 +318,11 @@ function StepPlan({
 }) {
   return (
     <section>
-      <h2 className="mb-1 font-semibold text-[var(--color-fg)] text-lg">Seleccioná tu plan</h2>
-      <p className="mb-6 text-[var(--color-fg-muted)] text-sm">
-        Elegí el plan que mejor se adapta a tu volumen de trabajo.
-      </p>
+      <StepHeader
+        eyebrow="Paso 2 · Plan"
+        title="Seleccioná tu plan"
+        description="Elegí el plan que mejor se adapta a tu volumen de trabajo."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {planes.map((plan) => (
@@ -294,22 +337,13 @@ function StepPlan({
       </div>
 
       <div className="mt-6 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-[var(--color-fg-muted)] text-sm border border-[var(--color-border)] bg-white hover:bg-[var(--color-bg-subtle)] transition-colors"
-        >
+        <Button variant="outline" onClick={onBack}>
           Volver
-        </button>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={selectedPlanId === null}
-          className="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-5 py-2.5 font-semibold text-[var(--color-primary-foreground)] text-sm shadow-[var(--shadow-xs)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
+        </Button>
+        <Button onClick={onNext} disabled={selectedPlanId === null}>
           Continuar
-          <ChevronRight className="h-4 w-4" strokeWidth={2} />
-        </button>
+          <ChevronRight strokeWidth={2} />
+        </Button>
       </div>
     </section>
   );
@@ -317,21 +351,7 @@ function StepPlan({
 
 // ─── Step 3: Facturación ───────────────────────────────────────────────────
 
-const CONDICIONES_IVA = [
-  { value: 'Responsable Inscripto', label: 'Responsable Inscripto' },
-  { value: 'Monotributo', label: 'Monotributo' },
-  { value: 'Exento', label: 'Exento' },
-  { value: 'Consumidor Final', label: 'Consumidor Final' },
-];
-
-function FieldError({ msg }: { msg?: string }) {
-  if (!msg) return null;
-  return (
-    <p className="mt-1 text-[var(--color-danger)] text-xs" role="alert">
-      {msg}
-    </p>
-  );
-}
+const CONDICIONES_IVA = ['Responsable Inscripto', 'Monotributo', 'Exento', 'Consumidor Final'];
 
 function StepFacturacion({
   datos,
@@ -357,118 +377,95 @@ function StepFacturacion({
     return Object.keys(errs).length === 0;
   }
 
-  function handleNext() {
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     if (validate()) onNext();
   }
 
   return (
     <section>
-      <h2 className="mb-1 font-semibold text-[var(--color-fg)] text-lg">Datos de facturación</h2>
-      <p className="mb-6 text-[var(--color-fg-muted)] text-sm">
-        Esta información se usará para generar la factura mensual.
-      </p>
+      <StepHeader
+        eyebrow="Paso 3 · Facturación"
+        title="Datos de facturación"
+        description="Esta información se usará para generar la factura mensual."
+      />
 
-      <div className="space-y-4 rounded-lg border border-[var(--color-border)] bg-white p-5">
-        <div>
-          <label
+      <form onSubmit={handleSubmit}>
+        <Panel className="space-y-4 p-5">
+          <FormField
+            label="Domicilio fiscal"
             htmlFor="domicilioFiscal"
-            className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]"
+            required
+            error={errors.domicilioFiscal}
           >
-            Domicilio fiscal <span className="text-[var(--color-danger)]">*</span>
-          </label>
-          <input
-            id="domicilioFiscal"
-            type="text"
-            value={datos.domicilioFiscal}
-            onChange={(e) => onUpdate({ ...datos, domicilioFiscal: e.target.value })}
-            placeholder="Av. Ejemplo 1234, Ciudad, Provincia"
-            className={cn(
-              'w-full rounded-md border px-3 py-2.5 text-sm text-[var(--color-fg)] placeholder:text-[var(--color-fg-subtle)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-0',
-              errors.domicilioFiscal
-                ? 'border-[var(--color-danger)]'
-                : 'border-[var(--color-border)]',
-            )}
-            aria-describedby={errors.domicilioFiscal ? 'domicilio-error' : undefined}
-          />
-          {errors.domicilioFiscal && (
-            <p
-              id="domicilio-error"
-              className="mt-1 text-[var(--color-danger)] text-xs"
-              role="alert"
-            >
-              {errors.domicilioFiscal}
-            </p>
-          )}
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor="cuit"
-              className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]"
-            >
-              CUIT{' '}
-              <span className="text-[var(--color-fg-subtle)] font-normal text-xs">(opcional)</span>
-            </label>
-            <input
-              id="cuit"
-              type="text"
-              inputMode="numeric"
-              value={datos.cuit ?? ''}
-              onChange={(e) => onUpdate({ ...datos, cuit: fmtCuit(e.target.value) })}
-              placeholder="20-12345678-9"
-              maxLength={13}
-              className={cn(
-                'w-full rounded-md border px-3 py-2.5 text-sm font-mono text-[var(--color-fg)] placeholder:text-[var(--color-fg-subtle)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-0',
-                errors.cuit ? 'border-[var(--color-danger)]' : 'border-[var(--color-border)]',
-              )}
-              aria-describedby={errors.cuit ? 'cuit-error' : undefined}
+            <Input
+              id="domicilioFiscal"
+              value={datos.domicilioFiscal}
+              onChange={(e) => onUpdate({ ...datos, domicilioFiscal: e.target.value })}
+              placeholder="Av. Ejemplo 1234, Ciudad, Provincia"
             />
-            <FieldError msg={errors.cuit} />
-          </div>
+          </FormField>
 
-          <div>
-            <label
-              htmlFor="condicionIva"
-              className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]"
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              label={
+                <>
+                  CUIT{' '}
+                  <span className="font-normal text-[var(--color-fg-subtle)] text-xs">
+                    (opcional)
+                  </span>
+                </>
+              }
+              htmlFor="cuit"
+              error={errors.cuit}
             >
-              Condición IVA{' '}
-              <span className="text-[var(--color-fg-subtle)] font-normal text-xs">(opcional)</span>
-            </label>
-            <select
-              id="condicionIva"
-              value={datos.condicionIva ?? ''}
-              onChange={(e) => onUpdate({ ...datos, condicionIva: e.target.value || undefined })}
-              className="w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2.5 text-sm text-[var(--color-fg)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-0"
-            >
-              <option value="">Seleccionar</option>
-              {CONDICIONES_IVA.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              <Input
+                id="cuit"
+                inputMode="numeric"
+                maxLength={13}
+                className="font-mono"
+                value={datos.cuit ?? ''}
+                onChange={(e) => onUpdate({ ...datos, cuit: fmtCuit(e.target.value) })}
+                placeholder="20-12345678-9"
+              />
+            </FormField>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="condicionIva">
+                Condición IVA{' '}
+                <span className="font-normal text-[var(--color-fg-subtle)] text-xs">
+                  (opcional)
+                </span>
+              </Label>
+              <Select
+                value={datos.condicionIva ?? ''}
+                onValueChange={(v) => onUpdate({ ...datos, condicionIva: v || undefined })}
+              >
+                <SelectTrigger id="condicionIva" className="w-full">
+                  <SelectValue placeholder="Seleccionar" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CONDICIONES_IVA.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+        </Panel>
+
+        <div className="mt-6 flex items-center justify-between">
+          <Button type="button" variant="outline" onClick={onBack}>
+            Volver
+          </Button>
+          <Button type="submit">
+            Continuar
+            <ChevronRight strokeWidth={2} />
+          </Button>
         </div>
-      </div>
-
-      <div className="mt-6 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-[var(--color-fg-muted)] text-sm border border-[var(--color-border)] bg-white hover:bg-[var(--color-bg-subtle)] transition-colors"
-        >
-          Volver
-        </button>
-        <button
-          type="button"
-          onClick={handleNext}
-          className="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-5 py-2.5 font-semibold text-[var(--color-primary-foreground)] text-sm shadow-[var(--shadow-xs)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
-        >
-          Continuar
-          <ChevronRight className="h-4 w-4" strokeWidth={2} />
-        </button>
-      </div>
+      </form>
     </section>
   );
 }
@@ -560,7 +557,7 @@ function OtpSection({
 
   if (otpState === 'verified') {
     return (
-      <div className="flex items-center gap-2 rounded-md bg-[var(--color-success-soft)] border border-[var(--color-success)]/20 px-4 py-3 text-[var(--color-success)] text-sm font-medium">
+      <div className="flex items-center gap-2 border border-[var(--color-success)]/25 bg-[var(--color-success-soft)] px-4 py-3 font-medium text-[var(--color-success)] text-sm">
         <CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={2.5} />
         Email verificado correctamente
       </div>
@@ -568,25 +565,22 @@ function OtpSection({
   }
 
   return (
-    <div className="rounded-lg border border-[var(--color-border)] bg-white p-5 space-y-4">
-      <div>
-        <p className="font-medium text-[var(--color-fg)] text-sm">Verificación por email</p>
-        <p className="text-[var(--color-fg-muted)] text-sm mt-0.5">
-          Te enviaremos un código de 6 dígitos a{' '}
-          <span className="font-medium text-[var(--color-fg)]">{emailOfuscado}</span>.
+    <Panel className="space-y-4 p-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-[0.14em]">
+          Verificación por email
         </p>
+        <span className="font-mono text-[var(--color-fg-subtle)] text-xs">1 / 2</span>
       </div>
+      <p className="text-[var(--color-fg-muted)] text-sm">
+        Te enviaremos un código de 6 dígitos a{' '}
+        <span className="font-medium text-[var(--color-fg)]">{emailOfuscado}</span>.
+      </p>
 
       {otpState === 'idle' && (
-        <button
-          type="button"
-          onClick={sendOtp}
-          disabled={sending}
-          className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-4 py-2 text-sm font-medium text-[var(--color-fg)] hover:bg-[var(--color-border)] transition-colors disabled:opacity-50"
-        >
-          {sending && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
-          {sending ? 'Enviando...' : `Enviar código a ${emailOfuscado}`}
-        </button>
+        <Button variant="secondary" onClick={sendOtp} loading={sending}>
+          {sending ? 'Enviando…' : 'Enviar código'}
+        </Button>
       )}
 
       {otpState === 'requested' && (
@@ -611,8 +605,9 @@ function OtpSection({
                 disabled={verifying}
                 aria-label={`Dígito ${idx + 1}`}
                 className={cn(
-                  'h-12 w-10 rounded-md border text-center font-mono text-lg font-semibold text-[var(--color-fg)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-0 disabled:opacity-50',
-                  otpError ? 'border-[var(--color-danger)]' : 'border-[var(--color-border)]',
+                  'h-12 w-10 border bg-[var(--color-bg-elevated)] text-center font-mono font-semibold text-[var(--color-fg)] text-lg shadow-[var(--shadow-inset)] outline-none transition-colors',
+                  'focus-visible:border-[var(--color-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-soft)] disabled:opacity-50',
+                  otpError ? 'border-[var(--color-danger)]' : 'border-[var(--color-border-strong)]',
                 )}
               />
             ))}
@@ -623,14 +618,9 @@ function OtpSection({
               />
             )}
           </fieldset>
-          <button
-            type="button"
-            onClick={sendOtp}
-            disabled={sending}
-            className="text-[var(--color-primary)] text-xs hover:underline underline-offset-2 disabled:opacity-50"
-          >
-            {sending ? 'Reenviando...' : 'Reenviar código'}
-          </button>
+          <Button variant="link" size="sm" onClick={sendOtp} disabled={sending}>
+            {sending ? 'Reenviando…' : 'Reenviar código'}
+          </Button>
         </div>
       )}
 
@@ -639,112 +629,10 @@ function OtpSection({
           {otpError}
         </p>
       )}
-    </div>
+    </Panel>
   );
 }
 
-function SignatureCanvas({
-  onChangeEmpty,
-}: {
-  onChangeEmpty: (empty: boolean) => void;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const padRef = useRef<SignaturePad | null>(null);
-
-  const resize = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !padRef.current) return;
-    const ratio = Math.max(window.devicePixelRatio || 1, 1);
-    canvas.width = canvas.offsetWidth * ratio;
-    canvas.height = canvas.offsetHeight * ratio;
-    canvas.getContext('2d')?.scale(ratio, ratio);
-    padRef.current.clear();
-    onChangeEmpty(true);
-  }, [onChangeEmpty]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const pad = new SignaturePad(canvas, {
-      penColor: '#1a2b3c',
-      backgroundColor: 'rgba(255,255,255,0)',
-      minWidth: 0.5,
-      maxWidth: 2.5,
-    });
-    padRef.current = pad;
-
-    pad.addEventListener('endStroke', () => {
-      onChangeEmpty(pad.isEmpty());
-    });
-
-    resize();
-    window.addEventListener('resize', resize);
-    return () => {
-      window.removeEventListener('resize', resize);
-      pad.off();
-    };
-  }, [resize, onChangeEmpty]);
-
-  function clear() {
-    padRef.current?.clear();
-    onChangeEmpty(true);
-  }
-
-  function undo() {
-    const pad = padRef.current;
-    if (!pad) return;
-    const data = pad.toData();
-    if (data.length > 0) {
-      data.pop();
-      pad.fromData(data);
-      onChangeEmpty(pad.isEmpty());
-    }
-  }
-
-  return (
-    <div className="space-y-2">
-      <div
-        className="relative rounded-md border-2 border-[var(--color-border)] bg-white overflow-hidden"
-        style={{ height: 180 }}
-      >
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 h-full w-full cursor-crosshair touch-none"
-          aria-label="Área de firma"
-          role="img"
-        />
-        <span
-          className="pointer-events-none absolute inset-0 flex items-center justify-center text-[var(--color-fg-subtle)] text-sm select-none"
-          id="firma-placeholder"
-        >
-          Firmá acá con el mouse o el dedo
-        </span>
-      </div>
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={undo}
-          className="text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline underline-offset-2"
-        >
-          Deshacer
-        </button>
-        <button
-          type="button"
-          onClick={clear}
-          className="text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] hover:underline underline-offset-2"
-        >
-          Borrar
-        </button>
-      </div>
-    </div>
-  );
-
-  // expose dataUrl to parent via imperative handle would be cleaner but adding forwardRef here
-  // instead we keep the canvas ref accessible by placing getDataUrl at module scope
-  // Actually — we need the parent to call toDataURL. We'll use a different approach below.
-}
-
-// We need the canvas data in the parent, so let's wire it differently:
 function SignatureSection({
   onReady,
 }: {
@@ -770,7 +658,7 @@ function SignatureSection({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const pad = new SignaturePad(canvas, {
-      penColor: '#1a2b3c',
+      penColor: '#1f2b5b',
       backgroundColor: 'rgba(255,255,255,0)',
       minWidth: 0.5,
       maxWidth: 2.5,
@@ -813,8 +701,10 @@ function SignatureSection({
   return (
     <div className="space-y-2">
       <div
-        className="relative rounded-md border-2 border-[var(--color-border)] bg-white overflow-hidden"
-        style={{ height: 180 }}
+        className={cn(
+          'relative h-[180px] overflow-hidden border bg-[var(--color-bg-elevated)] transition-colors',
+          isEmpty ? 'border-[var(--color-border-strong)]' : 'border-[var(--color-primary)]',
+        )}
       >
         <canvas
           ref={canvasRef}
@@ -823,26 +713,18 @@ function SignatureSection({
           role="img"
         />
         {isEmpty && (
-          <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[var(--color-fg-subtle)] text-sm select-none">
+          <span className="pointer-events-none absolute inset-0 flex select-none items-center justify-center text-[var(--color-fg-subtle)] text-sm">
             Firmá acá con el mouse o el dedo
           </span>
         )}
       </div>
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={undo}
-          className="text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] underline-offset-2 hover:underline"
-        >
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="sm" onClick={undo}>
           Deshacer
-        </button>
-        <button
-          type="button"
-          onClick={clear}
-          className="text-[var(--color-fg-muted)] text-xs hover:text-[var(--color-fg)] underline-offset-2 hover:underline"
-        >
+        </Button>
+        <Button variant="ghost" size="sm" onClick={clear}>
           Borrar
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -908,10 +790,11 @@ function StepFirma({
 
   return (
     <section>
-      <h2 className="mb-1 font-semibold text-[var(--color-fg)] text-lg">Verificación y firma</h2>
-      <p className="mb-6 text-[var(--color-fg-muted)] text-sm">
-        Verificá tu email y firmá el contrato para completar el proceso.
-      </p>
+      <StepHeader
+        eyebrow="Paso 4 · Firma"
+        title="Verificación y firma"
+        description="Verificá tu email y firmá el contrato para completar el proceso."
+      />
 
       <div className="space-y-5">
         <OtpSection
@@ -921,27 +804,35 @@ function StepFirma({
           onStateChange={setOtpState}
         />
 
-        <div className="rounded-lg border border-[var(--color-border)] bg-white p-5 space-y-3">
-          <p className="font-medium text-[var(--color-fg)] text-sm">Firma manuscrita</p>
+        <Panel className="space-y-3 p-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-[0.14em]">
+              Firma manuscrita
+            </p>
+            <span className="font-mono text-[var(--color-fg-subtle)] text-xs">2 / 2</span>
+          </div>
           <SignatureSection onReady={setFirmaDataUrl} />
-        </div>
+        </Panel>
 
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
+        <div className="flex items-start gap-3">
+          <Checkbox
+            id="acepta-terminos"
             checked={acepta}
-            onChange={(e) => setAcepta(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--color-border)] accent-[var(--color-primary)]"
+            onCheckedChange={(v) => setAcepta(v === true)}
+            className="mt-0.5"
           />
-          <span className="text-[var(--color-fg-muted)] text-sm leading-relaxed">
+          <Label
+            htmlFor="acepta-terminos"
+            className="text-[var(--color-fg-muted)] text-sm leading-relaxed"
+          >
             Leí y acepto los términos del contrato y la política de tratamiento de datos personales
             (Ley 25.326).
-          </span>
-        </label>
+          </Label>
+        </div>
 
         {signError && (
           <p
-            className="rounded-md bg-[var(--color-danger-soft)] border border-[var(--color-danger)]/20 px-4 py-3 text-[var(--color-danger)] text-sm"
+            className="border border-[var(--color-danger)]/25 bg-[var(--color-danger-soft)] px-4 py-3 text-[var(--color-danger)] text-sm"
             role="alert"
           >
             {signError}
@@ -949,24 +840,12 @@ function StepFirma({
         )}
 
         <div className="flex items-center justify-between pt-1">
-          <button
-            type="button"
-            onClick={onBack}
-            disabled={signing}
-            className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-[var(--color-fg-muted)] text-sm border border-[var(--color-border)] bg-white hover:bg-[var(--color-bg-subtle)] transition-colors disabled:opacity-50"
-          >
+          <Button variant="outline" onClick={onBack} disabled={signing}>
             Volver
-          </button>
-          <button
-            type="button"
-            onClick={handleSign}
-            disabled={!canSubmit}
-            className="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-6 py-2.5 font-semibold text-[var(--color-primary-foreground)] text-sm shadow-[var(--shadow-xs)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40"
-            aria-busy={signing}
-          >
-            {signing && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
-            {signing ? 'Firmando...' : 'Firmar contrato'}
-          </button>
+          </Button>
+          <Button onClick={handleSign} disabled={!canSubmit} loading={signing}>
+            {signing ? 'Firmando…' : 'Firmar contrato'}
+          </Button>
         </div>
       </div>
     </section>
@@ -977,38 +856,25 @@ function StepFirma({
 
 function ContratoExito({ emailOfuscado }: { emailOfuscado: string }) {
   return (
-    <div
-      className="flex flex-col items-center gap-6 rounded-lg border border-[var(--color-border)] bg-white px-8 py-12 text-center shadow-[var(--shadow-sm)]"
-      style={{
-        animation: 'fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both',
-      }}
-    >
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .fade-up { animation: none; }
-        }
-      `}</style>
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-success-soft)]">
-        <CheckCircle2 className="h-8 w-8 text-[var(--color-success)]" strokeWidth={2} />
+    <div className="[&_*]:rounded-none">
+      <div className="motion-scale-in flex flex-col items-center gap-6 border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-8 py-12 text-center shadow-[var(--shadow-sm)]">
+        <div className="flex h-16 w-16 items-center justify-center bg-[var(--color-success-soft)]">
+          <CheckCircle2 className="h-8 w-8 text-[var(--color-success)]" strokeWidth={2} />
+        </div>
+        <div>
+          <h2 className="font-semibold text-[var(--color-fg)] text-2xl tracking-tight">
+            Contrato firmado
+          </h2>
+          <p className="mx-auto mt-2 max-w-sm text-[var(--color-fg-muted)] text-sm leading-relaxed">
+            Creamos tu laboratorio. Vas a recibir un email en{' '}
+            <span className="font-medium text-[var(--color-fg)]">{emailOfuscado}</span> para
+            configurar tu acceso.
+          </p>
+        </div>
+        <Button asChild size="lg">
+          <a href="/login">Acceder a Banco Vital</a>
+        </Button>
       </div>
-      <div>
-        <h2 className="font-bold text-[var(--color-fg)] text-2xl">Contrato firmado</h2>
-        <p className="mt-2 text-[var(--color-fg-muted)] text-sm leading-relaxed max-w-sm mx-auto">
-          Creamos tu laboratorio. Vas a recibir un email en{' '}
-          <span className="font-medium text-[var(--color-fg)]">{emailOfuscado}</span> para
-          configurar tu acceso.
-        </p>
-      </div>
-      <a
-        href="/login"
-        className="inline-flex h-10 items-center justify-center rounded-md bg-[var(--color-primary)] px-5 font-semibold text-[var(--color-primary-foreground)] text-sm transition-opacity hover:opacity-90"
-      >
-        Acceder a Banco Vital
-      </a>
     </div>
   );
 }
@@ -1040,46 +906,48 @@ export function ContratoFlujo({
   }
 
   return (
-    <div>
+    <div className="[&_*]:rounded-none">
       <StepIndicator current={step} />
 
-      <div className="rounded-lg border border-[var(--color-border)] bg-white p-6 shadow-[var(--shadow-xs)]">
-        {step === 0 && (
-          <StepPropuesta
-            contrato={contrato}
-            diasRestantes={diasRestantes}
-            fechaExpira={fechaExpira}
-            onNext={() => setStep(1)}
-          />
-        )}
-        {step === 1 && (
-          <StepPlan
-            planes={contrato.planes}
-            planSugeridoId={contrato.planSugeridoId}
-            selectedPlanId={selectedPlanId}
-            onSelect={setSelectedPlanId}
-            onNext={() => setStep(2)}
-            onBack={() => setStep(0)}
-          />
-        )}
-        {step === 2 && (
-          <StepFacturacion
-            datos={datosFacturacion}
-            onUpdate={setDatosFacturacion}
-            onNext={() => setStep(3)}
-            onBack={() => setStep(1)}
-          />
-        )}
-        {step === 3 && selectedPlanId !== null && (
-          <StepFirma
-            token={token}
-            emailOfuscado={contrato.emailFirmanteOfuscado}
-            planId={selectedPlanId}
-            datosFacturacion={datosFacturacion}
-            onBack={() => setStep(2)}
-            onSuccess={setExito}
-          />
-        )}
+      <div className="border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-[var(--shadow-sm)] sm:p-8">
+        <div key={step} className="motion-fade-in">
+          {step === 0 && (
+            <StepPropuesta
+              contrato={contrato}
+              diasRestantes={diasRestantes}
+              fechaExpira={fechaExpira}
+              onNext={() => setStep(1)}
+            />
+          )}
+          {step === 1 && (
+            <StepPlan
+              planes={contrato.planes}
+              planSugeridoId={contrato.planSugeridoId}
+              selectedPlanId={selectedPlanId}
+              onSelect={setSelectedPlanId}
+              onNext={() => setStep(2)}
+              onBack={() => setStep(0)}
+            />
+          )}
+          {step === 2 && (
+            <StepFacturacion
+              datos={datosFacturacion}
+              onUpdate={setDatosFacturacion}
+              onNext={() => setStep(3)}
+              onBack={() => setStep(1)}
+            />
+          )}
+          {step === 3 && selectedPlanId !== null && (
+            <StepFirma
+              token={token}
+              emailOfuscado={contrato.emailFirmanteOfuscado}
+              planId={selectedPlanId}
+              datosFacturacion={datosFacturacion}
+              onBack={() => setStep(2)}
+              onSuccess={setExito}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
