@@ -1,6 +1,6 @@
 'use client';
 
-import { BvLogo } from '@/components/brand/bv-logo';
+import { IsoMark } from '@/components/brand/iso-mark';
 import { BookingFlow } from '@/components/domain/booking-flow';
 import { cn } from '@/lib/cn';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -19,7 +19,7 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 
 // ─── Datos ───────────────────────────────────────────────────────────────────
 
@@ -289,6 +289,38 @@ export function LandingAnon() {
 
 // ─── Header ────────────────────────────────────────────────────────────────────
 
+function MenuLink({
+  href,
+  children,
+  tone = 'light',
+}: {
+  href: string;
+  children: ReactNode;
+  tone?: 'light' | 'dark';
+}) {
+  const cls = cn(
+    'group inline-flex text-sm transition-colors duration-300',
+    tone === 'dark'
+      ? 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]'
+      : 'text-white/70 hover:text-white',
+  );
+  const inner = (
+    <span className="relative">
+      {children}
+      <span className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 bg-[var(--color-accent)] transition-transform duration-300 group-hover:scale-x-100" />
+    </span>
+  );
+  return href.startsWith('#') ? (
+    <a href={href} className={cls}>
+      {inner}
+    </a>
+  ) : (
+    <Link href={href} className={cls}>
+      {inner}
+    </Link>
+  );
+}
+
 function Header({ scrolled }: { scrolled: boolean }) {
   return (
     <header
@@ -301,7 +333,10 @@ function Header({ scrolled }: { scrolled: boolean }) {
     >
       <div className="mx-auto flex h-[68px] max-w-6xl items-center gap-8 px-6">
         <a href="#inicio" className="flex items-center gap-2.5" aria-label="Banco Vital — inicio">
-          {scrolled && <BvLogo size={28} alt="" priority className="h-7 w-7" />}
+          <IsoMark
+            variant={scrolled ? 'gradient' : 'mono'}
+            className={cn('h-8 w-8 shrink-0', !scrolled && 'text-white')}
+          />
           <span
             className={cn(
               'font-semibold text-lg tracking-tight transition-colors duration-300',
@@ -314,18 +349,9 @@ function Header({ scrolled }: { scrolled: boolean }) {
 
         <nav className="hidden flex-1 items-center gap-8 md:flex" aria-label="Secciones">
           {NAV_LINKS.map(({ href, label }) => (
-            <a
-              key={href}
-              href={href}
-              className={cn(
-                'text-sm transition-colors duration-300',
-                scrolled
-                  ? 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]'
-                  : 'text-white/70 hover:text-white',
-              )}
-            >
+            <MenuLink key={href} href={href} tone={scrolled ? 'dark' : 'light'}>
               {label}
-            </a>
+            </MenuLink>
           ))}
         </nav>
 
@@ -472,7 +498,7 @@ function AppPreview() {
     <div className="border border-white/12 bg-white/[0.06] shadow-[0_40px_90px_-30px_rgba(0,0,0,0.7)] backdrop-blur-xl">
       <div className="flex items-center gap-2 border-white/10 border-b px-4 py-3">
         <span className="flex h-6 w-6 items-center justify-center bg-white p-1">
-          <BvLogo size={16} alt="" className="h-full w-full" />
+          <IsoMark variant="gradient" className="h-full w-full" />
         </span>
         <span className="font-semibold text-sm text-white">Banco Vital</span>
         <span className="ml-auto h-2 w-2 bg-[var(--color-accent)]" />
@@ -552,7 +578,7 @@ function Features() {
     <section id="caracteristicas" className="scroll-mt-20 border-[var(--color-border)] border-b">
       <div className="mx-auto max-w-6xl px-6 py-24 lg:py-32">
         <div data-animate className="max-w-2xl">
-          <div className="mb-5 flex items-center gap-3 text-[var(--color-fg-subtle)] text-xs uppercase tracking-[0.18em]">
+          <div className="mb-5 flex items-center gap-3 text-[var(--color-accent)] text-xs uppercase tracking-[0.18em]">
             <span className="h-px w-8 bg-[var(--color-accent)]" />
             Características
           </div>
@@ -571,7 +597,7 @@ function Features() {
               data-stagger-item
               className="group relative border-[var(--color-border)] border-r border-b bg-[var(--color-bg-elevated)] p-8 transition-colors hover:bg-[var(--color-bg-subtle)]"
             >
-              <span className="font-mono text-[var(--color-fg-subtle)] text-xs tabular-nums">
+              <span className="font-mono text-[var(--color-accent)] text-sm tabular-nums">
                 0{i + 1}
               </span>
               <div className="mt-5 flex h-11 w-11 items-center justify-center bg-[var(--color-primary)] text-white shadow-[var(--shadow-button)]">
@@ -602,7 +628,7 @@ function HowItWorks() {
     >
       <div className="mx-auto w-full max-w-6xl px-6 py-24 lg:py-32">
         <div data-animate className="max-w-2xl">
-          <div className="mb-5 flex items-center gap-3 text-[var(--color-fg-subtle)] text-xs uppercase tracking-[0.18em]">
+          <div className="mb-5 flex items-center gap-3 text-[var(--color-accent)] text-xs uppercase tracking-[0.18em]">
             <span className="h-px w-8 bg-[var(--color-accent)]" />
             Cómo funciona
           </div>
@@ -635,7 +661,7 @@ function HowItWorks() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-start sm:gap-9">
                   <div className="flex items-center gap-4">
-                    <span className="font-mono font-semibold text-[var(--color-primary)] text-4xl tabular-nums sm:text-5xl">
+                    <span className="font-mono font-semibold text-[var(--color-accent)] text-4xl tabular-nums sm:text-5xl">
                       {s.n}
                     </span>
                     <span className="flex h-12 w-12 items-center justify-center bg-[var(--color-primary)] text-white shadow-[var(--shadow-button)]">
@@ -667,7 +693,7 @@ function BookingSection() {
     <section id="agendar" className="scroll-mt-20">
       <div className="mx-auto max-w-6xl px-6 py-24 lg:py-32">
         <div data-animate className="max-w-2xl">
-          <div className="mb-5 flex items-center gap-3 text-[var(--color-fg-subtle)] text-xs uppercase tracking-[0.18em]">
+          <div className="mb-5 flex items-center gap-3 text-[var(--color-accent)] text-xs uppercase tracking-[0.18em]">
             <span className="h-px w-8 bg-[var(--color-accent)]" />
             Reunión sin compromiso
           </div>
@@ -700,7 +726,10 @@ function Footer() {
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <span className="font-semibold text-3xl tracking-tight">Banco Vital</span>
+            <div className="flex items-center gap-3">
+              <IsoMark variant="mono" className="h-9 w-9 shrink-0 text-white" />
+              <span className="font-semibold text-3xl tracking-tight">Banco Vital</span>
+            </div>
             <p className="mt-4 max-w-xs text-sm text-white/55 leading-relaxed">
               El sistema de gestión para laboratorios bioquímicos. De la orden al informe.
             </p>
@@ -729,19 +758,10 @@ function Footer() {
             <p className="font-medium text-white/45 text-xs uppercase tracking-[0.14em]">
               Plataforma
             </p>
-            <div className="mt-4 flex flex-col gap-2.5 text-sm">
-              <a
-                href="#caracteristicas"
-                className="text-white/70 transition-colors hover:text-white"
-              >
-                Características
-              </a>
-              <a href="#como-funciona" className="text-white/70 transition-colors hover:text-white">
-                Cómo funciona
-              </a>
-              <Link href="/login" className="text-white/70 transition-colors hover:text-white">
-                Acceso clientes
-              </Link>
+            <div className="mt-4 flex flex-col items-start gap-3">
+              <MenuLink href="#caracteristicas">Características</MenuLink>
+              <MenuLink href="#como-funciona">Cómo funciona</MenuLink>
+              <MenuLink href="/login">Acceso clientes</MenuLink>
             </div>
           </div>
         </div>
@@ -749,14 +769,15 @@ function Footer() {
         <div className="mt-16 flex flex-col gap-2 border-white/10 border-t pt-7 text-white/40 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} Banco Vital. Sistema de gestión para laboratorios bioquímicos.</p>
           <p>
-            Creado por{' '}
+            Hecho por{' '}
             <a
               href="https://nodotech.dev"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-white/70 transition-colors hover:text-white"
+              className="group relative font-medium text-white/70 transition-colors hover:text-white"
             >
-              Nodo
+              nodotech.dev
+              <span className="absolute -bottom-0.5 left-0 h-[1.5px] w-full origin-left scale-x-0 bg-[var(--color-accent)] transition-transform duration-300 group-hover:scale-x-100" />
             </a>
           </p>
         </div>
