@@ -1,7 +1,7 @@
 'use client';
 
 import { LoginHero } from '@/components/auth/login-hero';
-import { IsoLogo } from '@/components/brand/iso-logo';
+import { BvLogo } from '@/components/brand/bv-logo';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -51,8 +51,8 @@ export default function GlobalLoginPage() {
         </span>
 
         <div className="motion-fade-in w-full max-w-[384px]">
-          <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--color-primary)] shadow-[var(--shadow-button)]">
-            <IsoLogo className="w-7 text-white" />
+          <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+            <BvLogo size={32} priority alt="" className="h-8 w-8" />
           </div>
 
           <h1 className="font-semibold text-[var(--color-fg)] text-2xl tracking-tight">
