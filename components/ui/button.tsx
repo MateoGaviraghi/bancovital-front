@@ -5,25 +5,26 @@ import { Loader2 } from 'lucide-react';
 import * as React from 'react';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium text-sm transition-[color,background-color,border-color,transform] duration-[var(--duration-fast)] ease-[var(--ease-out-app)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium text-sm tracking-[-0.01em] transition-[background-color,border-color,box-shadow,transform,color] duration-[var(--duration-fast)] ease-[var(--ease-out-app)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         default:
-          'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:bg-[var(--color-primary-hover)]',
+          'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] hover:shadow-[var(--shadow-button-hover)] active:shadow-none',
         destructive:
-          'bg-[var(--color-danger)] text-[var(--color-danger-foreground)] hover:opacity-90',
+          'bg-[var(--color-danger)] text-[var(--color-danger-foreground)] shadow-[var(--shadow-button)] hover:bg-[var(--color-danger-hover)] hover:shadow-[var(--shadow-button-hover)] active:shadow-none',
         outline:
-          'border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] text-[var(--color-fg)] hover:bg-[var(--color-bg-subtle)]',
+          'border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] text-[var(--color-fg)] shadow-[var(--shadow-xs)] hover:border-[var(--color-border-emphasis)] hover:bg-[var(--color-bg-hover)]',
         secondary:
-          'bg-[var(--color-bg-subtle)] text-[var(--color-fg)] hover:bg-[var(--color-bg-subtle)]/80',
-        ghost: 'text-[var(--color-fg)] hover:bg-[var(--color-bg-subtle)]',
+          'border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-fg)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-hover)]',
+        ghost:
+          'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-fg)]',
         link: 'text-[var(--color-primary)] underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2',
         sm: 'h-8 rounded-md px-3 text-xs',
-        lg: 'h-10 rounded-md px-8',
+        lg: 'h-10 rounded-md px-6',
         icon: 'h-9 w-9',
       },
     },

@@ -12,6 +12,7 @@
   --color-bg: #f6f7fb;
   --color-bg-elevated: #ffffff;
   --color-bg-subtle: #eef0f6;
+  --color-bg-hover: #e6eaf1;
   --color-scrim: rgb(20 27 50 / 0.5);
 
   /* === BORDERS === */
@@ -27,7 +28,7 @@
 
   /* === PRIMARY (Banco Vital navy — dominante) === */
   --color-primary: #1f2b5b;
-  --color-primary-hover: #172044;
+  --color-primary-hover: #2a3766;
   --color-primary-soft: #eaeef6;
   --color-primary-foreground: #ffffff;
 
@@ -44,6 +45,7 @@
   --color-warning: #b45309;
   --color-warning-soft: #fef3c7;
   --color-danger: #b91c1c;
+  --color-danger-hover: #a11717;
   --color-danger-soft: #fee2e2;
   --color-danger-foreground: #ffffff;
   --color-info: #0369a1;
@@ -60,6 +62,12 @@
   --shadow-sm: 0 1px 3px 0 rgb(20 27 50 / 0.1), 0 1px 2px -1px rgb(20 27 50 / 0.06);
   --shadow-md: 0 4px 6px -1px rgb(20 27 50 / 0.1), 0 2px 4px -2px rgb(20 27 50 / 0.06);
   --shadow-lg: 0 10px 15px -3px rgb(20 27 50 / 0.1), 0 4px 6px -4px rgb(20 27 50 / 0.06);
+
+  /* === CONTROL DEPTH (inset para inputs, lift tactil para botones) === */
+  --shadow-inset: inset 0 1px 2px 0 rgb(20 27 50 / 0.05);
+  --shadow-button: inset 0 1px 0 0 rgb(255 255 255 / 0.12), 0 1px 2px 0 rgb(20 27 50 / 0.22);
+  --shadow-button-hover: inset 0 1px 0 0 rgb(255 255 255 / 0.16), 0 3px 6px -1px
+    rgb(20 27 50 / 0.28);
 
   /* === TYPOGRAPHY (Geist Sans/Mono — vía paquete `geist` en layout.tsx) === */
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -137,6 +145,16 @@ input[type="datetime-local"] {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 

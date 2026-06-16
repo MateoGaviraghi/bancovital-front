@@ -13,7 +13,7 @@ export const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      'inline-flex h-9 items-center justify-center gap-1 rounded-md bg-[var(--color-bg-subtle)] p-1 text-[var(--color-fg-muted)]',
+      'inline-flex h-9 items-center justify-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-1 text-[var(--color-fg-muted)]',
       className,
     )}
     {...props}
@@ -28,7 +28,7 @@ export const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      'inline-flex h-7 items-center justify-center whitespace-nowrap rounded-sm px-3 text-xs font-medium outline-none transition-all focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-[var(--color-bg-elevated)] data-[state=active]:text-[var(--color-fg)] data-[state=active]:shadow-[var(--shadow-xs)]',
+      'inline-flex h-7 items-center justify-center whitespace-nowrap rounded-[5px] px-3 text-xs font-medium outline-none transition-[background-color,color,box-shadow] duration-[var(--duration-fast)] ease-[var(--ease-out-app)] hover:text-[var(--color-fg)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-soft)] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-[var(--color-bg-elevated)] data-[state=active]:text-[var(--color-fg)] data-[state=active]:shadow-[var(--shadow-xs)]',
       className,
     )}
     {...props}
@@ -43,7 +43,7 @@ export const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      'mt-4 outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]',
+      'mt-4 outline-none data-[state=active]:animate-[fade-in_var(--duration-base)_var(--ease-out-app)]',
       className,
     )}
     {...props}
