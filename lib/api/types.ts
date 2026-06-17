@@ -35,6 +35,9 @@ export interface MeResponse {
   /** Nombre + logo del lab del usuario, para el header. */
   labName: string | null;
   logoUrl: string | null;
+  /** Paleta de marca del lab (hex #rrggbb) — el front deriva los tokens. null = Banco Vital. */
+  primaryColor: string | null;
+  accentColor: string | null;
 }
 
 // ─────────────── Lab config ───────────────
@@ -57,6 +60,7 @@ export interface LabConfig {
   logoPath: string | null;
   shortName: string | null;
   primaryColor: string | null;
+  accentColor: string | null;
   tagline: string | null;
   estado: EstadoLab;
   createdAt: string;
@@ -83,6 +87,8 @@ export interface UpdateLabConfigDto {
   shortName?: string | null;
   /** Color primario de marca en hex (#rrggbb). */
   primaryColor?: string;
+  /** Color de acento de marca en hex (#rrggbb). */
+  accentColor?: string;
   /** Eslogan corto del lab (máx 120). */
   tagline?: string;
 }

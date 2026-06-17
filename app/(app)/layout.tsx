@@ -7,6 +7,7 @@ import { getServerApi } from '@/lib/api/server';
 import type { MeResponse } from '@/lib/api/types';
 import { getSessionUser } from '@/lib/auth/session';
 import { LabProvider } from '@/lib/lab/lab-info';
+import { labThemeVars } from '@/lib/lab/theme';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 
@@ -29,7 +30,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (me?.role === 'super') redirect('/super');
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--color-bg)]">
+    // Theming por lab: las CSS-vars de marca se setean acá y cascadean a todo el
+    // subtree (sidebar/topbar/contenido). Sin colores propios → defaults Banco Vital.
+    <div
+      className="flex min-h-screen flex-col bg-[var(--color-bg)]"
+      style={labThemeVars({ primaryColor: me?.primaryColor, accentColor: me?.accentColor })}
+    >
       <ImpersonateBanner />
       <div className="flex min-h-0 flex-1">
         <LabProvider lab={{ labName: me?.labName ?? null, logoUrl: me?.logoUrl ?? null }}>
