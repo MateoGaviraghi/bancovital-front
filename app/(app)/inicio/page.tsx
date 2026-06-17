@@ -4,8 +4,9 @@ import { StatusPill } from '@/components/domain/status-pill';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { getServerApi } from '@/lib/api/server';
-import type { OrderListItem, Patient, Practice } from '@/lib/api/types';
+import type { OrderListItem, OrderStatus, Patient, Practice } from '@/lib/api/types';
 import { getSessionUser } from '@/lib/auth/session';
+import { cn } from '@/lib/cn';
 import { ClipboardList, FlaskConical, Plus, TrendingUp, Users } from 'lucide-react';
 import Link from 'next/link';
 
@@ -53,18 +54,25 @@ function KpiCard({
   icon: Icon,
   label,
   value,
+  accent = false,
 }: {
   icon: typeof ClipboardList;
   label: string;
   value: string | number;
+  accent?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-5 shadow-[var(--shadow-xs)]">
+    <div
+      className={cn(
+        'rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-5 shadow-[var(--shadow-xs)]',
+        accent && 'border-l-[3px] border-l-[var(--color-primary)]',
+      )}
+    >
       <div className="flex items-start justify-between">
-        <p className="font-medium text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
+        <p className="font-medium text-[10px] text-[var(--color-fg-muted)] uppercase tracking-[0.12em]">
           {label}
         </p>
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
           <Icon className="h-4 w-4" strokeWidth={1.75} />
         </div>
       </div>
@@ -83,11 +91,22 @@ export default async function HomePage() {
   const ordersToday = orders.filter((o) => isToday(o.orderDate)).length;
   const recent = orders.slice(0, 8);
 
+  const byStatus = orders.reduce(
+    (acc, o) => {
+      acc[o.status] = (acc[o.status] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<OrderStatus, number>,
+  );
+  const statusEntries = (Object.entries(byStatus) as [OrderStatus, number][]).sort(
+    (a, b) => b[1] - a[1],
+  );
+
   return (
     <>
       <PageHeader
         title="Inicio"
-        description="Resumen operativo del laboratorio."
+        description={`${ordersToday} ${ordersToday === 1 ? 'orden' : 'órdenes'} hoy · ${orders.length} en total`}
         actions={
           canCreate && (
             <Button asChild>
@@ -101,7 +120,7 @@ export default async function HomePage() {
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard icon={ClipboardList} label="Órdenes hoy" value={ordersToday} />
+        <KpiCard icon={ClipboardList} label="Órdenes hoy" value={ordersToday} accent />
         <KpiCard icon={TrendingUp} label="Órdenes totales" value={orders.length} />
         <KpiCard icon={Users} label="Pacientes" value={patientCount} />
         <KpiCard icon={FlaskConical} label="Prácticas en catálogo" value={practiceCount} />
@@ -118,6 +137,20 @@ export default async function HomePage() {
             Ver todas
           </Link>
         </div>
+
+        {statusEntries.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] px-5 py-2.5">
+            {statusEntries.map(([status, count]) => (
+              <span key={status} className="inline-flex items-center gap-1.5">
+                <StatusPill status={status} />
+                <span className="tabular font-medium font-mono text-[var(--color-fg)] text-xs">
+                  {count}
+                </span>
+              </span>
+            ))}
+          </div>
+        )}
+
         {recent.length === 0 ? (
           <p className="px-5 py-10 text-center text-[var(--color-fg-muted)] text-sm">
             Sin órdenes todavía.
@@ -147,6 +180,12 @@ export default async function HomePage() {
                     >
                       #{String(o.protocolNumber).padStart(5, '0')}
                     </Link>
+                    {o.isUrgent && (
+                      <span
+                        className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-danger)] align-middle"
+                        title="Urgente"
+                      />
+                    )}
                   </td>
                   <td className="px-5 py-3 text-[var(--color-fg)]">
                     {o.patient.lastName}, {o.patient.firstName}

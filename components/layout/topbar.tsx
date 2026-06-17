@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { SessionUser } from '@/lib/auth/session';
 import { getSupabase } from '@/lib/supabase-browser';
-import { LogOut, User } from 'lucide-react';
+import { ChevronDown, LogOut, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -69,6 +69,10 @@ export function Topbar({ user }: { user: SessionUser }) {
                 {ROLE_LABEL[user.role]}
               </span>
             </span>
+            <ChevronDown
+              className="hidden h-4 w-4 shrink-0 text-[var(--color-fg-subtle)] sm:block"
+              strokeWidth={2}
+            />
           </button>
         </DropdownMenuTrigger>
 
