@@ -186,7 +186,8 @@ function StepPropuesta({
             Descripción de la propuesta
           </p>
           <p className="whitespace-pre-wrap text-[var(--color-fg)] text-sm leading-relaxed">
-            {contrato.propuesta.descripcion}
+            {contrato.propuesta.descripcion.trim() ||
+              'Prestación del servicio de gestión integral para laboratorio bioquímico mediante el sistema Banco Vital, conforme a los planes y condiciones establecidos en el presente contrato.'}
           </p>
           {contrato.propuesta.notas && (
             <p className="mt-2 text-[var(--color-fg-muted)] text-sm italic leading-relaxed">
