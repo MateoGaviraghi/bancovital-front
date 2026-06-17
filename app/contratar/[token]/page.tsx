@@ -78,10 +78,10 @@ function EstadoCard({
       <p className="text-[var(--color-fg-subtle)] text-xs">
         ¿Preguntas? Escribinos a{' '}
         <a
-          href="mailto:hola@nodo.ar"
+          href="mailto:nodotech.dev@gmail.com"
           className="text-[var(--color-primary)] underline underline-offset-2"
         >
-          hola@nodo.ar
+          nodotech.dev@gmail.com
         </a>
       </p>
     </div>
