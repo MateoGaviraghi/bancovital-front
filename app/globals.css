@@ -32,6 +32,9 @@
   --color-primary-soft: #eaeef6;
   --color-primary-foreground: #ffffff;
 
+  /* === RAIL (sidebar navy profundo — chrome de la app, mismo navy que el hero de la landing) === */
+  --color-rail: #10193a;
+
   /* === ACCENT (Banco Vital rojo — SOLO acento de marca:
      logo, detalles, highlights. NUNCA color de acción ni de error) === */
   --color-accent: #cd0f0f;

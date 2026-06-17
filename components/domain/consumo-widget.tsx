@@ -15,11 +15,11 @@ function ProgressBar({ pct }: { pct: number }) {
       ? 'bg-[var(--color-danger)]'
       : pct >= 80
         ? 'bg-[var(--color-warning)]'
-        : 'bg-[var(--color-primary)]';
+        : 'bg-white/85';
 
   return (
     <div
-      className="h-1 w-full overflow-hidden rounded-full bg-[var(--color-bg-subtle)]"
+      className="h-1 w-full overflow-hidden rounded-full bg-white/10"
       role="progressbar"
       tabIndex={0}
       aria-valuenow={clamped}
@@ -52,8 +52,8 @@ export function ConsumoWidget() {
   if (isLoading) {
     return (
       <div className="px-4 py-3">
-        <div className="h-2.5 w-24 animate-pulse rounded bg-[var(--color-bg-subtle)]" />
-        <div className="mt-2 h-1 w-full animate-pulse rounded-full bg-[var(--color-bg-subtle)]" />
+        <div className="h-2.5 w-24 animate-pulse rounded bg-white/10" />
+        <div className="mt-2 h-1 w-full animate-pulse rounded-full bg-white/10" />
       </div>
     );
   }
@@ -64,18 +64,16 @@ export function ConsumoWidget() {
   const pct = ciclo.porcentaje ?? 0;
 
   return (
-    <div className="border-[var(--color-border)] border-t px-4 py-3">
-      <p className="mb-1.5 font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wide">
+    <div className="border-white/10 border-t px-4 py-3">
+      <p className="mb-1.5 font-medium text-[10px] text-white/40 uppercase tracking-[0.12em]">
         Órdenes del mes
       </p>
       <ProgressBar pct={pct} />
-      <p className="tabular mt-1 font-mono text-[10px] text-[var(--color-fg-muted)]">
+      <p className="tabular mt-1 font-mono text-[10px] text-white/55">
         {ciclo.usadas} de {ciclo.cupoEfectivo ?? '?'}
       </p>
       {ciclo.rollover > 0 && (
-        <p className="mt-0.5 text-[10px] text-[var(--color-fg-subtle)]">
-          incluye +{ciclo.rollover} de rollover
-        </p>
+        <p className="mt-0.5 text-[10px] text-white/40">incluye +{ciclo.rollover} de rollover</p>
       )}
     </div>
   );
