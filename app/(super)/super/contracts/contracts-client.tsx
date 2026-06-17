@@ -147,7 +147,6 @@ function validate(f: NewContratoForm): Record<string, string> {
   if (!f.emailFirmante.trim()) errs.emailFirmante = 'Requerido';
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.emailFirmante))
     errs.emailFirmante = 'Email inválido';
-  if (!f.descripcion.trim()) errs.descripcion = 'Requerido';
   return errs;
 }
 
@@ -282,7 +281,6 @@ function NewContratoDialog({
           <FormField
             label="Descripción de la propuesta"
             htmlFor="c-desc"
-            required
             error={errors.descripcion}
           >
             <Textarea
