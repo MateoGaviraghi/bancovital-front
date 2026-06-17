@@ -41,6 +41,7 @@ import type {
   InviteUserDto,
   Laboratorio,
   Plan,
+  SetAdminPasswordResponse,
   UpdateLaboratorioDto,
   UserRole,
 } from '@/lib/api/types';
@@ -52,7 +53,9 @@ import {
   AlertTriangle,
   Building2,
   ChevronDown,
+  Copy,
   Download,
+  KeyRound,
   Layers,
   Loader2,
   LogIn,
@@ -61,6 +64,7 @@ import {
   Pencil,
   Plus,
   RotateCcw,
+  Sparkles,
   Trash2,
   Wallet,
   X,
@@ -741,6 +745,149 @@ function InviteUserDialog({
   );
 }
 
+// ─── Definir contraseña de acceso (admin del lab) ──────────────────
+
+function SetPasswordDialog({
+  open,
+  onOpenChange,
+  lab,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  lab: Laboratorio | null;
+}) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [result, setResult] = useState<{ email: string; password: string } | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setPassword('');
+      setError('');
+      setResult(null);
+    }
+  }, [open]);
+
+  const setPasswordMut = useMutation({
+    mutationFn: (pwd: string) =>
+      apiClient
+        .post<SetAdminPasswordResponse>(`/super/labs/${lab!.id}/admin-password`, { password: pwd })
+        .then((r) => r.data),
+    onSuccess: (data) => {
+      setResult({ email: data.email, password });
+      toast.success('Contraseña definida');
+    },
+    onError: (err) => toast.error(apiError(err, 'No se pudo definir la contraseña')),
+  });
+
+  function generate() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    const buf = new Uint32Array(14);
+    crypto.getRandomValues(buf);
+    let pwd = '';
+    for (let i = 0; i < 14; i++) pwd += chars[buf[i]! % chars.length];
+    setPassword(pwd);
+    setError('');
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (password.length < 8) {
+      setError('Mínimo 8 caracteres');
+      return;
+    }
+    setPasswordMut.mutate(password);
+  }
+
+  function copyCredentials() {
+    if (!result) return;
+    navigator.clipboard
+      .writeText(`Usuario: ${result.email}\nContraseña: ${result.password}`)
+      .then(() => toast.success('Credenciales copiadas'))
+      .catch(() => toast.error('No se pudo copiar'));
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Acceso del laboratorio — {lab?.shortName ?? lab?.legalName}</DialogTitle>
+        </DialogHeader>
+
+        {result ? (
+          <div className="space-y-4 pt-2">
+            <p className="border border-[var(--color-success)]/25 bg-[var(--color-success-soft)] px-4 py-2.5 text-[var(--color-success)] text-sm">
+              Contraseña definida. Pasale estas credenciales al cliente:
+            </p>
+            <div className="space-y-1.5 border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-4 text-sm">
+              <p>
+                <span className="text-[var(--color-fg-muted)]">Usuario: </span>
+                <span className="font-medium font-mono">{result.email}</span>
+              </p>
+              <p>
+                <span className="text-[var(--color-fg-muted)]">Contraseña: </span>
+                <span className="font-medium font-mono">{result.password}</span>
+              </p>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cerrar
+              </Button>
+              <Button type="button" onClick={copyCredentials}>
+                <Copy className="h-4 w-4" strokeWidth={2} />
+                Copiar credenciales
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            <p className="text-[var(--color-fg-muted)] text-sm">
+              El usuario es el email del laboratorio. Definí una contraseña y pasásela al cliente.
+            </p>
+            <FormField label="Contraseña" htmlFor="lab-password" required error={error}>
+              <Input
+                id="lab-password"
+                type="text"
+                autoComplete="off"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={setPasswordMut.isPending}
+                placeholder="Mínimo 8 caracteres"
+              />
+            </FormField>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={generate}
+              disabled={setPasswordMut.isPending}
+            >
+              <Sparkles className="h-4 w-4" strokeWidth={2} />
+              Generar contraseña segura
+            </Button>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={setPasswordMut.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={setPasswordMut.isPending}>
+                {setPasswordMut.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                )}
+                Definir contraseña
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Purge confirm dialog ──────────────────────────────────────────
 
 function PurgeDialog({
@@ -849,6 +996,7 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
   const [invitingLab, setInvitingLab] = useState<Laboratorio | null>(null);
   const [assigningLab, setAssigningLab] = useState<Laboratorio | null>(null);
   const [morosoLab, setMorosoLab] = useState<Laboratorio | null>(null);
+  const [settingPasswordLab, setSettingPasswordLab] = useState<Laboratorio | null>(null);
   const [impersonatingId, setImpersonatingId] = useState<number | null>(null);
   const [exportingId, setExportingId] = useState<number | null>(null);
 
@@ -1107,6 +1255,10 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
                                   <Mail className="h-4 w-4" strokeWidth={2} />
                                   Invitar
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setSettingPasswordLab(lab)}>
+                                  <KeyRound className="h-4 w-4" strokeWidth={2} />
+                                  Definir contraseña
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onSelect={(e) => {
                                     e.preventDefault();
@@ -1207,6 +1359,14 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
           if (!o) setInvitingLab(null);
         }}
         lab={invitingLab}
+      />
+
+      <SetPasswordDialog
+        open={settingPasswordLab !== null}
+        onOpenChange={(o) => {
+          if (!o) setSettingPasswordLab(null);
+        }}
+        lab={settingPasswordLab}
       />
 
       <AssignPlanDialog

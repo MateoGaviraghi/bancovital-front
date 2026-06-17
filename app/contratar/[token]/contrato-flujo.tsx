@@ -867,14 +867,11 @@ function ContratoExito({ emailOfuscado }: { emailOfuscado: string }) {
             Contrato firmado
           </h2>
           <p className="mx-auto mt-2 max-w-sm text-[var(--color-fg-muted)] text-sm leading-relaxed">
-            Creamos tu laboratorio. Vas a recibir un email en{' '}
-            <span className="font-medium text-[var(--color-fg)]">{emailOfuscado}</span> para
-            configurar tu acceso.
+            Creamos tu laboratorio. El equipo de Banco Vital se va a contactar con vos en{' '}
+            <span className="font-medium text-[var(--color-fg)]">{emailOfuscado}</span> para darte
+            tus datos de acceso.
           </p>
         </div>
-        <Button asChild size="lg">
-          <a href="/login">Acceder a Banco Vital</a>
-        </Button>
       </div>
     </div>
   );

@@ -882,6 +882,11 @@ export interface SetMorosoDto {
   moroso: boolean;
 }
 
+export interface SetAdminPasswordResponse {
+  ok: boolean;
+  email: string;
+}
+
 // ─────────────── Super: anuncios ───────────────
 
 export type AnuncioTipo = 'info' | 'advertencia' | 'mantenimiento';
