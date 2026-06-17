@@ -711,7 +711,8 @@ export interface ContratoPublicDetail {
   propuesta: { descripcion: string; notas?: string };
   planSugeridoId: number | null;
   planes: ContratoPublicPlan[];
-  pdfUrl: string;
+  /** Firmado con URL solo tras verificar OTP (el PDF tiene PII); null antes. */
+  pdfUrl: string | null;
 }
 
 export interface OtpRequestResponse {

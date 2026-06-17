@@ -214,12 +214,18 @@ function StepPropuesta({
               )}
             </p>
           </div>
-          <Button asChild variant="outline" size="sm">
-            <a href={contrato.pdfUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink strokeWidth={2} />
-              Ver contrato (PDF)
-            </a>
-          </Button>
+          {contrato.pdfUrl ? (
+            <Button asChild variant="outline" size="sm">
+              <a href={contrato.pdfUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink strokeWidth={2} />
+                Ver contrato (PDF)
+              </a>
+            </Button>
+          ) : (
+            <span className="max-w-[12rem] text-right text-[10px] text-[var(--color-fg-subtle)] leading-snug">
+              El PDF completo se habilita tras verificar tu email (paso Firma)
+            </span>
+          )}
         </div>
       </Panel>
 
