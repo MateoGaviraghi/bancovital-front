@@ -33,9 +33,11 @@ function getInitials(name: string): string {
 export function Topbar({
   user,
   mobileNav,
+  navStyle,
 }: {
   user: SessionUser;
   mobileNav?: React.ReactNode;
+  navStyle?: React.CSSProperties;
 }) {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
@@ -59,7 +61,7 @@ export function Topbar({
 
   return (
     <header className="flex h-14 items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-4 sm:px-6">
-      {mobileNav ? <MobileNav>{mobileNav}</MobileNav> : <span />}
+      {mobileNav ? <MobileNav style={navStyle}>{mobileNav}</MobileNav> : <span />}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button

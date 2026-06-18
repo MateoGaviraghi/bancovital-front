@@ -8,7 +8,15 @@ import { useEffect, useState } from 'react';
 // Disparador + panel deslizante de navegación para mobile (<md). El contenido
 // (`children`) es el mismo cuerpo de nav del sidebar (rail navy). Se cierra solo
 // al cambiar de ruta.
-export function MobileNav({ children }: { children: React.ReactNode }) {
+export function MobileNav({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  // Paleta del lab (CSS-vars). El sheet se portea a document.body, fuera del div
+  // tematizado del layout, así que necesita las vars acá para teñir el rail.
+  style?: React.CSSProperties;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -28,7 +36,9 @@ export function MobileNav({ children }: { children: React.ReactNode }) {
           <Menu className="h-5 w-5" strokeWidth={2} />
         </button>
       </SheetTrigger>
-      <SheetContent className="bg-rail">{children}</SheetContent>
+      <SheetContent className="bg-rail" style={style}>
+        {children}
+      </SheetContent>
     </Sheet>
   );
 }

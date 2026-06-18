@@ -29,20 +29,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // Bajo impersonation /me devuelve role 'admin' + labId → ve la app del lab.
   if (me?.role === 'super') redirect('/super');
 
+  // Paleta del lab (white-label). Se aplica al div raíz Y al sheet de la nav mobile
+  // (que se portea a document.body, fuera de este div → no heredaría las vars).
+  const themeVars = labThemeVars({ primaryColor: me?.primaryColor, accentColor: me?.accentColor });
+
   return (
     // Theming por lab: las CSS-vars de marca se setean acá y cascadean a todo el
     // subtree (sidebar/topbar/contenido). Sin colores propios → defaults Banco Vital.
-    <div
-      className="flex h-screen flex-col overflow-hidden bg-[var(--color-bg)]"
-      style={labThemeVars({ primaryColor: me?.primaryColor, accentColor: me?.accentColor })}
-    >
+    <div className="flex h-screen flex-col overflow-hidden bg-[var(--color-bg)]" style={themeVars}>
       <ImpersonateBanner />
       <div className="flex min-h-0 flex-1">
         <LabProvider lab={{ labName: me?.labName ?? null, logoUrl: me?.logoUrl ?? null }}>
           {/* Rol efectivo: bajo impersonation /me devuelve 'admin' → sidebar de lab. */}
           <Sidebar userRole={me?.role ?? user.role} />
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <Topbar user={user} mobileNav={<SidebarNavBody userRole={me?.role ?? user.role} />} />
+            <Topbar
+              user={user}
+              mobileNav={<SidebarNavBody userRole={me?.role ?? user.role} />}
+              navStyle={themeVars}
+            />
             <AnnouncementBanner />
             <ConsumoBanners />
             <main className="flex-1 overflow-auto">
