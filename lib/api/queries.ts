@@ -4,7 +4,11 @@ export const queries = {
 
   labConfig: ['lab-config'] as const,
 
-  preferenciaPdf: ['preferencia-pdf'] as const,
+  preferenciaPdf: {
+    list: () => ['preferencia-pdf'] as const,
+    detail: (id: number) => ['preferencia-pdf', id] as const,
+    fondoUrl: (id: number) => ['preferencia-pdf', id, 'fondo-url'] as const,
+  },
 
   sedes: {
     list: () => ['sedes'] as const,

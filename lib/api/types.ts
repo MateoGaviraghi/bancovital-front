@@ -492,11 +492,14 @@ export interface UpsertResultDto {
 
 // ─────────────── PDF preferences ───────────────
 
+export type TipoPdf = 'informe' | 'orden';
+
 export interface PdfLayoutCampo {
   x: number;
   y: number;
   fontSize?: number;
   color?: string;
+  prefix?: string;
 }
 
 export interface PdfLayoutConfig {
@@ -507,6 +510,8 @@ export interface PdfLayoutConfig {
 export interface PreferenciaPdf {
   id: number;
   labId: number;
+  nombre: string;
+  tipo: TipoPdf;
   fondoPath: string | null;
   layoutConfig: PdfLayoutConfig | null;
   marginTop: number;
@@ -515,11 +520,19 @@ export interface PreferenciaPdf {
   marginRight: number;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface CreatePreferenciaPdfDto {
+  nombre: string;
+  tipo?: TipoPdf;
 }
 
 export interface UpdatePreferenciaPdfDto {
-  /** Dibujar la imagen de fondo (membrete) en el PDF. */
+  nombre?: string;
+  tipo?: TipoPdf;
   usarFondo?: boolean;
+  campos?: Record<string, PdfLayoutCampo>;
   marginTop?: number;
   marginBottom?: number;
   marginLeft?: number;
