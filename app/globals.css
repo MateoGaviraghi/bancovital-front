@@ -160,6 +160,14 @@ input[type="datetime-local"] {
     transform: translate(-50%, -50%) scale(1);
   }
 }
+@keyframes sheet-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
 
 .motion-fade-in {
   animation: fade-in var(--duration-base) var(--ease-out-app) both;

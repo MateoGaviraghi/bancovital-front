@@ -14,6 +14,7 @@ import { ChevronDown, LogOut, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { MobileNav } from './mobile-nav';
 
 const ROLE_LABEL: Record<SessionUser['role'], string> = {
   admin: 'Administrador',
@@ -29,7 +30,13 @@ function getInitials(name: string): string {
   return letters.toUpperCase();
 }
 
-export function Topbar({ user }: { user: SessionUser }) {
+export function Topbar({
+  user,
+  mobileNav,
+}: {
+  user: SessionUser;
+  mobileNav?: React.ReactNode;
+}) {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
   const initials = getInitials(user.displayName ?? user.email);
@@ -51,7 +58,8 @@ export function Topbar({ user }: { user: SessionUser }) {
   }
 
   return (
-    <header className="flex h-14 items-center justify-end gap-3 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-6">
+    <header className="flex h-14 items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-4 sm:px-6">
+      {mobileNav ? <MobileNav>{mobileNav}</MobileNav> : <span />}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button

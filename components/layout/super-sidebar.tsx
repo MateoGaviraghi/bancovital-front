@@ -39,11 +39,11 @@ function isActive(href: string, pathname: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function SuperSidebar() {
+export function SuperSidebarNavBody() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col bg-rail md:flex">
+    <>
       <div className="flex h-14 items-center gap-2.5 border-white/10 border-b px-4">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[var(--color-accent)] text-white">
           <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2} />
@@ -89,6 +89,14 @@ export function SuperSidebar() {
           Banco Vital <span className="text-white/30">· Super</span>
         </p>
       </div>
+    </>
+  );
+}
+
+export function SuperSidebar() {
+  return (
+    <aside className="hidden w-60 shrink-0 flex-col bg-rail md:flex">
+      <SuperSidebarNavBody />
     </aside>
   );
 }

@@ -106,91 +106,93 @@ export default async function PracticasPage({ searchParams }: { searchParams: Se
       ) : (
         <>
           <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-[var(--shadow-xs)]">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
-                  <th className="px-5 py-2.5 text-left font-medium">NBU</th>
-                  <th className="px-5 py-2.5 text-left font-medium">Práctica</th>
-                  <th className="px-5 py-2.5 text-left font-medium">Sección</th>
-                  <th className="px-5 py-2.5 text-right font-medium">UB</th>
-                  <th className="px-5 py-2.5 text-left font-medium">Atributos</th>
-                  <th className="px-5 py-2.5 text-right font-medium">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(result.data as PracticeWithChildren[]).map((p) => (
-                  <tr
-                    key={p.id}
-                    className="border-[var(--color-border)] border-b last:border-b-0 hover:bg-[var(--color-bg-subtle)]"
-                  >
-                    <td className="tabular px-5 py-3 font-mono text-[var(--color-fg)]">
-                      {p.nbuCode}
-                    </td>
-                    <td className="px-5 py-3 text-[var(--color-fg)]">
-                      {p.name}
-                      {p.shortName && (
-                        <span className="ml-2 text-[var(--color-fg-subtle)] text-xs">
-                          ({p.shortName})
-                        </span>
-                      )}
-                      {p.children && p.children.length > 0 && (
-                        <span
-                          title={`Incluye: ${p.children.map((c) => c.name).join(', ')}`}
-                          className="ml-2 inline-flex items-center gap-0.5 rounded-sm bg-[var(--color-info-soft)] px-1.5 py-0.5 font-medium text-[10px] text-[var(--color-info)]"
-                        >
-                          <GitBranch className="h-3 w-3" strokeWidth={2} />
-                          {p.children.length} subprácticas
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-[var(--color-fg-muted)]">{p.section ?? '—'}</td>
-                    <td className="tabular px-5 py-3 text-right font-mono text-[var(--color-fg)]">
-                      {p.units}
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex flex-wrap items-center gap-1">
-                        {p.isElaborated ? (
-                          <span className="inline-flex items-center rounded-md border border-[var(--color-success)]/15 bg-[var(--color-success-soft)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-success)] uppercase tracking-wide">
-                            Propia
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-md border border-[var(--color-fg-subtle)]/15 bg-[var(--color-bg-subtle)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
-                            Derivada
-                          </span>
-                        )}
-                        {p.requiresAuthorization && (
-                          <span className="inline-flex items-center rounded-md border border-[var(--color-warning)]/15 bg-[var(--color-warning-soft)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-warning)] uppercase tracking-wide">
-                            Autorización
-                          </span>
-                        )}
-                        {p.isSpecialAct && (
-                          <span className="inline-flex items-center rounded-md border border-[var(--color-info)]/15 bg-[var(--color-info-soft)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-info)] uppercase tracking-wide">
-                            Especial
-                          </span>
-                        )}
-                        {!p.active && (
-                          <span
-                            className={cn(
-                              'inline-flex items-center rounded-md border border-[var(--color-fg-subtle)]/15 bg-[var(--color-bg-subtle)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide',
-                            )}
-                          >
-                            Inactiva
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <Link
-                        href={`/practicas/${p.id}`}
-                        className="font-medium text-[var(--color-primary)] hover:underline"
-                      >
-                        Configurar
-                      </Link>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
+                    <th className="px-5 py-2.5 text-left font-medium">NBU</th>
+                    <th className="px-5 py-2.5 text-left font-medium">Práctica</th>
+                    <th className="px-5 py-2.5 text-left font-medium">Sección</th>
+                    <th className="px-5 py-2.5 text-right font-medium">UB</th>
+                    <th className="px-5 py-2.5 text-left font-medium">Atributos</th>
+                    <th className="px-5 py-2.5 text-right font-medium">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(result.data as PracticeWithChildren[]).map((p) => (
+                    <tr
+                      key={p.id}
+                      className="border-[var(--color-border)] border-b last:border-b-0 hover:bg-[var(--color-bg-subtle)]"
+                    >
+                      <td className="tabular px-5 py-3 font-mono text-[var(--color-fg)]">
+                        {p.nbuCode}
+                      </td>
+                      <td className="px-5 py-3 text-[var(--color-fg)]">
+                        {p.name}
+                        {p.shortName && (
+                          <span className="ml-2 text-[var(--color-fg-subtle)] text-xs">
+                            ({p.shortName})
+                          </span>
+                        )}
+                        {p.children && p.children.length > 0 && (
+                          <span
+                            title={`Incluye: ${p.children.map((c) => c.name).join(', ')}`}
+                            className="ml-2 inline-flex items-center gap-0.5 rounded-sm bg-[var(--color-info-soft)] px-1.5 py-0.5 font-medium text-[10px] text-[var(--color-info)]"
+                          >
+                            <GitBranch className="h-3 w-3" strokeWidth={2} />
+                            {p.children.length} subprácticas
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-[var(--color-fg-muted)]">{p.section ?? '—'}</td>
+                      <td className="tabular px-5 py-3 text-right font-mono text-[var(--color-fg)]">
+                        {p.units}
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex flex-wrap items-center gap-1">
+                          {p.isElaborated ? (
+                            <span className="inline-flex items-center rounded-md border border-[var(--color-success)]/15 bg-[var(--color-success-soft)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-success)] uppercase tracking-wide">
+                              Propia
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-md border border-[var(--color-fg-subtle)]/15 bg-[var(--color-bg-subtle)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
+                              Derivada
+                            </span>
+                          )}
+                          {p.requiresAuthorization && (
+                            <span className="inline-flex items-center rounded-md border border-[var(--color-warning)]/15 bg-[var(--color-warning-soft)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-warning)] uppercase tracking-wide">
+                              Autorización
+                            </span>
+                          )}
+                          {p.isSpecialAct && (
+                            <span className="inline-flex items-center rounded-md border border-[var(--color-info)]/15 bg-[var(--color-info-soft)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-info)] uppercase tracking-wide">
+                              Especial
+                            </span>
+                          )}
+                          {!p.active && (
+                            <span
+                              className={cn(
+                                'inline-flex items-center rounded-md border border-[var(--color-fg-subtle)]/15 bg-[var(--color-bg-subtle)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide',
+                              )}
+                            >
+                              Inactiva
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <Link
+                          href={`/practicas/${p.id}`}
+                          className="font-medium text-[var(--color-primary)] hover:underline"
+                        >
+                          Configurar
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <Pagination page={page} pageSize={pageSize} total={result.total} buildHref={buildHref} />

@@ -67,42 +67,44 @@ export default async function MedicosPage({
         />
       ) : (
         <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-[var(--shadow-xs)]">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
-                <th className="px-5 py-2.5 text-left font-medium">Matrícula</th>
-                <th className="px-5 py-2.5 text-left font-medium">Médico</th>
-                <th className="px-5 py-2.5 text-left font-medium">Especialidad</th>
-                <th className="px-5 py-2.5 text-left font-medium">Teléfono</th>
-                <th className="px-5 py-2.5 text-right font-medium">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((d) => (
-                <tr
-                  key={d.id}
-                  className="border-[var(--color-border)] border-b last:border-b-0 hover:bg-[var(--color-bg-subtle)]"
-                >
-                  <td className="tabular px-5 py-3 font-mono text-[var(--color-fg)]">
-                    {d.matricula}
-                  </td>
-                  <td className="px-5 py-3 text-[var(--color-fg)]">
-                    {d.lastName}, {d.firstName}
-                  </td>
-                  <td className="px-5 py-3 text-[var(--color-fg-muted)]">{d.specialty ?? '—'}</td>
-                  <td className="px-5 py-3 text-[var(--color-fg-muted)]">{d.phone ?? '—'}</td>
-                  <td className="px-5 py-3 text-right">
-                    <Link
-                      href={`/medicos/${d.id}`}
-                      className="font-medium text-[var(--color-primary)] hover:underline"
-                    >
-                      Editar
-                    </Link>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
+                  <th className="px-5 py-2.5 text-left font-medium">Matrícula</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Médico</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Especialidad</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Teléfono</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((d) => (
+                  <tr
+                    key={d.id}
+                    className="border-[var(--color-border)] border-b last:border-b-0 hover:bg-[var(--color-bg-subtle)]"
+                  >
+                    <td className="tabular px-5 py-3 font-mono text-[var(--color-fg)]">
+                      {d.matricula}
+                    </td>
+                    <td className="px-5 py-3 text-[var(--color-fg)]">
+                      {d.lastName}, {d.firstName}
+                    </td>
+                    <td className="px-5 py-3 text-[var(--color-fg-muted)]">{d.specialty ?? '—'}</td>
+                    <td className="px-5 py-3 text-[var(--color-fg-muted)]">{d.phone ?? '—'}</td>
+                    <td className="px-5 py-3 text-right">
+                      <Link
+                        href={`/medicos/${d.id}`}
+                        className="font-medium text-[var(--color-primary)] hover:underline"
+                      >
+                        Editar
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

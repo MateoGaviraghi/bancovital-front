@@ -1,5 +1,5 @@
 import { ImpersonateBanner } from '@/components/domain/impersonate-banner';
-import { SuperSidebar } from '@/components/layout/super-sidebar';
+import { SuperSidebar, SuperSidebarNavBody } from '@/components/layout/super-sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { getSessionUser } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
@@ -18,9 +18,11 @@ export default async function SuperLayout({ children }: { children: React.ReactN
       <div className="flex min-h-0 flex-1">
         <SuperSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar user={user} />
+          <Topbar user={user} mobileNav={<SuperSidebarNavBody />} />
           <main className="flex-1 overflow-auto">
-            <div className="mx-auto w-full max-w-[1440px] px-6 py-8 lg:px-8">{children}</div>
+            <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+              {children}
+            </div>
           </main>
         </div>
       </div>

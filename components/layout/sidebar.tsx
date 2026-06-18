@@ -209,13 +209,13 @@ function NavEntry({
 
 // ─── Sidebar ─────────────────────────────────────────────────
 
-export function Sidebar({ userRole }: { userRole: AppRole }) {
+export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
   const pathname = usePathname();
   const { labName, logoUrl } = useLab();
   const name = labName ?? 'Mi laboratorio';
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col bg-rail md:flex">
+    <>
       <div className="flex h-14 items-center gap-2.5 border-white/10 border-b px-4">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white">
           {logoUrl ? (
@@ -269,6 +269,14 @@ export function Sidebar({ userRole }: { userRole: AppRole }) {
       <div className="border-white/10 border-t px-4 py-3">
         <p className="font-semibold text-[11px] text-white/45 tracking-tight">Banco Vital</p>
       </div>
+    </>
+  );
+}
+
+export function Sidebar({ userRole }: { userRole: AppRole }) {
+  return (
+    <aside className="hidden w-60 shrink-0 flex-col bg-rail md:flex">
+      <SidebarNavBody userRole={userRole} />
     </aside>
   );
 }

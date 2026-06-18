@@ -148,7 +148,7 @@ export function Combobox<T>({
               e.stopPropagation();
               onChange(null);
             }}
-            className="-translate-y-1/2 absolute top-1/2 right-8 rounded p-0.5 text-[var(--color-fg-subtle)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]"
+            className="-translate-y-1/2 absolute top-1/2 right-8 rounded p-0.5 text-[var(--color-fg-subtle)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
           >
             <X className="h-3.5 w-3.5" strokeWidth={2} />
           </button>

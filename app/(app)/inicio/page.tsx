@@ -156,56 +156,58 @@ export default async function HomePage() {
             Sin órdenes todavía.
           </p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
-                <th className="px-5 py-2.5 text-left font-medium">Protocolo</th>
-                <th className="px-5 py-2.5 text-left font-medium">Paciente</th>
-                <th className="px-5 py-2.5 text-left font-medium">Obra social</th>
-                <th className="px-5 py-2.5 text-left font-medium">Fecha</th>
-                <th className="px-5 py-2.5 text-right font-medium">$ Particular</th>
-                <th className="px-5 py-2.5 text-left font-medium">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recent.map((o) => (
-                <tr
-                  key={o.id}
-                  className="border-[var(--color-border)] border-b transition-colors last:border-0 hover:bg-[var(--color-bg-subtle)]"
-                >
-                  <td className="tabular px-5 py-3 font-mono text-xs">
-                    <Link
-                      href={`/ordenes/${o.id}`}
-                      className="text-[var(--color-primary)] hover:underline"
-                    >
-                      #{String(o.protocolNumber).padStart(5, '0')}
-                    </Link>
-                    {o.isUrgent && (
-                      <span
-                        className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-danger)] align-middle"
-                        title="Urgente"
-                      />
-                    )}
-                  </td>
-                  <td className="px-5 py-3 text-[var(--color-fg)]">
-                    {o.patient.lastName}, {o.patient.firstName}
-                  </td>
-                  <td className="px-5 py-3 text-[var(--color-fg-muted)] text-xs">
-                    {o.insurer.name}
-                  </td>
-                  <td className="tabular px-5 py-3 font-mono text-[var(--color-fg-muted)] text-xs">
-                    {fmtDate(o.orderDate)}
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    <MoneyDisplay value={o.totalParticular} />
-                  </td>
-                  <td className="px-5 py-3">
-                    <StatusPill status={o.status} />
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
+                  <th className="px-5 py-2.5 text-left font-medium">Protocolo</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Paciente</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Obra social</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Fecha</th>
+                  <th className="px-5 py-2.5 text-right font-medium">$ Particular</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recent.map((o) => (
+                  <tr
+                    key={o.id}
+                    className="border-[var(--color-border)] border-b transition-colors last:border-0 hover:bg-[var(--color-bg-subtle)]"
+                  >
+                    <td className="tabular px-5 py-3 font-mono text-xs">
+                      <Link
+                        href={`/ordenes/${o.id}`}
+                        className="text-[var(--color-primary)] hover:underline"
+                      >
+                        #{String(o.protocolNumber).padStart(5, '0')}
+                      </Link>
+                      {o.isUrgent && (
+                        <span
+                          className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-danger)] align-middle"
+                          title="Urgente"
+                        />
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-[var(--color-fg)]">
+                      {o.patient.lastName}, {o.patient.firstName}
+                    </td>
+                    <td className="px-5 py-3 text-[var(--color-fg-muted)] text-xs">
+                      {o.insurer.name}
+                    </td>
+                    <td className="tabular px-5 py-3 font-mono text-[var(--color-fg-muted)] text-xs">
+                      {fmtDate(o.orderDate)}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <MoneyDisplay value={o.totalParticular} />
+                    </td>
+                    <td className="px-5 py-3">
+                      <StatusPill status={o.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </>
