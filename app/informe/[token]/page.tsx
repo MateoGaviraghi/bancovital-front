@@ -1,4 +1,5 @@
 import type { PublicInformeMeta } from '@/lib/api/types';
+import { labThemeVars } from '@/lib/lab/theme';
 import type { Metadata } from 'next';
 import { InformeFlujo } from './informe-flujo';
 
@@ -133,9 +134,12 @@ export default async function InformePage({
     );
   }
 
-  // ── OK: renderizar el flujo (tema fijo bancovital, sin color per-lab) ─────
+  // ── OK: renderizar el flujo, tematizado con la paleta del lab (white-label) ─
   return (
-    <div className="min-h-screen bg-[var(--color-bg-subtle)]">
+    <div
+      className="min-h-screen bg-[var(--color-bg-subtle)]"
+      style={labThemeVars({ primaryColor: result.primaryColor, accentColor: result.accentColor })}
+    >
       <main className="mx-auto max-w-md px-5 py-10 sm:py-16">
         {/* ── Header del lab ── */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center">

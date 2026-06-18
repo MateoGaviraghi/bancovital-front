@@ -570,6 +570,7 @@ export interface PublicInformeMeta {
   shortName: string | null;
   logoUrl: string | null;
   primaryColor: string | null;
+  accentColor: string | null;
   tagline: string | null;
   protocolNumber: string;
   emitidaAt: string | null;
