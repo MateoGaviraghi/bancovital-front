@@ -7,134 +7,87 @@ import {
   FileSignature,
   Layers,
   LayoutDashboard,
+  type LucideIcon,
   Megaphone,
   ScrollText,
+  ShieldCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+// El panel super es de Nodo (god-mode), NO un lab → rail navy FIJO (nunca teñido)
+// + identidad con acento rojo para distinguirlo a simple vista de la app de un lab.
+
+const NAV: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: '/super/metrics', label: 'Métricas', icon: LayoutDashboard },
+  { href: '/super/labs', label: 'Laboratorios', icon: Building2 },
+  { href: '/super/plans', label: 'Planes', icon: Layers },
+  { href: '/super/contracts', label: 'Contratos', icon: FileSignature },
+  { href: '/super/reuniones', label: 'Reuniones', icon: Calendar },
+  { href: '/super/announcements', label: 'Anuncios', icon: Megaphone },
+  { href: '/super/audit', label: 'Auditoría', icon: ScrollText },
+];
+
+function isActive(href: string, pathname: string): boolean {
+  if (href === '/super/metrics') {
+    return (
+      pathname === '/super' ||
+      pathname === '/super/metrics' ||
+      pathname.startsWith('/super/metrics/')
+    );
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function SuperSidebar() {
   const pathname = usePathname();
-  const metricsActive =
-    pathname === '/super' ||
-    pathname === '/super/metrics' ||
-    pathname.startsWith('/super/metrics/');
-  const labsActive = pathname === '/super/labs' || pathname.startsWith('/super/labs/');
-  const plansActive = pathname === '/super/plans' || pathname.startsWith('/super/plans/');
-  const contractsActive =
-    pathname === '/super/contracts' || pathname.startsWith('/super/contracts/');
-  const reunionesActive =
-    pathname === '/super/reuniones' || pathname.startsWith('/super/reuniones/');
-  const announcementsActive =
-    pathname === '/super/announcements' || pathname.startsWith('/super/announcements/');
-  const auditActive = pathname === '/super/audit' || pathname.startsWith('/super/audit/');
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col border-[var(--color-border)] border-r bg-[var(--color-bg-elevated)] md:flex">
-      <div className="flex h-14 items-center gap-2.5 border-[var(--color-border)] border-b px-5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
-          <Building2 className="h-4 w-4" strokeWidth={2} />
+    <aside className="hidden w-60 shrink-0 flex-col bg-rail md:flex">
+      <div className="flex h-14 items-center gap-2.5 border-white/10 border-b px-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[var(--color-accent)] text-white">
+          <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2} />
         </div>
         <div className="min-w-0 leading-tight">
-          <p className="truncate font-semibold text-[var(--color-fg)] text-sm">Super Admin</p>
-          <p className="truncate text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wide">
-            Panel global
+          <p className="truncate font-semibold text-sm text-white">Super Admin</p>
+          <p className="truncate text-[10px] text-white/40 uppercase tracking-[0.14em]">
+            Banco Vital · Nodo
           </p>
         </div>
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4">
-        <p className="px-2 pb-1 font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wide">
+        <p className="px-2.5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
           Administración
         </p>
-        <Link
-          href="/super/metrics"
-          className={cn(
-            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
-            metricsActive
-              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
-              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
-          )}
-        >
-          <LayoutDashboard className="h-4 w-4 shrink-0" strokeWidth={2} />
-          <span className="truncate">Métricas</span>
-        </Link>
-        <Link
-          href="/super/labs"
-          className={cn(
-            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
-            labsActive
-              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
-              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
-          )}
-        >
-          <Building2 className="h-4 w-4 shrink-0" strokeWidth={2} />
-          <span className="truncate">Laboratorios</span>
-        </Link>
-        <Link
-          href="/super/plans"
-          className={cn(
-            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
-            plansActive
-              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
-              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
-          )}
-        >
-          <Layers className="h-4 w-4 shrink-0" strokeWidth={2} />
-          <span className="truncate">Planes</span>
-        </Link>
-        <Link
-          href="/super/contracts"
-          className={cn(
-            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
-            contractsActive
-              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
-              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
-          )}
-        >
-          <FileSignature className="h-4 w-4 shrink-0" strokeWidth={2} />
-          <span className="truncate">Contratos</span>
-        </Link>
-        <Link
-          href="/super/reuniones"
-          className={cn(
-            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
-            reunionesActive
-              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
-              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
-          )}
-        >
-          <Calendar className="h-4 w-4 shrink-0" strokeWidth={2} />
-          <span className="truncate">Reuniones</span>
-        </Link>
-        <Link
-          href="/super/announcements"
-          className={cn(
-            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
-            announcementsActive
-              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
-              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
-          )}
-        >
-          <Megaphone className="h-4 w-4 shrink-0" strokeWidth={2} />
-          <span className="truncate">Anuncios</span>
-        </Link>
-        <Link
-          href="/super/audit"
-          className={cn(
-            'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
-            auditActive
-              ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
-              : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
-          )}
-        >
-          <ScrollText className="h-4 w-4 shrink-0" strokeWidth={2} />
-          <span className="truncate">Auditoría</span>
-        </Link>
+        {NAV.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.href, pathname);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
+                active
+                  ? 'bg-white/10 font-medium text-white'
+                  : 'text-white/60 hover:bg-white/5 hover:text-white',
+              )}
+            >
+              {active && (
+                <span className="-translate-y-1/2 absolute top-1/2 left-0 h-4 w-[3px] rounded-r bg-[var(--color-accent)]" />
+              )}
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
+              <span className="truncate">{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="border-[var(--color-border)] border-t px-4 py-3">
-        <p className="text-[10px] text-[var(--color-fg-subtle)]">v0.1 · Super</p>
+      <div className="border-white/10 border-t px-4 py-3">
+        <p className="font-semibold text-[11px] text-white/45 tracking-tight">
+          Banco Vital <span className="text-white/30">· Super</span>
+        </p>
       </div>
     </aside>
   );
