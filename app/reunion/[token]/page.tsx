@@ -18,8 +18,8 @@ async function fetchReunion(token: string): Promise<BookingPublicDetail | null |
 }
 
 export const metadata: Metadata = {
-  title: 'Tu reunión con Nodo',
-  description: 'Confirmá tu asistencia o cancelá tu reunión con Nodo.',
+  title: 'Tu reunión con Banco Vital',
+  description: 'Confirmá tu asistencia o cancelá tu reunión con Banco Vital.',
   robots: { index: false, follow: false },
 };
 
@@ -50,36 +50,23 @@ function fmtFechaHora(inicioIso: string, finIso: string): string {
   return `${fechaCap}, de ${horaFmt.format(inicio)} a ${horaFmt.format(fin)} hs`;
 }
 
-// ─── Nodo brand theme (scoped to /reunion) ──────────────────────────────────
-// Values are literals — no user input interpolated here.
-const NODO_THEME = `
-:root {
-  --color-primary: #8b2fef;
-  --color-primary-hover: color-mix(in oklab, #8b2fef 85%, black);
-  --color-primary-soft: color-mix(in oklab, #8b2fef 10%, white);
-  --color-primary-foreground: #ffffff;
-}
-`.trim();
-
 // ─── Static state shell ─────────────────────────────────────────────────────
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: CSS literals only — no user data interpolated */}
-      <style dangerouslySetInnerHTML={{ __html: NODO_THEME }} />
-      <div className="min-h-screen bg-[#f8f7ff]">
-        <header className="border-b border-[var(--color-border)] bg-white">
-          <div className="mx-auto flex h-14 max-w-xl items-center justify-between px-5">
-            <span className="font-bold text-[var(--color-primary)] text-xl tracking-tight">
-              NODO
-            </span>
-            <span className="text-[var(--color-fg-muted)] text-xs">Tu reunión</span>
-          </div>
-        </header>
-        <main className="mx-auto max-w-xl px-5 py-10 sm:py-14">{children}</main>
-      </div>
-    </>
+    <div className="min-h-screen bg-[var(--color-bg)]">
+      <header className="border-[var(--color-border)] border-b bg-[var(--color-bg-elevated)]">
+        <div className="mx-auto flex h-[68px] max-w-xl items-center justify-between px-5">
+          <span className="font-semibold text-[var(--color-fg)] text-2xl tracking-tight">
+            Banco Vital
+          </span>
+          <span className="font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-[0.16em]">
+            Tu reunión
+          </span>
+        </div>
+      </header>
+      <main className="mx-auto max-w-xl px-5 py-10 sm:py-14">{children}</main>
+    </div>
   );
 }
 
@@ -93,12 +80,12 @@ function EstadoCard({
   body: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-5 rounded-lg border border-[var(--color-border)] bg-white px-7 py-11 text-center shadow-[var(--shadow-sm)]">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]">
+    <div className="flex flex-col items-center gap-5 border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-7 py-11 text-center shadow-[var(--shadow-sm)] [&_*]:rounded-none">
+      <div className="flex h-14 w-14 items-center justify-center bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]">
         {icon}
       </div>
       <div>
-        <h1 className="font-semibold text-[var(--color-fg)] text-xl">{title}</h1>
+        <h1 className="font-semibold text-[var(--color-fg)] text-xl tracking-tight">{title}</h1>
         <div className="mt-2 text-[var(--color-fg-muted)] text-sm leading-relaxed">{body}</div>
       </div>
       <p className="text-[var(--color-fg-subtle)] text-xs">
@@ -167,7 +154,7 @@ export default async function ReunionPage({
         <EstadoCard
           icon={IconBroken}
           title="Enlace no válido"
-          body="Este enlace de reunión no existe o ya no está disponible. Contactá a Nodo para coordinar una nueva fecha."
+          body="Este enlace de reunión no existe o ya no está disponible. Contactá a Banco Vital para coordinar una nueva fecha."
         />
       </PageShell>
     );

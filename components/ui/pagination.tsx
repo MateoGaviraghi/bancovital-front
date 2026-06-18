@@ -22,11 +22,11 @@ function buildPageList(current: number, total: number): (number | '...')[] {
 }
 
 const base =
-  'flex h-8 min-w-[2rem] items-center justify-center rounded-md border px-2 text-sm transition-colors';
+  'flex h-8 min-w-[2rem] items-center justify-center rounded-md border px-2 text-sm transition-[background-color,border-color,color,box-shadow] duration-[var(--duration-fast)] ease-[var(--ease-out-app)]';
 const active =
-  'border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)]';
+  'border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-[var(--shadow-button)]';
 const inactive =
-  'border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-fg)] hover:bg-[var(--color-bg-subtle)]';
+  'border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-fg-muted)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-fg)]';
 const disabled =
   'pointer-events-none border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-fg-subtle)]';
 

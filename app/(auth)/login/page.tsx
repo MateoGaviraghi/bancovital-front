@@ -1,9 +1,13 @@
 'use client';
 
+import { LoginHero } from '@/components/auth/login-hero';
+import { BvLogo } from '@/components/brand/bv-logo';
+import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 import { getApiClient } from '@/lib/api/client';
 import type { MeResponse } from '@/lib/api/types';
 import { getSupabase } from '@/lib/supabase-browser';
-import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
@@ -39,66 +43,65 @@ export default function GlobalLoginPage() {
   }
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="mb-8 text-center">
-        <h1 className="font-bold text-[var(--color-fg)] text-xl tracking-tight">bancovital</h1>
-        <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
-          Gestión de laboratorios bioquímicos
-        </p>
-      </div>
+    <div className="grid min-h-screen w-full lg:grid-cols-2">
+      {/* Formulario */}
+      <main className="relative flex items-center justify-center bg-[var(--color-bg-elevated)] px-6 py-12">
+        <div className="motion-fade-in w-full max-w-[400px]">
+          <div className="mb-8 flex items-center gap-3">
+            <BvLogo size={56} priority alt="" className="h-14 w-14" />
+            <span className="font-semibold text-[var(--color-fg)] text-3xl tracking-tight">
+              Banco Vital
+            </span>
+          </div>
 
-      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-8 shadow-[var(--shadow-md)]">
-        <div className="mb-7">
-          <h2 className="font-semibold text-[var(--color-fg)] text-xl">Iniciar sesión</h2>
+          <h1 className="font-semibold text-[var(--color-fg)] text-xl tracking-tight">
+            Iniciar sesión
+          </h1>
           <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
-            Ingresá con tu cuenta para continuar.
+            Ingresá a la plataforma de tu laboratorio.
+          </p>
+
+          <div className="my-6 h-px bg-[var(--color-border)]" />
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormField label="Email" htmlFor="email">
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                placeholder="usuario@laboratorio.com"
+              />
+            </FormField>
+
+            <FormField label="Contraseña" htmlFor="password">
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+              />
+            </FormField>
+
+            <Button type="submit" size="lg" loading={loading} className="mt-2 h-11 w-full">
+              {loading ? 'Ingresando…' : 'Ingresar'}
+            </Button>
+          </form>
+
+          <p className="mt-6 text-[var(--color-fg-subtle)] text-xs">
+            ¿Problemas para entrar? Contactá al administrador de tu laboratorio.
           </p>
         </div>
+      </main>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label htmlFor="email" className="block font-medium text-[var(--color-fg)] text-xs">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              placeholder="usuario@laboratorio.com"
-              className="block w-full rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-fg)] outline-none transition-all placeholder:text-[var(--color-fg-subtle)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="password" className="block font-medium text-[var(--color-fg)] text-xs">
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              className="block w-full rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-fg)] outline-none transition-all placeholder:text-[var(--color-fg-subtle)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] font-semibold text-sm text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
-            {loading ? 'Ingresando…' : 'Ingresar'}
-          </button>
-        </form>
-      </div>
+      {/* Hero animado */}
+      <LoginHero />
     </div>
   );
 }

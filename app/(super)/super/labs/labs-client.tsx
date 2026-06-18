@@ -3,6 +3,7 @@
 import { ConfirmDialog } from '@/components/domain/confirm-dialog';
 import { MoneyDisplay } from '@/components/domain/money-display';
 import { OnboardingBadge } from '@/components/domain/onboarding-checklist';
+import { EmptyState } from '@/components/layout/empty-state';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -41,6 +42,7 @@ import type {
   InviteUserDto,
   Laboratorio,
   Plan,
+  SetAdminPasswordResponse,
   UpdateLaboratorioDto,
   UserRole,
 } from '@/lib/api/types';
@@ -52,7 +54,9 @@ import {
   AlertTriangle,
   Building2,
   ChevronDown,
+  Copy,
   Download,
+  KeyRound,
   Layers,
   Loader2,
   LogIn,
@@ -61,6 +65,7 @@ import {
   Pencil,
   Plus,
   RotateCcw,
+  Sparkles,
   Trash2,
   Wallet,
   X,
@@ -741,6 +746,149 @@ function InviteUserDialog({
   );
 }
 
+// ─── Definir contraseña de acceso (admin del lab) ──────────────────
+
+function SetPasswordDialog({
+  open,
+  onOpenChange,
+  lab,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  lab: Laboratorio | null;
+}) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [result, setResult] = useState<{ email: string; password: string } | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setPassword('');
+      setError('');
+      setResult(null);
+    }
+  }, [open]);
+
+  const setPasswordMut = useMutation({
+    mutationFn: (pwd: string) =>
+      apiClient
+        .post<SetAdminPasswordResponse>(`/super/labs/${lab!.id}/admin-password`, { password: pwd })
+        .then((r) => r.data),
+    onSuccess: (data) => {
+      setResult({ email: data.email, password });
+      toast.success('Contraseña definida');
+    },
+    onError: (err) => toast.error(apiError(err, 'No se pudo definir la contraseña')),
+  });
+
+  function generate() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    const buf = new Uint32Array(14);
+    crypto.getRandomValues(buf);
+    let pwd = '';
+    for (let i = 0; i < 14; i++) pwd += chars[buf[i]! % chars.length];
+    setPassword(pwd);
+    setError('');
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (password.length < 8) {
+      setError('Mínimo 8 caracteres');
+      return;
+    }
+    setPasswordMut.mutate(password);
+  }
+
+  function copyCredentials() {
+    if (!result) return;
+    navigator.clipboard
+      .writeText(`Usuario: ${result.email}\nContraseña: ${result.password}`)
+      .then(() => toast.success('Credenciales copiadas'))
+      .catch(() => toast.error('No se pudo copiar'));
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Acceso del laboratorio — {lab?.shortName ?? lab?.legalName}</DialogTitle>
+        </DialogHeader>
+
+        {result ? (
+          <div className="space-y-4 pt-2">
+            <p className="border border-[var(--color-success)]/25 bg-[var(--color-success-soft)] px-4 py-2.5 text-[var(--color-success)] text-sm">
+              Contraseña definida. Pasale estas credenciales al cliente:
+            </p>
+            <div className="space-y-1.5 border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-4 text-sm">
+              <p>
+                <span className="text-[var(--color-fg-muted)]">Usuario: </span>
+                <span className="font-medium font-mono">{result.email}</span>
+              </p>
+              <p>
+                <span className="text-[var(--color-fg-muted)]">Contraseña: </span>
+                <span className="font-medium font-mono">{result.password}</span>
+              </p>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cerrar
+              </Button>
+              <Button type="button" onClick={copyCredentials}>
+                <Copy className="h-4 w-4" strokeWidth={2} />
+                Copiar credenciales
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            <p className="text-[var(--color-fg-muted)] text-sm">
+              El usuario es el email del laboratorio. Definí una contraseña y pasásela al cliente.
+            </p>
+            <FormField label="Contraseña" htmlFor="lab-password" required error={error}>
+              <Input
+                id="lab-password"
+                type="text"
+                autoComplete="off"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={setPasswordMut.isPending}
+                placeholder="Mínimo 8 caracteres"
+              />
+            </FormField>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={generate}
+              disabled={setPasswordMut.isPending}
+            >
+              <Sparkles className="h-4 w-4" strokeWidth={2} />
+              Generar contraseña segura
+            </Button>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={setPasswordMut.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={setPasswordMut.isPending}>
+                {setPasswordMut.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                )}
+                Definir contraseña
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Purge confirm dialog ──────────────────────────────────────────
 
 function PurgeDialog({
@@ -849,6 +997,7 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
   const [invitingLab, setInvitingLab] = useState<Laboratorio | null>(null);
   const [assigningLab, setAssigningLab] = useState<Laboratorio | null>(null);
   const [morosoLab, setMorosoLab] = useState<Laboratorio | null>(null);
+  const [settingPasswordLab, setSettingPasswordLab] = useState<Laboratorio | null>(null);
   const [impersonatingId, setImpersonatingId] = useState<number | null>(null);
   const [exportingId, setExportingId] = useState<number | null>(null);
 
@@ -991,206 +1140,208 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
       />
 
       {labs.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-6 py-16 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
-            <Building2 className="h-6 w-6" strokeWidth={2} />
-          </div>
-          <div>
-            <p className="font-medium text-[var(--color-fg)] text-sm">Sin laboratorios</p>
-            <p className="mt-1 text-[var(--color-fg-muted)] text-xs">
-              Creá el primer laboratorio para empezar.
-            </p>
-          </div>
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" strokeWidth={2} />
-            Nuevo laboratorio
-          </Button>
-        </div>
+        <EmptyState
+          icon={Building2}
+          title="Sin laboratorios"
+          description="Creá el primer laboratorio para empezar."
+          action={
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" strokeWidth={2} />
+              Nuevo laboratorio
+            </Button>
+          }
+        />
       ) : (
         <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-[var(--shadow-xs)]">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
-                <th className="px-5 py-2.5 text-left font-medium">Slug</th>
-                <th className="px-5 py-2.5 text-left font-medium">Razón social</th>
-                <th className="px-5 py-2.5 text-left font-medium">Ciudad</th>
-                <th className="px-5 py-2.5 text-left font-medium">Estado</th>
-                <th className="px-5 py-2.5 text-left font-medium">Plan / Consumo</th>
-                <th className="px-5 py-2.5 text-left font-medium">Onboarding</th>
-                <th className="px-5 py-2.5 text-right font-medium">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {labs.map((lab) => {
-                const pill = ESTADO_PILL[lab.estado];
-                const resumen = consumoByLabId.get(lab.id);
-                const currentPlanId = resumen?.plan?.id ?? null;
-                const isInactivo = lab.estado === 'inactivo';
-                return (
-                  <tr
-                    key={lab.id}
-                    className={cn(
-                      'border-[var(--color-border)] border-b last:border-b-0 hover:bg-[var(--color-bg-subtle)]',
-                      isInactivo && 'opacity-60',
-                    )}
-                  >
-                    <td className="tabular px-5 py-3 font-mono text-xs text-[var(--color-fg-muted)]">
-                      {lab.slug}
-                    </td>
-                    <td className="px-5 py-3 text-[var(--color-fg)]">
-                      {lab.legalName}
-                      {lab.shortName && (
-                        <span className="ml-2 text-[var(--color-fg-subtle)] text-xs">
-                          ({lab.shortName})
-                        </span>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
+                  <th className="px-5 py-2.5 text-left font-medium">Slug</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Razón social</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Ciudad</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Estado</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Plan / Consumo</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Onboarding</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {labs.map((lab) => {
+                  const pill = ESTADO_PILL[lab.estado];
+                  const resumen = consumoByLabId.get(lab.id);
+                  const currentPlanId = resumen?.plan?.id ?? null;
+                  const isInactivo = lab.estado === 'inactivo';
+                  return (
+                    <tr
+                      key={lab.id}
+                      className={cn(
+                        'border-[var(--color-border)] border-b last:border-b-0 hover:bg-[var(--color-bg-subtle)]',
+                        isInactivo && 'opacity-60',
                       )}
-                    </td>
-                    <td className="px-5 py-3 text-[var(--color-fg-muted)]">{lab.city ?? '—'}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span
-                          className={cn(
-                            'inline-flex items-center rounded-md border px-2 py-0.5 font-medium text-[10px] uppercase tracking-wide',
-                            pill.cls,
-                          )}
-                        >
-                          {pill.label}
-                        </span>
-                        {lab.moroso && (
-                          <span className="inline-flex items-center gap-1 rounded-md border border-[var(--color-danger)]/20 bg-[var(--color-danger-soft)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-danger)] uppercase tracking-wide">
-                            <AlertTriangle className="h-3 w-3" strokeWidth={2} />
-                            Deudor
+                    >
+                      <td className="tabular px-5 py-3 font-mono text-xs text-[var(--color-fg-muted)]">
+                        {lab.slug}
+                      </td>
+                      <td className="px-5 py-3 text-[var(--color-fg)]">
+                        {lab.legalName}
+                        {lab.shortName && (
+                          <span className="ml-2 text-[var(--color-fg-subtle)] text-xs">
+                            ({lab.shortName})
                           </span>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <ConsumoCelda resumen={resumen} />
-                    </td>
-                    <td className="px-5 py-3">
-                      <OnboardingBadge labId={lab.id} />
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex justify-end">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="min-h-[44px]">
-                              Acciones
-                              <ChevronDown className="h-3.5 w-3.5" strokeWidth={2} />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="min-w-[12rem]">
-                            {!isInactivo && (
-                              <>
-                                <DropdownMenuItem
-                                  onSelect={() => handleImpersonate(lab)}
-                                  disabled={impersonatingId === lab.id}
-                                >
-                                  {impersonatingId === lab.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-                                  ) : (
-                                    <LogIn className="h-4 w-4" strokeWidth={2} />
-                                  )}
-                                  Entrar como
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setAssigningLab(lab)}>
-                                  <Layers className="h-4 w-4" strokeWidth={2} />
-                                  {currentPlanId ? 'Plan' : 'Asignar plan'}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/super/labs/${lab.id}/cuenta`}>
-                                    <Wallet className="h-4 w-4" strokeWidth={2} />
-                                    Estado de cuenta
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setInvitingLab(lab)}>
-                                  <Mail className="h-4 w-4" strokeWidth={2} />
-                                  Invitar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onSelect={(e) => {
-                                    e.preventDefault();
-                                    handleExport(lab);
-                                  }}
-                                  disabled={exportingId === lab.id}
-                                >
-                                  {exportingId === lab.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-                                  ) : (
-                                    <Download className="h-4 w-4" strokeWidth={2} />
-                                  )}
-                                  Exportar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => openEdit(lab)}>
-                                  <Pencil className="h-4 w-4" strokeWidth={2} />
-                                  Editar
-                                </DropdownMenuItem>
-
-                                <DropdownMenuSeparator />
-
-                                <DropdownMenuItem
-                                  onSelect={() => setMorosoLab(lab)}
-                                  className={cn(
-                                    !lab.moroso &&
-                                      'text-[var(--color-danger)] focus:text-[var(--color-danger)]',
-                                  )}
-                                >
-                                  <AlertTriangle className="h-4 w-4" strokeWidth={2} />
-                                  {lab.moroso ? 'Quitar deudor' : 'Marcar como deudor'}
-                                </DropdownMenuItem>
-                                {lab.estado === 'activo' && (
+                      </td>
+                      <td className="px-5 py-3 text-[var(--color-fg-muted)]">{lab.city ?? '—'}</td>
+                      <td className="px-5 py-3">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={cn(
+                              'inline-flex items-center rounded-md border px-2 py-0.5 font-medium text-[10px] uppercase tracking-wide',
+                              pill.cls,
+                            )}
+                          >
+                            {pill.label}
+                          </span>
+                          {lab.moroso && (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-[var(--color-danger)]/20 bg-[var(--color-danger-soft)] px-2 py-0.5 font-medium text-[10px] text-[var(--color-danger)] uppercase tracking-wide">
+                              <AlertTriangle className="h-3 w-3" strokeWidth={2} />
+                              Deudor
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3">
+                        <ConsumoCelda resumen={resumen} />
+                      </td>
+                      <td className="px-5 py-3">
+                        <OnboardingBadge labId={lab.id} />
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm" className="min-h-[44px]">
+                                Acciones
+                                <ChevronDown className="h-3.5 w-3.5" strokeWidth={2} />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="min-w-[12rem]">
+                              {!isInactivo && (
+                                <>
                                   <DropdownMenuItem
-                                    onSelect={() => setSuspendingLab(lab)}
-                                    className="text-[var(--color-warning)] focus:text-[var(--color-warning)]"
+                                    onSelect={() => handleImpersonate(lab)}
+                                    disabled={impersonatingId === lab.id}
                                   >
-                                    <PauseCircle className="h-4 w-4" strokeWidth={2} />
-                                    Suspender
+                                    {impersonatingId === lab.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                                    ) : (
+                                      <LogIn className="h-4 w-4" strokeWidth={2} />
+                                    )}
+                                    Entrar como
                                   </DropdownMenuItem>
-                                )}
-                                {lab.estado === 'suspendido' && (
+                                  <DropdownMenuItem onSelect={() => setAssigningLab(lab)}>
+                                    <Layers className="h-4 w-4" strokeWidth={2} />
+                                    {currentPlanId ? 'Plan' : 'Asignar plan'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/super/labs/${lab.id}/cuenta`}>
+                                      <Wallet className="h-4 w-4" strokeWidth={2} />
+                                      Estado de cuenta
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => setInvitingLab(lab)}>
+                                    <Mail className="h-4 w-4" strokeWidth={2} />
+                                    Invitar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => setSettingPasswordLab(lab)}>
+                                    <KeyRound className="h-4 w-4" strokeWidth={2} />
+                                    Definir contraseña
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onSelect={() => setReactivatingLab(lab)}
-                                    className="text-[var(--color-success)] focus:text-[var(--color-success)]"
+                                    onSelect={(e) => {
+                                      e.preventDefault();
+                                      handleExport(lab);
+                                    }}
+                                    disabled={exportingId === lab.id}
                                   >
+                                    {exportingId === lab.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                                    ) : (
+                                      <Download className="h-4 w-4" strokeWidth={2} />
+                                    )}
+                                    Exportar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => openEdit(lab)}>
+                                    <Pencil className="h-4 w-4" strokeWidth={2} />
+                                    Editar
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuSeparator />
+
+                                  <DropdownMenuItem
+                                    onSelect={() => setMorosoLab(lab)}
+                                    className={cn(
+                                      !lab.moroso &&
+                                        'text-[var(--color-danger)] focus:text-[var(--color-danger)]',
+                                    )}
+                                  >
+                                    <AlertTriangle className="h-4 w-4" strokeWidth={2} />
+                                    {lab.moroso ? 'Quitar deudor' : 'Marcar como deudor'}
+                                  </DropdownMenuItem>
+                                  {lab.estado === 'activo' && (
+                                    <DropdownMenuItem
+                                      onSelect={() => setSuspendingLab(lab)}
+                                      className="text-[var(--color-warning)] focus:text-[var(--color-warning)]"
+                                    >
+                                      <PauseCircle className="h-4 w-4" strokeWidth={2} />
+                                      Suspender
+                                    </DropdownMenuItem>
+                                  )}
+                                  {lab.estado === 'suspendido' && (
+                                    <DropdownMenuItem
+                                      onSelect={() => setReactivatingLab(lab)}
+                                      className="text-[var(--color-success)] focus:text-[var(--color-success)]"
+                                    >
+                                      <RotateCcw className="h-4 w-4" strokeWidth={2} />
+                                      Reactivar
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem
+                                    onSelect={() => setDeactivatingLab(lab)}
+                                    className="text-[var(--color-danger)] focus:text-[var(--color-danger)]"
+                                  >
+                                    <Trash2 className="h-4 w-4" strokeWidth={2} />
+                                    Desactivar
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+
+                              {isInactivo && (
+                                <>
+                                  <DropdownMenuItem onSelect={() => setReactivatingLab(lab)}>
                                     <RotateCcw className="h-4 w-4" strokeWidth={2} />
                                     Reactivar
                                   </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                  onSelect={() => setDeactivatingLab(lab)}
-                                  className="text-[var(--color-danger)] focus:text-[var(--color-danger)]"
-                                >
-                                  <Trash2 className="h-4 w-4" strokeWidth={2} />
-                                  Desactivar
-                                </DropdownMenuItem>
-                              </>
-                            )}
-
-                            {isInactivo && (
-                              <>
-                                <DropdownMenuItem onSelect={() => setReactivatingLab(lab)}>
-                                  <RotateCcw className="h-4 w-4" strokeWidth={2} />
-                                  Reactivar
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onSelect={() => setPurgingLab(lab)}
-                                  className="text-[var(--color-danger)] focus:text-[var(--color-danger)]"
-                                >
-                                  <Trash2 className="h-4 w-4" strokeWidth={2} />
-                                  Borrar definitivamente
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onSelect={() => setPurgingLab(lab)}
+                                    className="text-[var(--color-danger)] focus:text-[var(--color-danger)]"
+                                  >
+                                    <Trash2 className="h-4 w-4" strokeWidth={2} />
+                                    Borrar definitivamente
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -1207,6 +1358,14 @@ export function LabsClient({ initialLabs }: { initialLabs: Laboratorio[] }) {
           if (!o) setInvitingLab(null);
         }}
         lab={invitingLab}
+      />
+
+      <SetPasswordDialog
+        open={settingPasswordLab !== null}
+        onOpenChange={(o) => {
+          if (!o) setSettingPasswordLab(null);
+        }}
+        lab={settingPasswordLab}
       />
 
       <AssignPlanDialog

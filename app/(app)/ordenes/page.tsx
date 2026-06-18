@@ -135,61 +135,63 @@ export default async function OrdersPage({ searchParams }: Props) {
         </section>
       ) : (
         <section className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-[var(--shadow-xs)]">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
-                <th className="px-5 py-2.5 text-left font-medium">Protocolo</th>
-                <th className="px-5 py-2.5 text-left font-medium">Paciente</th>
-                <th className="px-5 py-2.5 text-left font-medium">Obra social</th>
-                <th className="px-5 py-2.5 text-left font-medium">Fecha</th>
-                <th className="px-5 py-2.5 text-right font-medium">$ Particular</th>
-                <th className="px-5 py-2.5 text-left font-medium">Estado</th>
-                <th className="px-5 py-2.5 text-right font-medium">PDF</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((o) => (
-                <tr
-                  key={o.id}
-                  className="border-[var(--color-border)] border-b transition-colors last:border-0 hover:bg-[var(--color-bg-subtle)]"
-                >
-                  <td className="tabular px-5 py-3 font-mono text-xs">
-                    <Link
-                      href={`/ordenes/${o.id}`}
-                      className="text-[var(--color-primary)] hover:underline"
-                    >
-                      #{String(o.protocolNumber).padStart(5, '0')}
-                    </Link>
-                  </td>
-                  <td className="px-5 py-3 text-[var(--color-fg)]">
-                    {o.patient.lastName}, {o.patient.firstName}
-                    <span className="ml-2 tabular font-mono text-[10px] text-[var(--color-fg-subtle)]">
-                      {o.patient.dni}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-[var(--color-fg-muted)] text-xs">
-                    {o.insurer.name}
-                  </td>
-                  <td className="tabular px-5 py-3 font-mono text-[var(--color-fg-muted)] text-xs">
-                    {formatDateTime(o.orderDate)}
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    <MoneyDisplay value={o.totalParticular} />
-                  </td>
-                  <td className="px-5 py-3">
-                    <StatusPill status={o.status} />
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    {o.status === 'emitida' || o.status === 'entregada' ? (
-                      <DownloadPdfButton orderId={o.id} compact />
-                    ) : (
-                      <span className="text-[var(--color-fg-subtle)]">—</span>
-                    )}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
+                  <th className="px-5 py-2.5 text-left font-medium">Protocolo</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Paciente</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Obra social</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Fecha</th>
+                  <th className="px-5 py-2.5 text-right font-medium">$ Particular</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Estado</th>
+                  <th className="px-5 py-2.5 text-right font-medium">PDF</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {orders.map((o) => (
+                  <tr
+                    key={o.id}
+                    className="border-[var(--color-border)] border-b transition-colors last:border-0 hover:bg-[var(--color-bg-subtle)]"
+                  >
+                    <td className="tabular px-5 py-3 font-mono text-xs">
+                      <Link
+                        href={`/ordenes/${o.id}`}
+                        className="text-[var(--color-primary)] hover:underline"
+                      >
+                        #{String(o.protocolNumber).padStart(5, '0')}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-3 text-[var(--color-fg)]">
+                      {o.patient.lastName}, {o.patient.firstName}
+                      <span className="ml-2 tabular font-mono text-[10px] text-[var(--color-fg-subtle)]">
+                        {o.patient.dni}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-[var(--color-fg-muted)] text-xs">
+                      {o.insurer.name}
+                    </td>
+                    <td className="tabular px-5 py-3 font-mono text-[var(--color-fg-muted)] text-xs">
+                      {formatDateTime(o.orderDate)}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <MoneyDisplay value={o.totalParticular} />
+                    </td>
+                    <td className="px-5 py-3">
+                      <StatusPill status={o.status} />
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      {o.status === 'emitida' || o.status === 'entregada' ? (
+                        <DownloadPdfButton orderId={o.id} compact />
+                      ) : (
+                        <span className="text-[var(--color-fg-subtle)]">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
     </>

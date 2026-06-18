@@ -27,7 +27,7 @@ export default function SetPasswordPage() {
       const refreshToken = params.get('refresh_token');
       const type = params.get('type');
 
-      if (type !== 'invite' || !accessToken || !refreshToken) {
+      if ((type !== 'invite' && type !== 'recovery') || !accessToken || !refreshToken) {
         setTokenState({ status: 'invalid' });
         return;
       }

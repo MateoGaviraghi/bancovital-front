@@ -1,5 +1,6 @@
 'use client';
 
+import { EmptyState } from '@/components/layout/empty-state';
 import { PageHeader } from '@/components/layout/page-header';
 import { Pagination } from '@/components/ui/pagination';
 import {
@@ -97,17 +98,11 @@ export function AuditClient({ audit, labs, page, pageSize, labId }: Props) {
       />
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-6 py-16 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]">
-            <ScrollText className="h-6 w-6" strokeWidth={2} />
-          </div>
-          <div>
-            <p className="font-medium text-[var(--color-fg)] text-sm">Sin eventos</p>
-            <p className="mt-1 text-[var(--color-fg-muted)] text-xs">
-              No hay eventos de auditoría para este filtro.
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          icon={ScrollText}
+          title="Sin eventos"
+          description="No hay eventos de auditoría para este filtro."
+        />
       ) : (
         <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-[var(--shadow-xs)]">
           <div className="overflow-x-auto">

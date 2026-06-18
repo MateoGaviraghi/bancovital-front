@@ -118,7 +118,7 @@ function A4Mock({
       {fondoUrl && (
         <img
           src={fondoUrl}
-          alt="Membrete"
+          alt=""
           className={cn(
             'absolute inset-0 h-full w-full object-contain transition-opacity duration-200',
             dimBg ? 'opacity-20' : 'opacity-100',

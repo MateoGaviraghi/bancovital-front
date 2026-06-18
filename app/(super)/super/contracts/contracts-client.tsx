@@ -1,6 +1,7 @@
 'use client';
 
 import { ConfirmDialog } from '@/components/domain/confirm-dialog';
+import { EmptyState } from '@/components/layout/empty-state';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -147,7 +148,6 @@ function validate(f: NewContratoForm): Record<string, string> {
   if (!f.emailFirmante.trim()) errs.emailFirmante = 'Requerido';
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.emailFirmante))
     errs.emailFirmante = 'Email inválido';
-  if (!f.descripcion.trim()) errs.descripcion = 'Requerido';
   return errs;
 }
 
@@ -282,7 +282,6 @@ function NewContratoDialog({
           <FormField
             label="Descripción de la propuesta"
             htmlFor="c-desc"
-            required
             error={errors.descripcion}
           >
             <Textarea
@@ -525,21 +524,17 @@ export function ContractsClient({
       />
 
       {contracts.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-6 py-16 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
-            <FileSignature className="h-6 w-6" strokeWidth={2} />
-          </div>
-          <div>
-            <p className="font-medium text-[var(--color-fg)] text-sm">Sin contratos</p>
-            <p className="mt-1 text-[var(--color-fg-muted)] text-xs">
-              Creá el primer contrato para comenzar el proceso de onboarding de un cliente.
-            </p>
-          </div>
-          <Button size="sm" onClick={() => setNewOpen(true)}>
-            <Plus className="h-4 w-4" strokeWidth={2} />
-            Crear contrato
-          </Button>
-        </div>
+        <EmptyState
+          icon={FileSignature}
+          title="Sin contratos"
+          description="Creá el primer contrato para comenzar el proceso de onboarding de un cliente."
+          action={
+            <Button size="sm" onClick={() => setNewOpen(true)}>
+              <Plus className="h-4 w-4" strokeWidth={2} />
+              Crear contrato
+            </Button>
+          }
+        />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-[var(--shadow-xs)]">
           <table className="w-full text-sm">

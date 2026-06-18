@@ -119,7 +119,7 @@ export function DownloadPdfButton({
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending}
           title="Descargar PDF"
-          className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-2 text-[var(--color-fg)] text-xs transition-colors hover:bg-[var(--color-bg-subtle)] disabled:opacity-50"
+          className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-2 text-[var(--color-fg)] text-xs transition-colors hover:bg-[var(--color-bg-subtle)] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
         >
           {mutation.isPending ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />

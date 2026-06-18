@@ -15,7 +15,10 @@ export const AlertDialogOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Overlay
     ref={ref}
-    className={cn('fixed inset-0 z-50 bg-black/40 backdrop-blur-sm', className)}
+    className={cn(
+      'fixed inset-0 z-50 bg-[var(--color-scrim)] backdrop-blur-sm data-[state=open]:animate-[fade-in_var(--duration-base)_var(--ease-out-app)]',
+      className,
+    )}
     {...props}
   />
 ));
@@ -30,7 +33,7 @@ export const AlertDialogContent = React.forwardRef<
     <AlertDialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-[var(--shadow-lg)] focus:outline-none',
+        'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-[var(--shadow-lg)] focus:outline-none data-[state=open]:animate-[dialog-in_var(--duration-base)_var(--ease-out-soft)]',
         className,
       )}
       {...props}

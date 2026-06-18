@@ -182,7 +182,7 @@ export function ReunionFlujo({ token, reunion, fechaHora, accionInicial }: Props
 
       {yaConfirmada ? (
         <>
-          <div className="mt-6 flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-success-soft)] px-4 py-3 text-center">
+          <div className="mt-6 flex items-center justify-center gap-2 border border-[var(--color-success)]/25 bg-[var(--color-success-soft)] px-4 py-3 text-center">
             <CheckCircle2 className="h-5 w-5 shrink-0 text-[var(--color-success)]" />
             <p className="font-medium text-[var(--color-success)] text-sm">
               Ya confirmaste tu asistencia
@@ -254,7 +254,7 @@ export function ReunionFlujo({ token, reunion, fechaHora, accionInicial }: Props
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-[var(--color-border)] bg-white px-6 py-8 shadow-[var(--shadow-sm)] sm:px-8">
+    <div className="border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-6 py-8 shadow-[var(--shadow-sm)] sm:px-8 [&_*]:rounded-none">
       {children}
     </div>
   );
@@ -269,8 +269,18 @@ function ReunionResumen({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <h1 className="font-semibold text-[var(--color-fg)] text-lg">Tu reunión con Nodo</h1>
-      <div className="flex items-start gap-2.5 rounded-[var(--radius-md)] border border-[var(--color-primary-soft)] bg-[var(--color-primary-soft)] px-4 py-3">
+      <div>
+        <div className="mb-2 flex items-center gap-3">
+          <span className="h-px w-8 bg-[var(--color-accent)]" />
+          <span className="font-medium text-[10px] text-[var(--color-accent)] uppercase tracking-[0.18em]">
+            Reunión
+          </span>
+        </div>
+        <h1 className="font-semibold text-[var(--color-fg)] text-xl tracking-tight">
+          Tu reunión con Banco Vital
+        </h1>
+      </div>
+      <div className="flex items-start gap-2.5 border border-[var(--color-primary)]/15 bg-[var(--color-primary-soft)] px-4 py-3">
         <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
         <p className="font-medium text-[var(--color-primary-hover)] text-sm leading-snug">
           {fechaHora}
@@ -316,26 +326,11 @@ function ResultCard({
       : 'bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]';
 
   return (
-    <div
-      className="flex flex-col items-center gap-5 rounded-lg border border-[var(--color-border)] bg-white px-7 py-11 text-center shadow-[var(--shadow-sm)]"
-      style={{ animation: 'reunionFadeIn 220ms var(--ease-out-app, ease-out) both' }}
-    >
-      <style>{`
-        @keyframes reunionFadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          [style*="reunionFadeIn"] { animation: none !important; }
-        }
-      `}</style>
-
-      <div className={cn('flex h-14 w-14 items-center justify-center rounded-full', iconWrap)}>
-        {icon}
-      </div>
+    <div className="motion-scale-in flex flex-col items-center gap-5 border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-7 py-11 text-center shadow-[var(--shadow-sm)] [&_*]:rounded-none">
+      <div className={cn('flex h-14 w-14 items-center justify-center', iconWrap)}>{icon}</div>
 
       <div>
-        <h1 className="font-semibold text-[var(--color-fg)] text-xl">{title}</h1>
+        <h1 className="font-semibold text-[var(--color-fg)] text-xl tracking-tight">{title}</h1>
         <div className="mt-2 text-[var(--color-fg-muted)] text-sm leading-relaxed">{body}</div>
       </div>
 
@@ -344,7 +339,7 @@ function ResultCard({
           href={meetLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-5 py-2.5 font-medium text-[var(--color-primary-foreground)] text-sm transition-colors hover:bg-[var(--color-primary-hover)]"
+          className="inline-flex min-h-11 items-center gap-2 bg-[var(--color-primary)] px-5 py-2.5 font-medium text-[var(--color-primary-foreground)] text-sm transition-colors hover:bg-[var(--color-primary-hover)]"
         >
           <VideoIcon className="h-4 w-4" />
           Unirse a la reunión

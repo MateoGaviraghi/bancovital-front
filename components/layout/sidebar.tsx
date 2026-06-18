@@ -135,14 +135,17 @@ function LeafLink({
     <Link
       href={item.path}
       className={cn(
-        'flex items-center gap-2 rounded-md py-1.5 text-sm transition-colors',
-        indent ? 'px-2' : 'px-2.5',
+        'relative flex items-center gap-2.5 rounded-md py-1.5 text-sm transition-colors',
+        indent ? 'px-2.5' : 'px-2.5',
         active
-          ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary-hover)]'
-          : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
+          ? 'bg-white/10 font-medium text-white'
+          : 'text-white/60 hover:bg-white/5 hover:text-white',
       )}
     >
-      <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+      {active && !indent && (
+        <span className="-translate-y-1/2 absolute top-1/2 left-0 h-4 w-[3px] rounded-r bg-[var(--color-accent)]" />
+      )}
+      <Icon className={cn('h-4 w-4 shrink-0', indent && 'h-3.5 w-3.5')} strokeWidth={2} />
       <span className="truncate">{item.label}</span>
     </Link>
   );
@@ -168,18 +171,18 @@ function GroupItem({
         className={cn(
           'flex cursor-pointer list-none items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors select-none',
           isInSection
-            ? 'font-medium text-[var(--color-fg)]'
-            : 'text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]',
+            ? 'font-medium text-white'
+            : 'text-white/60 hover:bg-white/5 hover:text-white',
         )}
       >
         <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
         <span className="flex-1 truncate">{group.label}</span>
         <ChevronDown
-          className="h-3.5 w-3.5 shrink-0 text-[var(--color-fg-subtle)] transition-transform duration-150 group-open/details:rotate-180"
+          className="h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-150 group-open/details:rotate-180"
           strokeWidth={2}
         />
       </summary>
-      <div className="mt-0.5 ml-3.5 space-y-0.5 border-[var(--color-border)] border-l pl-3">
+      <div className="mt-0.5 ml-[1.1rem] space-y-0.5 border-white/10 border-l pl-3">
         {visibleChildren.map((child) => (
           <LeafLink key={child.path} item={child} pathname={pathname} indent />
         ))}
@@ -206,33 +209,33 @@ function NavEntry({
 
 // ─── Sidebar ─────────────────────────────────────────────────
 
-export function Sidebar({ userRole }: { userRole: AppRole }) {
+export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
   const pathname = usePathname();
   const { labName, logoUrl } = useLab();
   const name = labName ?? 'Mi laboratorio';
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col border-[var(--color-border)] border-r bg-[var(--color-bg-elevated)] md:flex">
-      <div className="flex h-14 items-center gap-2.5 border-[var(--color-border)] border-b px-5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-primary-soft)]">
+    <>
+      <div className="flex h-14 items-center gap-2.5 border-white/10 border-b px-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white">
           {logoUrl ? (
             <img src={logoUrl} alt="" className="h-full w-full object-contain" />
           ) : (
-            <span className="text-sm font-bold text-[var(--color-primary)] uppercase">
+            <span className="font-bold text-[var(--color-primary)] text-sm uppercase">
               {name.slice(0, 2)}
             </span>
           )}
         </div>
         <div className="min-w-0 leading-tight">
-          <p className="truncate font-semibold text-[var(--color-fg)] text-sm">{name}</p>
-          <p className="truncate text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wide">
+          <p className="truncate font-semibold text-sm text-white">{name}</p>
+          <p className="truncate text-[10px] text-white/40 uppercase tracking-[0.14em]">
             Laboratorio
           </p>
         </div>
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4">
-        <p className="px-2 pb-1 font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wide">
+        <p className="px-2.5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
           Operación
         </p>
         {PRIMARY.map((entry) => (
@@ -246,7 +249,7 @@ export function Sidebar({ userRole }: { userRole: AppRole }) {
 
         {userRole === 'admin' && (
           <>
-            <p className="px-2 pt-4 pb-1 font-medium text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wide">
+            <p className="px-2.5 pt-5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
               Sistema
             </p>
             {ADMIN.map((entry) => (
@@ -263,9 +266,17 @@ export function Sidebar({ userRole }: { userRole: AppRole }) {
 
       <ConsumoWidget />
 
-      <div className="border-[var(--color-border)] border-t px-4 py-3">
-        <p className="text-[10px] text-[var(--color-fg-subtle)]">bancovital</p>
+      <div className="border-white/10 border-t px-4 py-3">
+        <p className="font-semibold text-[11px] text-white/45 tracking-tight">Banco Vital</p>
       </div>
+    </>
+  );
+}
+
+export function Sidebar({ userRole }: { userRole: AppRole }) {
+  return (
+    <aside className="hidden w-60 shrink-0 flex-col bg-rail md:flex">
+      <SidebarNavBody userRole={userRole} />
     </aside>
   );
 }
