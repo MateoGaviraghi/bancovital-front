@@ -2,7 +2,7 @@
 
 import { ConfirmDialog } from '@/components/domain/confirm-dialog';
 import { PdfCanvas } from '@/components/domain/pdf-canvas';
-import { PdfFieldPanel } from '@/components/domain/pdf-field-panel';
+import { PdfFieldList, PdfFieldProps } from '@/components/domain/pdf-field-panel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -355,13 +355,19 @@ const INFORME_FIELDS = [
   { key: 'paciente.sexo', label: 'Paciente: Sexo' },
   { key: 'paciente.edad', label: 'Paciente: Edad' },
   { key: 'paciente.nacimiento', label: 'Paciente: Nacimiento' },
+  { key: 'paciente.domicilio', label: 'Paciente: Domicilio' },
+  { key: 'paciente.ciudad', label: 'Paciente: Ciudad' },
+  { key: 'paciente.telefono', label: 'Paciente: Teléfono' },
   { key: 'orden.protocolo', label: 'Orden: Protocolo' },
   { key: 'orden.fecha', label: 'Orden: Fecha' },
+  { key: 'orden.origen', label: 'Orden: Origen' },
+  { key: 'orden.urgente', label: 'Orden: Urgente' },
+  { key: 'orden.diagnostico', label: 'Orden: Diagnóstico' },
+  { key: 'orden.notas', label: 'Orden: Notas' },
   { key: 'cobertura.obraSocial', label: 'Cobertura: Obra social' },
   { key: 'cobertura.nroAfiliado', label: 'Cobertura: Nro afiliado' },
   { key: 'medico.nombre', label: 'Médico: Nombre' },
   { key: 'medico.mp', label: 'Médico: M.P.' },
-  { key: 'medico.diagnostico', label: 'Médico: Diagnóstico' },
   { key: 'tabla.resultados', label: 'Tabla de resultados' },
   { key: 'firma.nombre', label: 'Firma: Nombre' },
   { key: 'firma.matricula', label: 'Firma: Matrícula' },
@@ -370,10 +376,18 @@ const INFORME_FIELDS = [
 const ORDEN_FIELDS = [
   { key: 'paciente.nombre', label: 'Paciente: Nombre' },
   { key: 'paciente.dni', label: 'Paciente: DNI' },
+  { key: 'paciente.sexo', label: 'Paciente: Sexo' },
+  { key: 'paciente.domicilio', label: 'Paciente: Domicilio' },
+  { key: 'paciente.telefono', label: 'Paciente: Teléfono' },
   { key: 'orden.protocolo', label: 'Orden: Protocolo' },
   { key: 'orden.fecha', label: 'Orden: Fecha' },
+  { key: 'orden.origen', label: 'Orden: Origen' },
+  { key: 'orden.diagnostico', label: 'Orden: Diagnóstico' },
+  { key: 'orden.notas', label: 'Orden: Notas' },
   { key: 'cobertura.obraSocial', label: 'Cobertura: Obra social' },
+  { key: 'cobertura.nroAfiliado', label: 'Cobertura: Nro afiliado' },
   { key: 'medico.nombre', label: 'Médico: Nombre' },
+  { key: 'medico.mp', label: 'Médico: M.P.' },
   { key: 'tabla.practicas', label: 'Tabla de prácticas' },
 ] as const;
 
@@ -452,7 +466,7 @@ function CamposTab({
   );
 
   const handleUpdateFieldProp = useCallback(
-    (key: string, prop: 'fontSize' | 'color' | 'prefix', value: number | string) => {
+    (key: string, prop: string, value: number | string | boolean) => {
       if (!campos[key]) return;
       onCamposChange({
         ...campos,
@@ -492,14 +506,12 @@ function CamposTab({
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        <div className="w-full shrink-0 lg:w-56">
-          <PdfFieldPanel
+        <div className="w-full shrink-0 lg:w-48">
+          <PdfFieldList
             availableFields={availableFields}
             placedFields={campos}
             selectedField={selectedField}
             onSelectField={setSelectedField}
-            onRemoveField={handleRemoveField}
-            onUpdateProp={handleUpdateFieldProp}
           />
         </div>
         <div className="w-full max-w-md">
@@ -512,6 +524,15 @@ function CamposTab({
             onSelectField={setSelectedField}
             onFieldDrop={handleFieldDrop}
             onFieldMove={handleFieldMove}
+          />
+        </div>
+        <div className="w-full shrink-0 lg:w-52">
+          <PdfFieldProps
+            availableFields={availableFields}
+            placedFields={campos}
+            selectedField={selectedField}
+            onRemoveField={handleRemoveField}
+            onUpdateProp={handleUpdateFieldProp}
           />
         </div>
       </div>

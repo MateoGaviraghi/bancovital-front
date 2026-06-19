@@ -500,6 +500,11 @@ export interface PdfLayoutCampo {
   fontSize?: number;
   color?: string;
   prefix?: string;
+  bold?: boolean;
+  headerBg?: string;
+  headerColor?: string;
+  borderColor?: string;
+  rowColor?: string;
 }
 
 export interface PdfLayoutConfig {
@@ -627,6 +632,7 @@ export interface Laboratorio {
   email: string | null;
   signingProfessionalName: string | null;
   signingProfessionalMp: string | null;
+  logoPath: string | null;
   estado: EstadoLab;
   /** True when the lab is flagged as past-due (super-managed). */
   moroso?: boolean;

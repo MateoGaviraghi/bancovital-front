@@ -56,6 +56,7 @@ import {
   ChevronDown,
   Copy,
   Download,
+  ImageIcon,
   KeyRound,
   Layers,
   Loader2,
@@ -67,11 +68,12 @@ import {
   RotateCcw,
   Sparkles,
   Trash2,
+  Upload,
   Wallet,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 function apiError(err: unknown, fallback: string): string {
@@ -401,11 +403,14 @@ function LaboratorioDialog({
   const isEdit = lab !== null;
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setForm(lab ? labToForm(lab) : EMPTY_FORM);
       setErrors({});
+      setLogoPreview(null);
     }
   }, [open, lab]);
 
@@ -434,7 +439,24 @@ function LaboratorioDialog({
     onError: (err) => toast.error(apiError(err, 'Error al actualizar laboratorio')),
   });
 
-  const isPending = createMut.isPending || updateMut.isPending;
+  const logoMut = useMutation({
+    mutationFn: async (file: File) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      return apiClient
+        .post<Laboratorio>(`/super/labs/${lab!.id}/logo`, fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+        .then((r) => r.data);
+    },
+    onSuccess: () => {
+      toast.success('Logo actualizado');
+      onSuccess();
+    },
+    onError: (err) => toast.error(apiError(err, 'Error al subir logo')),
+  });
+
+  const isPending = createMut.isPending || updateMut.isPending || logoMut.isPending;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -593,6 +615,58 @@ function LaboratorioDialog({
               </FormField>
             )}
           </div>
+
+          {/* Logo upload — solo en edición, sube automáticamente al elegir archivo */}
+          {isEdit && (
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-4">
+              <p className="mb-2 text-xs font-medium text-[var(--color-fg-muted)] uppercase tracking-wide">Logo del laboratorio</p>
+              <div className="flex items-center gap-4">
+                {logoPreview || lab?.logoPath ? (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-md border border-[var(--color-border)] bg-white p-1">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Preview logo" className="max-h-12 max-w-12 object-contain" />
+                    ) : (
+                      <ImageIcon className="h-6 w-6 text-[var(--color-success)]" strokeWidth={1.5} />
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-md border border-dashed border-[var(--color-border-strong)] bg-white">
+                    <ImageIcon className="h-6 w-6 text-[var(--color-fg-subtle)]" strokeWidth={1.5} />
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      if (f.size > 5 * 1024 * 1024) { toast.error('El logo supera los 5 MB.'); return; }
+                      setLogoPreview(URL.createObjectURL(f));
+                      logoMut.mutate(f);
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={logoMut.isPending}
+                  >
+                    {logoMut.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+                    ) : (
+                      <Upload className="h-3.5 w-3.5" strokeWidth={2} />
+                    )}
+                    {logoMut.isPending ? 'Subiendo...' : lab?.logoPath ? 'Cambiar logo' : 'Subir logo'}
+                  </Button>
+                  <p className="text-[10px] text-[var(--color-fg-subtle)]">PNG, JPG o WEBP. Máx 5 MB.</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <DialogFooter>
             <Button

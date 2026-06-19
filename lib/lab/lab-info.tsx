@@ -2,10 +2,11 @@
 
 import { createContext, useContext } from 'react';
 
-/** Identidad mínima del lab del usuario para el header (sin colores). */
 export interface LabInfo {
   labName: string | null;
   logoUrl: string | null;
+  primaryColor: string | null;
+  accentColor: string | null;
 }
 
 const LabContext = createContext<LabInfo | null>(null);

@@ -61,12 +61,14 @@ export function labThemeVars({ primaryColor, accentColor }: LabPalette): CSSProp
   const vars: Record<string, string> = {};
 
   if (primary) {
+    const lum = relativeLuminance(primary);
+    const isLight = lum > 0.15;
     vars['--color-primary'] = primary;
     vars['--color-primary-hover'] = `color-mix(in oklab, ${primary} 85%, black)`;
     vars['--color-primary-soft'] = `color-mix(in oklab, ${primary} 12%, white)`;
     vars['--color-primary-foreground'] = readableForeground(primary);
-    // Sidebar: deep tinted dark derivado del primario (texto del rail = blanco).
-    vars['--color-rail'] = `color-mix(in oklab, ${primary} 32%, #070a14)`;
+    const railMix = isLight ? 20 : 32;
+    vars['--color-rail'] = `color-mix(in oklab, ${primary} ${railMix}%, #070a14)`;
   }
 
   if (accent) {

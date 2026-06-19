@@ -9,8 +9,7 @@ const A4_W = 595;
 const A4_H = 842;
 const A4_RATIO = A4_W / A4_H;
 
-const TABLE_W = 400;
-const TABLE_H = 200;
+const TABLE_H = 300;
 
 const DEFAULT_GRID = 10; // pt
 
@@ -209,26 +208,44 @@ export function PdfCanvas({
           const fontSize = (campo.fontSize ?? 10) * scale;
 
           if (isTable) {
-            const w = TABLE_W * scale;
+            const tableW = Math.max(200, A4_W - campo.x - 30);
+            const w = tableW * scale;
             const h = TABLE_H * scale;
+            const headerH = Math.max(14, 22 * scale);
+            const borderCol = campo.borderColor ?? '#d4c9b0';
             return (
               <div
                 key={key}
                 className={cn(
-                  'absolute flex items-center justify-center border-2 border-dashed cursor-move select-none rounded',
-                  isSelected
-                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
-                    : 'border-[var(--color-fg-muted)]/40 bg-[var(--color-fg-muted)]/5',
+                  'absolute cursor-move select-none rounded overflow-hidden',
+                  isSelected && 'ring-2 ring-[var(--color-primary)]',
                 )}
-                style={{ left, top, width: w, height: h }}
+                style={{ left, top, width: w, height: h, border: `1.5px solid ${borderCol}` }}
                 onMouseDown={(e) => handleFieldClick(key, e)}
               >
-                <span
-                  className="text-center font-mono text-[var(--color-fg-muted)] pointer-events-none"
-                  style={{ fontSize: Math.max(8, scale * 10) }}
+                <div
+                  className="flex items-center justify-center pointer-events-none"
+                  style={{
+                    height: headerH,
+                    backgroundColor: campo.headerBg ?? '#f5f0e8',
+                    color: campo.headerColor ?? '#5a4a2f',
+                    fontSize: Math.max(7, scale * 8),
+                    fontWeight: 600,
+                    borderBottom: `1px solid ${borderCol}`,
+                  }}
                 >
                   {fieldLabel(key)}
-                </span>
+                </div>
+                <div
+                  className="flex flex-1 items-center justify-center pointer-events-none"
+                  style={{
+                    color: campo.rowColor ?? '#000',
+                    fontSize: Math.max(6, scale * 7),
+                    height: `calc(100% - ${headerH}px)`,
+                  }}
+                >
+                  filas de datos...
+                </div>
               </div>
             );
           }
@@ -250,7 +267,10 @@ export function PdfCanvas({
               }}
               onMouseDown={(e) => handleFieldClick(key, e)}
             >
-              {campo.prefix ? `${campo.prefix}${fieldLabel(key)}` : fieldLabel(key)}
+              {campo.prefix && (
+                <span style={{ fontWeight: campo.bold ? 700 : 400 }}>{campo.prefix}</span>
+              )}
+              {fieldLabel(key)}
             </div>
           );
         })}
