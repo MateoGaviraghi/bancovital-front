@@ -163,10 +163,19 @@ export default async function OrdersPage({ searchParams }: Props) {
                       </Link>
                     </td>
                     <td className="px-5 py-3 text-[var(--color-fg)]">
-                      {o.patient.lastName}, {o.patient.firstName}
-                      <span className="ml-2 tabular font-mono text-[10px] text-[var(--color-fg-subtle)]">
-                        {o.patient.dni}
-                      </span>
+                      {o.patient
+                        ? <>{o.patient.lastName}, {o.patient.firstName}
+                            <span className="ml-2 tabular font-mono text-[10px] text-[var(--color-fg-subtle)]">
+                              {o.patient.dni}
+                            </span>
+                          </>
+                        : o.animalPatient
+                          ? <>{o.animalPatient.nombre}
+                              <span className="ml-2 text-[10px] text-[var(--color-fg-subtle)]">
+                                {o.animalPatient.especie} · {o.animalPatient.propietario}
+                              </span>
+                            </>
+                          : '—'}
                     </td>
                     <td className="px-5 py-3 text-[var(--color-fg-muted)] text-xs">
                       {o.insurer.name}

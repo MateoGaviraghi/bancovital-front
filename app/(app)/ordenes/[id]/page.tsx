@@ -135,7 +135,7 @@ export default async function OrdenDetailPage({
     <div>
       <PageHeader
         title={`Orden #${order.protocolNumber}`}
-        description={`${order.patient.lastName}, ${order.patient.firstName} · DNI ${order.patient.dni}`}
+        description={order.patient ? `${order.patient.lastName}, ${order.patient.firstName} · DNI ${order.patient.dni}` : order.animalPatient ? `${order.animalPatient.nombre} · ${order.animalPatient.especie} · ${order.animalPatient.propietario}` : ''}
         actions={
           <div className="flex items-center gap-3">
             <StatusPill status={order.status} />

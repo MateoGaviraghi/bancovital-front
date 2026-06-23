@@ -25,6 +25,26 @@ export const queries = {
     detail: (id: number) => ['doctors', id] as const,
   },
 
+  veterinarios: {
+    list: (filters: Record<string, unknown> = {}) => ['veterinarios', filters] as const,
+    detail: (id: number) => ['veterinarios', id] as const,
+  },
+
+  especies: {
+    list: () => ['especies'] as const,
+    razas: (especieId: number) => ['especies', especieId, 'razas'] as const,
+  },
+
+  propietarios: {
+    list: (filters: Record<string, unknown> = {}) => ['propietarios', filters] as const,
+    detail: (id: number) => ['propietarios', id] as const,
+  },
+
+  pacientesAnimales: {
+    list: (filters: Record<string, unknown> = {}) => ['pacientes-animales', filters] as const,
+    detail: (id: number) => ['pacientes-animales', id] as const,
+  },
+
   insurers: {
     list: (filters: Record<string, unknown> = {}) => ['insurers', filters] as const,
     withUb: ['insurers', 'with-ub'] as const,

@@ -53,7 +53,7 @@ type Errors = Partial<Record<'patient' | 'insurer' | 'origin' | 'practices', str
 
 type Props = {
   order: OrderDetail;
-  initialPatient: Patient;
+  initialPatient: Patient | null;
   initialDoctor: Doctor | null;
   initialPractices: PracticeWithChildren[];
 };
