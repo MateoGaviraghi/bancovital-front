@@ -1,6 +1,7 @@
 'use client';
 
 import { ConsumoWidget } from '@/components/domain/consumo-widget';
+import { ThemePickerButton } from '@/components/domain/theme-picker-button';
 import type { AppRole } from '@/lib/auth/session';
 import { cn } from '@/lib/cn';
 import { useLab } from '@/lib/lab/lab-info';
@@ -211,7 +212,7 @@ function NavEntry({
 
 export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
   const pathname = usePathname();
-  const { labName, logoUrl } = useLab();
+  const { labName, logoUrl, primaryColor, accentColor } = useLab();
   const name = labName ?? 'Mi laboratorio';
 
   return (
@@ -226,12 +227,13 @@ export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
             </span>
           )}
         </div>
-        <div className="min-w-0 leading-tight">
+        <div className="min-w-0 flex-1 leading-tight">
           <p className="truncate font-semibold text-sm text-white">{name}</p>
           <p className="truncate text-[10px] text-white/40 uppercase tracking-[0.14em]">
             Laboratorio
           </p>
         </div>
+        {userRole === 'admin' && <ThemePickerButton currentPrimary={primaryColor} />}
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4">

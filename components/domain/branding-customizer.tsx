@@ -1,6 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { apiClient } from '@/lib/api/client';
@@ -9,7 +16,7 @@ import type { LabAssetSignedUrlResponse, LabConfig, UpdateLabConfigDto } from '@
 import { cleanHex, labThemeVars } from '@/lib/lab/theme';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { ImageIcon, Loader2, Upload } from 'lucide-react';
+import { ImageIcon, Loader2, Palette, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -22,14 +29,50 @@ const LOGO_MAX_BYTES = 5 * 1024 * 1024;
 const BV_PRIMARY = '#1f2b5b';
 const BV_ACCENT = '#cd0f0f';
 
-// Pares curados: primario oscuro + acento cálido → mantienen el look premium.
-const PRESETS: { name: string; primary: string; accent: string }[] = [
-  { name: 'Banco Vital', primary: '#1f2b5b', accent: '#cd0f0f' },
-  { name: 'Esmeralda', primary: '#0f5132', accent: '#d97706' },
-  { name: 'Borgoña', primary: '#7a1f2b', accent: '#c89b3c' },
-  { name: 'Océano', primary: '#0e4a6e', accent: '#e0533d' },
-  { name: 'Violeta', primary: '#4c2a86', accent: '#e0a800' },
-  { name: 'Grafito', primary: '#1f2933', accent: '#0d9488' },
+const PRESETS: { name: string; primary: string; accent: string; group: string }[] = [
+  // Clásicos
+  { name: 'Banco Vital', primary: '#1f2b5b', accent: '#cd0f0f', group: 'Clásicos' },
+  { name: 'Navy Gold', primary: '#1a2744', accent: '#c8a951', group: 'Clásicos' },
+  { name: 'Borgoña', primary: '#7a1f2b', accent: '#c89b3c', group: 'Clásicos' },
+  { name: 'Grafito', primary: '#1f2933', accent: '#0d9488', group: 'Clásicos' },
+  // Naturaleza
+  { name: 'Esmeralda', primary: '#0f5132', accent: '#d97706', group: 'Naturaleza' },
+  { name: 'Bosque', primary: '#1a4731', accent: '#e07b39', group: 'Naturaleza' },
+  { name: 'Oliva', primary: '#3d4f2f', accent: '#c49a2a', group: 'Naturaleza' },
+  { name: 'Jade', primary: '#115e59', accent: '#f59e0b', group: 'Naturaleza' },
+  // Oceánicos
+  { name: 'Océano', primary: '#0e4a6e', accent: '#e0533d', group: 'Oceánicos' },
+  { name: 'Celeste', primary: '#1e5a8a', accent: '#e57c23', group: 'Oceánicos' },
+  { name: 'Atlántico', primary: '#1e3a5f', accent: '#d4a017', group: 'Oceánicos' },
+  { name: 'Turquesa', primary: '#134e5e', accent: '#f2994a', group: 'Oceánicos' },
+  // Cálidos
+  { name: 'Terracota', primary: '#8b3a2a', accent: '#2d6a4f', group: 'Cálidos' },
+  { name: 'Caramelo', primary: '#6b3410', accent: '#1a6b4b', group: 'Cálidos' },
+  { name: 'Ladrillo', primary: '#922b21', accent: '#1a5276', group: 'Cálidos' },
+  { name: 'Bronce', primary: '#5d4037', accent: '#00838f', group: 'Cálidos' },
+  // Violetas
+  { name: 'Violeta', primary: '#4c2a86', accent: '#e0a800', group: 'Violetas' },
+  { name: 'Amatista', primary: '#5b2c6f', accent: '#d4ac0d', group: 'Violetas' },
+  { name: 'Índigo', primary: '#3f2b96', accent: '#e67e22', group: 'Violetas' },
+  { name: 'Uva', primary: '#6c3483', accent: '#27ae60', group: 'Violetas' },
+  // Modernos
+  { name: 'Carbón', primary: '#2c3e50', accent: '#e74c3c', group: 'Modernos' },
+  { name: 'Acero', primary: '#34495e', accent: '#1abc9c', group: 'Modernos' },
+  { name: 'Pizarra', primary: '#2c3e50', accent: '#f39c12', group: 'Modernos' },
+  { name: 'Ébano', primary: '#1c1c1c', accent: '#c0392b', group: 'Modernos' },
+  // Claros
+  { name: 'Cielo', primary: '#4a90d9', accent: '#e8853d', group: 'Claros' },
+  { name: 'Lavanda', primary: '#7c6bc4', accent: '#e09545', group: 'Claros' },
+  { name: 'Menta', primary: '#3da88e', accent: '#d47c5a', group: 'Claros' },
+  { name: 'Coral', primary: '#d06b5d', accent: '#4a90a4', group: 'Claros' },
+  { name: 'Lila', primary: '#9b72cf', accent: '#5bb5a2', group: 'Claros' },
+  { name: 'Durazno', primary: '#c87f5a', accent: '#5b8fc2', group: 'Claros' },
+  { name: 'Aqua', primary: '#4db6ac', accent: '#c27688', group: 'Claros' },
+  { name: 'Rosa', primary: '#c47a9b', accent: '#5aad82', group: 'Claros' },
+  { name: 'Dorado', primary: '#b8860b', accent: '#4a6fa5', group: 'Claros' },
+  { name: 'Miel', primary: '#d4a017', accent: '#5b7d9a', group: 'Claros' },
+  { name: 'Ámbar', primary: '#c4972a', accent: '#6b8e7b', group: 'Claros' },
+  { name: 'Mostaza', primary: '#c49b2a', accent: '#7a5ba5', group: 'Claros' },
 ];
 
 function apiError(err: unknown, fallback: string): string {
@@ -72,6 +115,79 @@ function ColorField({
         />
       </div>
     </div>
+  );
+}
+
+const GROUPS = Array.from(new Set(PRESETS.map((p) => p.group)));
+
+function ThemePicker({
+  primary,
+  accent,
+  onSelect,
+}: {
+  primary: string;
+  accent: string;
+  onSelect: (primary: string, accent: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button type="button" variant="outline" onClick={() => setOpen(true)}>
+        <Palette className="h-4 w-4" strokeWidth={2} />
+        Elegir tema
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Temas de color</DialogTitle>
+            <DialogDescription>
+              Elegí una paleta prediseñada. Después podés ajustar los colores manualmente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+            {GROUPS.map((group) => (
+              <div key={group}>
+                <p className="mb-2 font-semibold text-xs text-[var(--color-fg-muted)] uppercase tracking-wide">
+                  {group}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {PRESETS.filter((p) => p.group === group).map((p) => {
+                    const active = cleanHex(primary) === p.primary && cleanHex(accent) === p.accent;
+                    return (
+                      <button
+                        key={p.name}
+                        type="button"
+                        onClick={() => {
+                          onSelect(p.primary, p.accent);
+                          setOpen(false);
+                        }}
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                          active
+                            ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]'
+                            : 'border-[var(--color-border)] hover:bg-[var(--color-bg-subtle)]'
+                        }`}
+                      >
+                        <div className="flex -space-x-1">
+                          <span
+                            className="h-6 w-6 rounded-full border-2 border-white shadow-sm"
+                            style={{ background: p.primary }}
+                          />
+                          <span
+                            className="h-6 w-6 rounded-full border-2 border-white shadow-sm"
+                            style={{ background: p.accent }}
+                          />
+                        </div>
+                        <span className="text-sm text-[var(--color-fg)]">{p.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -262,47 +378,17 @@ export function BrandingCustomizer({ config }: { config: LabConfig }) {
         <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_auto]">
           {/* Controles */}
           <div className="space-y-5">
-            {/* Presets */}
-            <div>
-              <p className="mb-2 font-medium text-[10px] text-[var(--color-fg-muted)] uppercase tracking-[0.12em]">
-                Paletas sugeridas
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {PRESETS.map((p) => {
-                  const active = cleanHex(primary) === p.primary && cleanHex(accent) === p.accent;
-                  return (
-                    <button
-                      key={p.name}
-                      type="button"
-                      title={p.name}
-                      onClick={() => {
-                        setPrimary(p.primary);
-                        setAccent(p.accent);
-                      }}
-                      className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 transition-colors ${
-                        active
-                          ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]'
-                          : 'border-[var(--color-border)] hover:bg-[var(--color-bg-subtle)]'
-                      }`}
-                    >
-                      <span
-                        className="h-4 w-4 rounded-full border border-black/10"
-                        style={{ background: p.primary }}
-                      />
-                      <span
-                        className="h-4 w-4 rounded-full border border-black/10"
-                        style={{ background: p.accent }}
-                      />
-                      <span className="ml-0.5 text-[var(--color-fg)] text-xs">{p.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-5">
+            <div className="flex flex-wrap items-end gap-5">
               <ColorField label="Principal" value={primary} onChange={setPrimary} />
               <ColorField label="Acento" value={accent} onChange={setAccent} />
+              <ThemePicker
+                primary={primary}
+                accent={accent}
+                onSelect={(p, a) => {
+                  setPrimary(p);
+                  setAccent(a);
+                }}
+              />
             </div>
 
             {!colorsValid && (
