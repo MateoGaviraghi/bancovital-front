@@ -3,7 +3,7 @@
 import { ResultRow } from '@/components/domain/result-row';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api/client';
-import type { OrderStatus, ResultLine } from '@/lib/api/types';
+import type { CondicionVisibilidad, OrderStatus, ResultLine } from '@/lib/api/types';
 import { Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useRef, useState } from 'react';
@@ -63,8 +63,29 @@ export function ResultsForm({ lines, orderId, orderStatus }: Props) {
     }
   }, [router]);
 
-  const reportable = lines.filter((l) => l.orderPractice.includeInReport);
-  const excluded = lines.filter((l) => !l.orderPractice.includeInReport);
+  const isVisible = useCallback(
+    (line: ResultLine): boolean => {
+      if (!line.parentId || !line.condicionVisibilidad) return true;
+      const cond: CondicionVisibilidad = line.condicionVisibilidad;
+      const parentLine = lines.find(
+        (l) => l.orderPractice.practiceId === line.parentId,
+      );
+      if (!parentLine) return true;
+      const parentValue =
+        parentLine.result?.valueText ?? parentLine.result?.valueNumeric ?? null;
+      if (parentValue === null) return true;
+      if (cond.parentValue?.equals !== undefined)
+        return parentValue === cond.parentValue.equals;
+      if (cond.parentValue?.notEquals !== undefined)
+        return parentValue !== cond.parentValue.notEquals;
+      return true;
+    },
+    [lines],
+  );
+
+  const visibleLines = lines.filter(isVisible);
+  const reportable = visibleLines.filter((l) => l.orderPractice.includeInReport);
+  const excluded = visibleLines.filter((l) => !l.orderPractice.includeInReport);
 
   return (
     <div className="space-y-6">

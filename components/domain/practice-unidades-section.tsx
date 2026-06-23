@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { TagInput } from '@/components/ui/tag-input';
 import { apiClient } from '@/lib/api/client';
 import { queries } from '@/lib/api/queries';
 import type {
@@ -20,7 +21,7 @@ import type {
 import { cn } from '@/lib/cn';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Check, Loader2, Plus, Ruler, Search, X } from 'lucide-react';
+import { Check, Loader2, Pencil, Plus, Ruler, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -49,6 +50,9 @@ function UnidadesDialog({
   const [showCreate, setShowCreate] = useState(false);
   const [newNombre, setNewNombre] = useState('');
   const [newSimbolo, setNewSimbolo] = useState('');
+  const [newOpciones, setNewOpciones] = useState<string[]>([]);
+  const [editingUnit, setEditingUnit] = useState<UnidadMedida | null>(null);
+  const [editOpciones, setEditOpciones] = useState<string[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,6 +61,8 @@ function UnidadesDialog({
       setShowCreate(false);
       setNewNombre('');
       setNewSimbolo('');
+      setNewOpciones([]);
+      setEditingUnit(null);
       setTimeout(() => searchRef.current?.focus(), 80);
     }
   }, [open]);
@@ -132,12 +138,27 @@ function UnidadesDialog({
       toast.success(`Unidad "${newUnit.nombre}" creada`);
       setNewNombre('');
       setNewSimbolo('');
+      setNewOpciones([]);
       setShowCreate(false);
       qc.invalidateQueries({ queryKey: ['unidades-medida', 'all'] });
-      // Auto-associate the new unit
       addMutation.mutate(newUnit.id);
     },
     onError: (err) => toast.error(apiError(err, 'No se pudo crear la unidad')),
+  });
+
+  const updateOpcionesMut = useMutation({
+    mutationFn: async ({ id, opciones }: { id: number; opciones: string[] }) => {
+      const { data } = await apiClient.patch<UnidadMedida>(`/unidades-medida/${id}`, {
+        opcionesPredeterminadas: opciones.length > 0 ? opciones : null,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Opciones guardadas');
+      setEditingUnit(null);
+      qc.invalidateQueries({ queryKey: ['unidades-medida', 'all'] });
+    },
+    onError: (err) => toast.error(apiError(err, 'No se pudieron guardar las opciones')),
   });
 
   const assocItems = assocQuery.data ?? [];
@@ -167,7 +188,11 @@ function UnidadesDialog({
     e.preventDefault();
     const nombre = newNombre.trim();
     if (!nombre) return;
-    createMutation.mutate({ nombre, simbolo: newSimbolo.trim() || null });
+    createMutation.mutate({
+      nombre,
+      simbolo: newSimbolo.trim() || null,
+      opcionesPredeterminadas: newOpciones.length > 0 ? newOpciones : null,
+    });
   }
 
   const loading = catalogQuery.isLoading || assocQuery.isLoading;
@@ -253,16 +278,45 @@ function UnidadesDialog({
                         ) : null}
                       </span>
 
-                      <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                        <span className="truncate text-[var(--color-fg)] text-sm">
-                          {unit.nombre}
-                        </span>
-                        {unit.simbolo && (
-                          <span className="shrink-0 font-mono text-[var(--color-fg-muted)] text-xs">
-                            {unit.simbolo}
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="flex items-baseline gap-2">
+                          <span className="truncate text-[var(--color-fg)] text-sm">
+                            {unit.nombre}
                           </span>
-                        )}
+                          {unit.simbolo && (
+                            <span className="shrink-0 font-mono text-[var(--color-fg-muted)] text-xs">
+                              {unit.simbolo}
+                            </span>
+                          )}
+                        </span>
+                        {unit.opcionesPredeterminadas &&
+                          unit.opcionesPredeterminadas.length > 0 && (
+                            <span className="mt-0.5 flex flex-wrap gap-1">
+                              {unit.opcionesPredeterminadas.map((o) => (
+                                <span
+                                  key={o}
+                                  className="rounded bg-[var(--color-bg-subtle)] px-1.5 py-0.5 text-[10px] text-[var(--color-fg-muted)]"
+                                >
+                                  {o}
+                                </span>
+                              ))}
+                            </span>
+                          )}
                       </span>
+                      {isAssoc && (
+                        <button
+                          type="button"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            setEditingUnit(unit);
+                            setEditOpciones(unit.opcionesPredeterminadas ?? []);
+                          }}
+                          className="shrink-0 rounded p-1 text-[var(--color-fg-subtle)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-fg)]"
+                          title="Editar opciones predeterminadas"
+                        >
+                          <Pencil className="h-3 w-3" strokeWidth={2} />
+                        </button>
+                      )}
                     </button>
                   </li>
                 );
@@ -272,62 +326,121 @@ function UnidadesDialog({
         </div>
 
         {/* Create new unit */}
-        <div className="border-[var(--color-border)] border-t">
-          {showCreate ? (
-            <form onSubmit={handleCreate} className="flex items-end gap-2 px-4 py-3">
-              <div className="flex-1 space-y-1">
-                <label htmlFor="new-unidad-nombre" className="text-[var(--color-fg-muted)] text-xs">
-                  Nombre
-                </label>
-                <input
-                  id="new-unidad-nombre"
-                  value={newNombre}
-                  onChange={(e) => setNewNombre(e.target.value)}
-                  placeholder="ej: Glucosa"
-                  className="block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-2.5 py-1.5 text-[var(--color-fg)] text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)]"
-                  disabled={createMutation.isPending}
-                />
-              </div>
-              <div className="w-24 space-y-1">
-                <label
-                  htmlFor="new-unidad-simbolo"
-                  className="text-[var(--color-fg-muted)] text-xs"
-                >
-                  Símbolo
-                </label>
-                <input
-                  id="new-unidad-simbolo"
-                  value={newSimbolo}
-                  onChange={(e) => setNewSimbolo(e.target.value)}
-                  placeholder="ej: mg/dL"
-                  className="block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-2.5 py-1.5 font-mono text-[var(--color-fg)] text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)]"
-                  disabled={createMutation.isPending}
-                />
-              </div>
+        {/* Edit opciones inline */}
+        {editingUnit && (
+          <div className="border-[var(--color-border)] border-t bg-[var(--color-bg-subtle)] px-4 py-3 space-y-2">
+            <p className="font-medium text-[var(--color-fg)] text-xs">
+              Opciones predeterminadas — {editingUnit.nombre}
+            </p>
+            <TagInput
+              value={editOpciones}
+              onChange={setEditOpciones}
+              placeholder="Escribí una opción y presioná Enter…"
+              disabled={updateOpcionesMut.isPending}
+            />
+            <div className="flex gap-2">
               <Button
-                type="submit"
+                type="button"
                 size="sm"
-                disabled={!newNombre.trim() || createMutation.isPending}
+                onClick={() =>
+                  updateOpcionesMut.mutate({ id: editingUnit.id, opciones: editOpciones })
+                }
+                disabled={updateOpcionesMut.isPending}
               >
-                {createMutation.isPending ? (
+                {updateOpcionesMut.isPending ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
                 ) : (
-                  'Crear'
+                  'Guardar'
                 )}
               </Button>
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
-                onClick={() => {
-                  setShowCreate(false);
-                  setNewNombre('');
-                  setNewSimbolo('');
-                }}
-                disabled={createMutation.isPending}
+                onClick={() => setEditingUnit(null)}
+                disabled={updateOpcionesMut.isPending}
               >
-                <X className="h-3.5 w-3.5" strokeWidth={2} />
+                Cancelar
               </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="border-[var(--color-border)] border-t">
+          {showCreate ? (
+            <form onSubmit={handleCreate} className="space-y-3 px-4 py-3">
+              <div className="flex items-end gap-2">
+                <div className="flex-1 space-y-1">
+                  <label
+                    htmlFor="new-unidad-nombre"
+                    className="text-[var(--color-fg-muted)] text-xs"
+                  >
+                    Nombre
+                  </label>
+                  <input
+                    id="new-unidad-nombre"
+                    value={newNombre}
+                    onChange={(e) => setNewNombre(e.target.value)}
+                    placeholder="ej: Glucosa"
+                    className="block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-2.5 py-1.5 text-[var(--color-fg)] text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)]"
+                    disabled={createMutation.isPending}
+                  />
+                </div>
+                <div className="w-24 space-y-1">
+                  <label
+                    htmlFor="new-unidad-simbolo"
+                    className="text-[var(--color-fg-muted)] text-xs"
+                  >
+                    Símbolo
+                  </label>
+                  <input
+                    id="new-unidad-simbolo"
+                    value={newSimbolo}
+                    onChange={(e) => setNewSimbolo(e.target.value)}
+                    placeholder="ej: mg/dL"
+                    className="block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-2.5 py-1.5 font-mono text-[var(--color-fg)] text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)]"
+                    disabled={createMutation.isPending}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[var(--color-fg-muted)] text-xs">
+                  Opciones predeterminadas (opcional)
+                </span>
+                <TagInput
+                  value={newOpciones}
+                  onChange={setNewOpciones}
+                  placeholder="ej: Amarillo, Ámbar, Rojizo…"
+                  disabled={createMutation.isPending}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!newNombre.trim() || createMutation.isPending}
+                >
+                  {createMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+                  ) : (
+                    'Crear'
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setShowCreate(false);
+                    setNewNombre('');
+                    setNewSimbolo('');
+                    setNewOpciones([]);
+                  }}
+                  disabled={createMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+              </div>
             </form>
           ) : (
             <button

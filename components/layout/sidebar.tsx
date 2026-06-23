@@ -8,16 +8,19 @@ import { useLab } from '@/lib/lab/lab-info';
 import {
   BookOpen,
   Building2,
+  Cat,
   ChevronDown,
   ClipboardList,
   DollarSign,
   FilePlus,
   FileText,
   FlaskConical,
+  Heart,
   Home,
   LayoutDashboard,
   type LucideIcon,
   MapPin,
+  PawPrint,
   ShieldCheck,
   Stethoscope,
   TrendingUp,
@@ -97,6 +100,39 @@ const PRIMARY: Entry[] = [
   { kind: 'leaf', path: '/reportes', label: 'Reportes', icon: TrendingUp },
 ];
 
+const VETERINARIA: Entry[] = [
+  {
+    kind: 'group',
+    label: 'Propietarios',
+    icon: Users,
+    basePath: '/propietarios',
+    children: [
+      { path: '/propietarios', label: 'Ver propietarios', icon: Users },
+      { path: '/propietarios/nuevo', label: 'Nuevo propietario', icon: UserPlus },
+    ],
+  },
+  {
+    kind: 'group',
+    label: 'Pacientes animales',
+    icon: PawPrint,
+    basePath: '/pacientes-animales',
+    children: [
+      { path: '/pacientes-animales', label: 'Ver pacientes', icon: PawPrint },
+      { path: '/pacientes-animales/nuevo', label: 'Nuevo paciente', icon: Cat },
+    ],
+  },
+  {
+    kind: 'group',
+    label: 'Veterinarios',
+    icon: Heart,
+    basePath: '/veterinarios',
+    children: [
+      { path: '/veterinarios', label: 'Ver veterinarios', icon: Heart },
+      { path: '/veterinarios/nuevo', label: 'Nuevo veterinario', icon: UserPlus },
+    ],
+  },
+];
+
 const ADMIN: Entry[] = [
   {
     kind: 'group',
@@ -109,6 +145,7 @@ const ADMIN: Entry[] = [
       { path: '/admin/valor-ub', label: 'Valor UB', icon: DollarSign },
       { path: '/admin/config-lab', label: 'Config. laboratorio', icon: Building2 },
       { path: '/admin/sedes', label: 'Sedes', icon: MapPin },
+      { path: '/admin/especies', label: 'Especies y razas', icon: PawPrint },
     ],
   },
   { kind: 'leaf', path: '/configuracion/pdf', label: 'Config. PDF', icon: FileText },
@@ -241,6 +278,18 @@ export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
           Operación
         </p>
         {PRIMARY.map((entry) => (
+          <NavEntry
+            key={entry.kind === 'leaf' ? entry.path : entry.basePath}
+            entry={entry}
+            pathname={pathname}
+            userRole={userRole}
+          />
+        ))}
+
+        <p className="px-2.5 pt-5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
+          Veterinaria
+        </p>
+        {VETERINARIA.map((entry) => (
           <NavEntry
             key={entry.kind === 'leaf' ? entry.path : entry.basePath}
             entry={entry}

@@ -652,6 +652,8 @@ export interface ResultLine {
   unidades?: OrderPracticeUnidadItem[];
   /** Texto orientativo de la práctica, inyectado client-side desde /practices/bulk. */
   referenceValue?: string | null;
+  parentId?: number | null;
+  condicionVisibilidad?: CondicionVisibilidad | null;
 }
 
 export interface UpsertResultDto {

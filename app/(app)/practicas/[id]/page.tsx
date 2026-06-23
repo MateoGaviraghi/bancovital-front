@@ -1,5 +1,6 @@
 import { PracticeHierarchySection } from '@/components/domain/practice-hierarchy-section';
 import { PracticeInlineField } from '@/components/domain/practice-inline-field';
+import { PracticeReferenciasEspecieSection } from '@/components/domain/practice-referencias-especie';
 import { PracticeUnidadesSection } from '@/components/domain/practice-unidades-section';
 import { PageHeader } from '@/components/layout/page-header';
 import { getServerApi } from '@/lib/api/server';
@@ -114,6 +115,10 @@ export default async function PracticaDetailPage({
 
       <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-5 shadow-[var(--shadow-xs)]">
         <PracticeUnidadesSection practiceId={practice.id} />
+      </section>
+
+      <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-5 shadow-[var(--shadow-xs)]">
+        <PracticeReferenciasEspecieSection practiceId={practice.id} />
       </section>
     </div>
   );
