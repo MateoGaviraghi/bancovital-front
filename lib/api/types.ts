@@ -20,6 +20,18 @@ export type OrderOrigin = 'ambulatorio' | 'internacion' | 'urgencia';
 
 export type AuthorizationStatus = 'no_aplica' | 'pendiente' | 'autorizada' | 'rechazada';
 
+export type OrderType = 'humana' | 'veterinaria';
+
+export type AnimalSex = 'macho' | 'hembra' | 'indeterminado';
+
+export type ReproductiveStatus =
+  | 'entero'
+  | 'castrado'
+  | 'esterilizado'
+  | 'gestante'
+  | 'lactante'
+  | 'desconocido';
+
 /** Backend stores result flags in this short form. UI classification helper uses the long form. */
 export type ResultFlagShort = 'L' | 'N' | 'H';
 
@@ -157,6 +169,144 @@ export interface CreateDoctorDto {
 
 export type UpdateDoctorDto = Partial<CreateDoctorDto>;
 
+// ─────────────── Veterinarios ───────────────
+
+export interface Veterinario {
+  id: number;
+  firstName: string;
+  lastName: string;
+  matricula: string;
+  clinica: string | null;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface CreateVeterinarioDto {
+  firstName: string;
+  lastName: string;
+  matricula: string;
+  clinica?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  notes?: string | null;
+}
+
+export type UpdateVeterinarioDto = Partial<CreateVeterinarioDto>;
+
+// ─────────────── Especies y razas ───────────────
+
+export interface Especie {
+  id: number;
+  nombre: string;
+  nombreCientifico: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Raza {
+  id: number;
+  especieId: number;
+  nombre: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─────────────── Propietarios ───────────────
+
+export interface Propietario {
+  id: number;
+  dni: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  email: string | null;
+  streetAddress: string | null;
+  city: string | null;
+  notes: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface CreatePropietarioDto {
+  dni: string;
+  firstName: string;
+  lastName: string;
+  phone?: string | null;
+  email?: string | null;
+  streetAddress?: string | null;
+  city?: string | null;
+  notes?: string | null;
+}
+
+export type UpdatePropietarioDto = Partial<CreatePropietarioDto>;
+
+// ─────────────── Pacientes animales ───────────────
+
+export interface PacienteAnimal {
+  id: number;
+  labId: number;
+  propietarioId: number;
+  especieId: number;
+  razaId: number | null;
+  nombre: string;
+  sexo: AnimalSex | null;
+  birthDate: string | null;
+  peso: string | null;
+  color: string | null;
+  tamanio: string | null;
+  estadoReproductivo: ReproductiveStatus | null;
+  microchip: string | null;
+  notes: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  propietario?: Propietario;
+  especie?: Especie;
+  raza?: Raza | null;
+}
+
+export interface CreatePacienteAnimalDto {
+  propietarioId: number;
+  especieId: number;
+  razaId?: number | null;
+  nombre: string;
+  sexo?: AnimalSex | null;
+  birthDate?: string | null;
+  peso?: string | null;
+  color?: string | null;
+  tamanio?: string | null;
+  estadoReproductivo?: ReproductiveStatus | null;
+  microchip?: string | null;
+  notes?: string | null;
+}
+
+export type UpdatePacienteAnimalDto = Partial<CreatePacienteAnimalDto>;
+
+// ─────────────── Valores de referencia por especie ───────────────
+
+export interface PracticeReferenciaEspecie {
+  id: number;
+  practiceId: number;
+  especieId: number;
+  rangeLow: string | null;
+  rangeHigh: string | null;
+  unit: string | null;
+  referenceText: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─────────────── Insurers ───────────────
 
 export interface Insurer {
@@ -207,6 +357,10 @@ export interface SetUbValueDto {
 
 // ─────────────── Practices ───────────────
 
+export interface CondicionVisibilidad {
+  parentValue?: { equals?: string; notEquals?: string };
+}
+
 export interface Practice {
   id: number;
   nbuCode: string;
@@ -224,6 +378,7 @@ export interface Practice {
   notes: string | null;
   referenceValue: string | null;
   methodology: string | null;
+  condicionVisibilidad: CondicionVisibilidad | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -267,6 +422,7 @@ export interface UnidadMedida {
   nombre: string;
   simbolo: string | null;
   active: boolean;
+  opcionesPredeterminadas: string[] | null;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
@@ -282,6 +438,7 @@ export interface UnidadMedidaCatalogPage {
 export interface CreateUnidadMedidaDto {
   nombre: string;
   simbolo?: string | null;
+  opcionesPredeterminadas?: string[] | null;
 }
 
 export type UpdateUnidadMedidaDto = Partial<CreateUnidadMedidaDto>;
@@ -342,8 +499,11 @@ export interface UpsertOrderPracticeUnidadDto {
 
 export interface OrderListItem {
   id: number;
+  orderType: OrderType;
   protocolNumber: number;
-  patientId: number;
+  patientId: number | null;
+  animalPatientId: number | null;
+  veterinarioId: number | null;
   insurerId: number;
   insuranceAffiliateNumber: string | null;
   referringDoctorId: number | null;
@@ -371,7 +531,14 @@ export interface OrderListItem {
     firstName: string;
     lastName: string;
     dni: string;
-  };
+  } | null;
+  animalPatient?: {
+    id: number;
+    nombre: string;
+    especie: string;
+    raza: string | null;
+    propietario: string;
+  } | null;
   insurer: {
     id: number;
     code: string;
@@ -389,7 +556,10 @@ export interface OrderPracticeInputDto {
 }
 
 export interface CreateOrderDto {
-  patientId: number;
+  orderType?: OrderType;
+  patientId?: number | null;
+  animalPatientId?: number | null;
+  veterinarioId?: number | null;
   insurerId: number;
   insuranceAffiliateNumber?: string | null;
   referringDoctorId?: number | null;
@@ -403,7 +573,10 @@ export interface CreateOrderDto {
 }
 
 export interface UpdateOrderDto {
-  patientId?: number;
+  orderType?: OrderType;
+  patientId?: number | null;
+  animalPatientId?: number | null;
+  veterinarioId?: number | null;
   insurerId?: number;
   insuranceAffiliateNumber?: string | null;
   referringDoctorId?: number | null;
