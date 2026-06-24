@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { getServerApi } from '@/lib/api/server';
 import type { Insurer, OrderListItem, OrderStatus } from '@/lib/api/types';
 import { getSessionUser } from '@/lib/auth/session';
-import { AlertTriangle, ClipboardList, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ClipboardList, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { OrdersFilters } from './filters';
 
 export const dynamic = 'force-dynamic';
 
-const LIMIT = 200;
+const PAGE_SIZE = 50;
 
 const VALID_STATUSES: OrderStatus[] = [
   'borrador',
@@ -49,22 +49,32 @@ type Props = {
     from?: string;
     to?: string;
     q?: string;
+    page?: string;
   }>;
 };
 
+interface PaginatedOrders {
+  data: OrderListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 async function fetchData(sp: Awaited<Props['searchParams']>): Promise<{
-  orders: OrderListItem[];
+  result: PaginatedOrders;
   insurers: Insurer[];
 }> {
   try {
     const api = await getServerApi();
     const rawStatuses = sp.status ? (Array.isArray(sp.status) ? sp.status : [sp.status]) : [];
     const validStatuses = rawStatuses.filter((s) => VALID_STATUSES.includes(s as OrderStatus));
+    const page = Math.max(Number(sp.page) || 1, 1);
 
     const [ordersRes, insurersRes] = await Promise.all([
-      api.get<OrderListItem[]>('/orders', {
+      api.get<PaginatedOrders>('/orders', {
         params: {
-          limit: LIMIT,
+          limit: PAGE_SIZE,
+          page,
           status: validStatuses.length > 0 ? validStatuses : undefined,
           insurerId: sp.insurer ? Number(sp.insurer) : undefined,
           dateFrom: sp.from || undefined,
@@ -86,24 +96,43 @@ async function fetchData(sp: Awaited<Props['searchParams']>): Promise<{
       }),
       api.get<Insurer[]>('/insurers'),
     ]);
-    return { orders: ordersRes.data, insurers: insurersRes.data };
+    return { result: ordersRes.data, insurers: insurersRes.data };
   } catch {
-    return { orders: [], insurers: [] };
+    return {
+      result: { data: [], total: 0, page: 1, pageSize: PAGE_SIZE },
+      insurers: [],
+    };
   }
+}
+
+function buildPageUrl(sp: Awaited<Props['searchParams']>, targetPage: number): string {
+  const params = new URLSearchParams();
+  if (sp.q) params.set('q', sp.q);
+  if (sp.from) params.set('from', sp.from);
+  if (sp.to) params.set('to', sp.to);
+  if (sp.insurer) params.set('insurer', sp.insurer);
+  const statuses = sp.status ? (Array.isArray(sp.status) ? sp.status : [sp.status]) : [];
+  for (const s of statuses) params.append('status', s);
+  if (targetPage > 1) params.set('page', String(targetPage));
+  const qs = params.toString();
+  return qs ? `/ordenes?${qs}` : '/ordenes';
 }
 
 export default async function OrdersPage({ searchParams }: Props) {
   const sp = await searchParams;
   const user = await getSessionUser();
   const canCreate = user?.role === 'admin' || user?.role === 'bioquimico';
-  const { orders, insurers } = await fetchData(sp);
-  const capped = orders.length === LIMIT;
+  const { result, insurers } = await fetchData(sp);
+  const { data: orders, total, page, pageSize } = result;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
 
   return (
     <>
       <PageHeader
         title="Órdenes"
-        description={`${orders.length}${capped ? '+' : ''} ${orders.length === 1 ? 'orden' : 'órdenes'}`}
+        description={total > 0 ? `${total} ${total === 1 ? 'orden' : 'órdenes'}` : undefined}
         actions={
           canCreate && (
             <Button asChild>
@@ -117,13 +146,6 @@ export default async function OrdersPage({ searchParams }: Props) {
       />
 
       <OrdersFilters insurers={insurers.map((i) => ({ id: i.id, name: i.name }))} />
-
-      {capped && (
-        <div className="mb-4 flex items-center gap-2 rounded-md border border-[var(--color-warning)]/30 bg-[var(--color-warning-soft)] px-4 py-3 text-[var(--color-warning)] text-xs">
-          <AlertTriangle className="h-4 w-4 shrink-0" strokeWidth={2} />
-          Se muestran las últimas {LIMIT} órdenes. Usá los filtros para acotar los resultados.
-        </div>
-      )}
 
       {orders.length === 0 ? (
         <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-[var(--shadow-xs)]">
@@ -163,19 +185,23 @@ export default async function OrdersPage({ searchParams }: Props) {
                       </Link>
                     </td>
                     <td className="px-5 py-3 text-[var(--color-fg)]">
-                      {o.patient
-                        ? <>{o.patient.lastName}, {o.patient.firstName}
-                            <span className="ml-2 tabular font-mono text-[10px] text-[var(--color-fg-subtle)]">
-                              {o.patient.dni}
-                            </span>
-                          </>
-                        : o.animalPatient
-                          ? <>{o.animalPatient.nombre}
-                              <span className="ml-2 text-[10px] text-[var(--color-fg-subtle)]">
-                                {o.animalPatient.especie} · {o.animalPatient.propietario}
-                              </span>
-                            </>
-                          : '—'}
+                      {o.patient ? (
+                        <>
+                          {o.patient.lastName}, {o.patient.firstName}
+                          <span className="ml-2 tabular font-mono text-[10px] text-[var(--color-fg-subtle)]">
+                            {o.patient.dni}
+                          </span>
+                        </>
+                      ) : o.animalPatient ? (
+                        <>
+                          {o.animalPatient.nombre}
+                          <span className="ml-2 text-[10px] text-[var(--color-fg-subtle)]">
+                            {o.animalPatient.especie} · {o.animalPatient.propietario}
+                          </span>
+                        </>
+                      ) : (
+                        '—'
+                      )}
                     </td>
                     <td className="px-5 py-3 text-[var(--color-fg-muted)] text-xs">
                       {o.insurer.name}
@@ -201,6 +227,44 @@ export default async function OrdersPage({ searchParams }: Props) {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-[var(--color-border)] border-t px-5 py-3">
+              <p className="text-[var(--color-fg-muted)] text-xs">
+                {from}–{to} de {total}
+              </p>
+              <div className="flex items-center gap-1">
+                {page > 1 ? (
+                  <Link
+                    href={buildPageUrl(sp, page - 1)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-fg-muted)] transition-colors hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]"
+                  >
+                    <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+                  </Link>
+                ) : (
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-fg-subtle)] opacity-40">
+                    <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+                  </span>
+                )}
+                <span className="px-2 text-[var(--color-fg)] text-xs font-medium">
+                  {page} / {totalPages}
+                </span>
+                {page < totalPages ? (
+                  <Link
+                    href={buildPageUrl(sp, page + 1)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-fg-muted)] transition-colors hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]"
+                  >
+                    <ChevronRight className="h-4 w-4" strokeWidth={2} />
+                  </Link>
+                ) : (
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-fg-subtle)] opacity-40">
+                    <ChevronRight className="h-4 w-4" strokeWidth={2} />
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </section>
       )}
     </>

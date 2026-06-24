@@ -56,14 +56,14 @@ export function ResultRow({
   onDirtyChange,
   onSaveSuccess,
 }: Props) {
-  function stripZeros(s: string | null | undefined): string {
+  function displayNumeric(s: string | null | undefined): string {
     if (!s) return '';
-    if (!/^-?\d+\.\d+$/.test(s)) return s;
-    return s.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '') || '0';
+    const clean = s.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '') || '0';
+    return clean.replace('.', ',');
   }
 
   const initial = {
-    valueNumeric: stripZeros(line.result?.valueNumeric),
+    valueNumeric: displayNumeric(line.result?.valueNumeric),
     valueText: line.result?.valueText ?? '',
     unit: line.result?.unit ?? '',
     methodology: line.result?.methodology ?? '',
@@ -111,7 +111,7 @@ export function ResultRow({
     mutationFn: async () => {
       const payload: UpsertResultDto = {
         orderPracticeId: line.orderPractice.id,
-        valueNumeric: valueNumeric.trim() || undefined,
+        valueNumeric: valueNumeric.trim().replace(',', '.') || undefined,
         valueText: valueText.trim() || undefined,
         unit: unit.trim() || undefined,
         methodology: methodology.trim() || undefined,

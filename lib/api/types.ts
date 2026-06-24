@@ -292,6 +292,25 @@ export interface CreatePacienteAnimalDto {
 
 export type UpdatePacienteAnimalDto = Partial<CreatePacienteAnimalDto>;
 
+// ─────────────── Lab practice config (per-lab) ───────────────
+
+export interface LabPracticeConfig {
+  id: number;
+  labId: number;
+  practiceId: number;
+  methodology: string | null;
+  referenceValue: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateLabPracticeConfigDto {
+  methodology?: string | null;
+  referenceValue?: string | null;
+  notes?: string | null;
+}
+
 // ─────────────── Valores de referencia por especie ───────────────
 
 export interface PracticeReferenciaEspecie {
@@ -457,11 +476,17 @@ export interface PracticeUnidadListItem {
   associationId: number;
   unidad: UnidadMedida;
   sortOrder: number;
+  rangeLow: string | null;
+  rangeHigh: string | null;
+  referenceText: string | null;
 }
 
 export interface AddPracticeUnidadDto {
   unidadId: number;
   sortOrder?: number;
+  rangeLow?: string | null;
+  rangeHigh?: string | null;
+  referenceText?: string | null;
 }
 
 export interface OrderPracticeUnidadValue {
@@ -486,6 +511,10 @@ export interface OrderPracticeUnidadItem {
   simbolo: string | null;
   sortOrder: number;
   value: OrderPracticeUnidadValue | null;
+  opcionesPredeterminadas: string[] | null;
+  rangeLow: string | null;
+  rangeHigh: string | null;
+  referenceText: string | null;
 }
 
 export interface UpsertOrderPracticeUnidadDto {

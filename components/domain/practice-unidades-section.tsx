@@ -53,6 +53,9 @@ function UnidadesDialog({
   const [newOpciones, setNewOpciones] = useState<string[]>([]);
   const [editingUnit, setEditingUnit] = useState<UnidadMedida | null>(null);
   const [editOpciones, setEditOpciones] = useState<string[]>([]);
+  const [editRangeLow, setEditRangeLow] = useState('');
+  const [editRangeHigh, setEditRangeHigh] = useState('');
+  const [editRefText, setEditRefText] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -159,6 +162,28 @@ function UnidadesDialog({
       qc.invalidateQueries({ queryKey: ['unidades-medida', 'all'] });
     },
     onError: (err) => toast.error(apiError(err, 'No se pudieron guardar las opciones')),
+  });
+
+  const updateRefMut = useMutation({
+    mutationFn: async ({
+      unidadId,
+      rangeLow,
+      rangeHigh,
+      referenceText,
+    }: { unidadId: number; rangeLow: string; rangeHigh: string; referenceText: string }) => {
+      const { data } = await apiClient.patch(`/practices/${practiceId}/unidades/${unidadId}`, {
+        rangeLow: rangeLow.trim() || null,
+        rangeHigh: rangeHigh.trim() || null,
+        referenceText: referenceText.trim() || null,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Referencia guardada');
+      setEditingUnit(null);
+      invalidate();
+    },
+    onError: (err) => toast.error(apiError(err, 'No se pudo guardar la referencia')),
   });
 
   const assocItems = assocQuery.data ?? [];
@@ -310,9 +335,13 @@ function UnidadesDialog({
                             ev.stopPropagation();
                             setEditingUnit(unit);
                             setEditOpciones(unit.opcionesPredeterminadas ?? []);
+                            const assoc = assocItems.find((a) => a.unidad.id === unit.id);
+                            setEditRangeLow(assoc?.rangeLow ?? '');
+                            setEditRangeHigh(assoc?.rangeHigh ?? '');
+                            setEditRefText(assoc?.referenceText ?? '');
                           }}
                           className="shrink-0 rounded p-1 text-[var(--color-fg-subtle)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-fg)]"
-                          title="Editar opciones predeterminadas"
+                          title="Editar opciones y referencia"
                         >
                           <Pencil className="h-3 w-3" strokeWidth={2} />
                         </button>
@@ -328,26 +357,66 @@ function UnidadesDialog({
         {/* Create new unit */}
         {/* Edit opciones inline */}
         {editingUnit && (
-          <div className="border-[var(--color-border)] border-t bg-[var(--color-bg-subtle)] px-4 py-3 space-y-2">
+          <div className="border-[var(--color-border)] border-t bg-[var(--color-bg-subtle)] px-4 py-3 space-y-3">
             <p className="font-medium text-[var(--color-fg)] text-xs">
-              Opciones predeterminadas — {editingUnit.nombre}
+              Editar — {editingUnit.nombre}
             </p>
-            <TagInput
-              value={editOpciones}
-              onChange={setEditOpciones}
-              placeholder="Escribí una opción y presioná Enter…"
-              disabled={updateOpcionesMut.isPending}
-            />
+            <div className="space-y-1">
+              <span className="text-[var(--color-fg-muted)] text-[10px]">
+                Opciones predeterminadas
+              </span>
+              <TagInput
+                value={editOpciones}
+                onChange={setEditOpciones}
+                placeholder="Escribí una opción y presioná Enter…"
+                disabled={updateOpcionesMut.isPending}
+              />
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1 space-y-1">
+                <span className="text-[var(--color-fg-muted)] text-[10px]">Rango bajo</span>
+                <input
+                  value={editRangeLow}
+                  onChange={(e) => setEditRangeLow(e.target.value)}
+                  placeholder="ej: 70"
+                  className="block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-2 py-1 text-sm text-[var(--color-fg)] outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)]"
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <span className="text-[var(--color-fg-muted)] text-[10px]">Rango alto</span>
+                <input
+                  value={editRangeHigh}
+                  onChange={(e) => setEditRangeHigh(e.target.value)}
+                  placeholder="ej: 110"
+                  className="block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-2 py-1 text-sm text-[var(--color-fg)] outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)]"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[var(--color-fg-muted)] text-[10px]">Texto de referencia</span>
+              <input
+                value={editRefText}
+                onChange={(e) => setEditRefText(e.target.value)}
+                placeholder="ej: Valores normales entre 70 y 110 mg/dL"
+                className="block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-2 py-1 text-sm text-[var(--color-fg)] outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)]"
+              />
+            </div>
             <div className="flex gap-2">
               <Button
                 type="button"
                 size="sm"
-                onClick={() =>
-                  updateOpcionesMut.mutate({ id: editingUnit.id, opciones: editOpciones })
-                }
-                disabled={updateOpcionesMut.isPending}
+                onClick={() => {
+                  updateOpcionesMut.mutate({ id: editingUnit.id, opciones: editOpciones });
+                  updateRefMut.mutate({
+                    unidadId: editingUnit.id,
+                    rangeLow: editRangeLow,
+                    rangeHigh: editRangeHigh,
+                    referenceText: editRefText,
+                  });
+                }}
+                disabled={updateOpcionesMut.isPending || updateRefMut.isPending}
               >
-                {updateOpcionesMut.isPending ? (
+                {updateOpcionesMut.isPending || updateRefMut.isPending ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
                 ) : (
                   'Guardar'
@@ -517,19 +586,29 @@ export function PracticeUnidadesSection({ practiceId, readOnly = false, onChange
           )}
         </div>
       ) : (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="space-y-1.5">
           {items.map((item) => (
-            <span
+            <div
               key={item.associationId}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-2.5 py-1 text-[var(--color-fg)] text-xs"
+              className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-3 py-2 text-xs"
             >
-              <span>{item.unidad.nombre}</span>
-              {item.unidad.simbolo && (
-                <span className="font-mono text-[var(--color-fg-muted)]">
-                  {item.unidad.simbolo}
+              <span className="font-medium text-[var(--color-fg)]">
+                {item.unidad.nombre}
+                {item.unidad.simbolo && (
+                  <span className="ml-1 font-mono text-[var(--color-fg-muted)]">
+                    ({item.unidad.simbolo})
+                  </span>
+                )}
+              </span>
+              {(item.rangeLow || item.rangeHigh) && (
+                <span className="text-[var(--color-fg-muted)]">
+                  Ref: {item.rangeLow ?? '—'} – {item.rangeHigh ?? '—'}
                 </span>
               )}
-            </span>
+              {item.referenceText && (
+                <span className="text-[var(--color-fg-muted)] italic">{item.referenceText}</span>
+              )}
+            </div>
           ))}
         </div>
       )}

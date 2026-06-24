@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { apiClient } from '@/lib/api/client';
-import type { Practice, UpdatePracticeDto } from '@/lib/api/types';
+import type { LabPracticeConfig, UpdateLabPracticeConfigDto } from '@/lib/api/types';
 import axios from 'axios';
 import { Check, Pencil, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -55,8 +55,8 @@ export function PracticeInlineField({
     }
     setSaving(true);
     try {
-      const dto: UpdatePracticeDto = { [field]: newValue };
-      await apiClient.patch<Practice>(`/practices/${practiceId}`, dto);
+      const dto: UpdateLabPracticeConfigDto = { [field]: newValue };
+      await apiClient.put<LabPracticeConfig>(`/lab-practice-config/${practiceId}`, dto);
       toast.success('Guardado');
       setEditing(false);
       router.refresh();
