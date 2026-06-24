@@ -50,6 +50,8 @@ export interface MeResponse {
   /** Paleta de marca del lab (hex #rrggbb) — el front deriva los tokens. null = Banco Vital. */
   primaryColor: string | null;
   accentColor: string | null;
+  /** Opt-in del super: el lab tiene habilitada el área veterinaria. */
+  veterinariaHabilitada: boolean;
 }
 
 // ─────────────── Lab config ───────────────
@@ -840,6 +842,8 @@ export interface Laboratorio {
   estado: EstadoLab;
   /** True when the lab is flagged as past-due (super-managed). */
   moroso?: boolean;
+  /** Opt-in del super: el lab tiene habilitada el área veterinaria. */
+  veterinariaHabilitada: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -856,6 +860,7 @@ export interface CreateLaboratorioDto {
   email?: string | null;
   signingProfessionalName?: string | null;
   signingProfessionalMp?: string | null;
+  veterinariaHabilitada?: boolean;
 }
 
 export interface UpdateLaboratorioDto extends Partial<CreateLaboratorioDto> {

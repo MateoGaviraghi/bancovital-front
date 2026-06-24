@@ -39,7 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex h-screen flex-col overflow-hidden bg-[var(--color-bg)]" style={themeVars}>
       <ImpersonateBanner />
       <div className="flex min-h-0 flex-1">
-        <LabProvider lab={{ labName: me?.labName ?? null, logoUrl: me?.logoUrl ?? null, primaryColor: me?.primaryColor ?? null, accentColor: me?.accentColor ?? null }}>
+        <LabProvider lab={{ labName: me?.labName ?? null, logoUrl: me?.logoUrl ?? null, primaryColor: me?.primaryColor ?? null, accentColor: me?.accentColor ?? null, veterinariaHabilitada: me?.veterinariaHabilitada ?? false }}>
           {/* Rol efectivo: bajo impersonation /me devuelve 'admin' → sidebar de lab. */}
           <Sidebar userRole={me?.role ?? user.role} />
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">

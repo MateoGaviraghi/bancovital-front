@@ -33,6 +33,7 @@ import type {
   Veterinario,
 } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
+import { useLab } from '@/lib/lab/lab-info';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { AlertCircle, Loader2, PawPrint, Plus, Stethoscope } from 'lucide-react';
@@ -61,6 +62,7 @@ type Errors = Partial<
 
 export function NewOrderForm() {
   const router = useRouter();
+  const { veterinariaHabilitada } = useLab();
 
   const [orderType, setOrderType] = useState<OrderType>('humana');
   const isVet = orderType === 'veterinaria';
@@ -178,35 +180,37 @@ export function NewOrderForm() {
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-8" noValidate>
-        {/* Order type toggle */}
-        <div className="flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-1">
-          <button
-            type="button"
-            onClick={() => switchType('humana')}
-            className={cn(
-              'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors',
-              !isVet
-                ? 'bg-[var(--color-bg-elevated)] text-[var(--color-fg)] shadow-[var(--shadow-xs)]'
-                : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]',
-            )}
-          >
-            <Stethoscope className="h-4 w-4" strokeWidth={2} />
-            Orden humana
-          </button>
-          <button
-            type="button"
-            onClick={() => switchType('veterinaria')}
-            className={cn(
-              'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors',
-              isVet
-                ? 'bg-[var(--color-bg-elevated)] text-[var(--color-fg)] shadow-[var(--shadow-xs)]'
-                : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]',
-            )}
-          >
-            <PawPrint className="h-4 w-4" strokeWidth={2} />
-            Orden veterinaria
-          </button>
-        </div>
+        {/* Order type toggle — solo si el lab tiene veterinaria habilitada */}
+        {veterinariaHabilitada && (
+          <div className="flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-1">
+            <button
+              type="button"
+              onClick={() => switchType('humana')}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors',
+                !isVet
+                  ? 'bg-[var(--color-bg-elevated)] text-[var(--color-fg)] shadow-[var(--shadow-xs)]'
+                  : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]',
+              )}
+            >
+              <Stethoscope className="h-4 w-4" strokeWidth={2} />
+              Orden humana
+            </button>
+            <button
+              type="button"
+              onClick={() => switchType('veterinaria')}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors',
+                isVet
+                  ? 'bg-[var(--color-bg-elevated)] text-[var(--color-fg)] shadow-[var(--shadow-xs)]'
+                  : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]',
+              )}
+            >
+              <PawPrint className="h-4 w-4" strokeWidth={2} />
+              Orden veterinaria
+            </button>
+          </div>
+        )}
 
         {/* Patient & coverage */}
         <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-[var(--shadow-xs)]">

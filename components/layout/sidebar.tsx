@@ -249,8 +249,16 @@ function NavEntry({
 
 export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
   const pathname = usePathname();
-  const { labName, logoUrl, primaryColor, accentColor } = useLab();
+  const { labName, logoUrl, primaryColor, accentColor, veterinariaHabilitada } = useLab();
   const name = labName ?? 'Mi laboratorio';
+  // Sin veterinaria habilitada, ocultamos "Especies y razas" del panel de Administración.
+  const adminEntries: Entry[] = veterinariaHabilitada
+    ? ADMIN
+    : ADMIN.map((e) =>
+        e.kind === 'group' && e.basePath === '/admin'
+          ? { ...e, children: e.children.filter((c) => c.path !== '/admin/especies') }
+          : e,
+      );
 
   return (
     <>
@@ -286,24 +294,28 @@ export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
           />
         ))}
 
-        <p className="px-2.5 pt-5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
-          Veterinaria
-        </p>
-        {VETERINARIA.map((entry) => (
-          <NavEntry
-            key={entry.kind === 'leaf' ? entry.path : entry.basePath}
-            entry={entry}
-            pathname={pathname}
-            userRole={userRole}
-          />
-        ))}
+        {veterinariaHabilitada && (
+          <>
+            <p className="px-2.5 pt-5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
+              Veterinaria
+            </p>
+            {VETERINARIA.map((entry) => (
+              <NavEntry
+                key={entry.kind === 'leaf' ? entry.path : entry.basePath}
+                entry={entry}
+                pathname={pathname}
+                userRole={userRole}
+              />
+            ))}
+          </>
+        )}
 
         {userRole === 'admin' && (
           <>
             <p className="px-2.5 pt-5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
               Sistema
             </p>
-            {ADMIN.map((entry) => (
+            {adminEntries.map((entry) => (
               <NavEntry
                 key={entry.kind === 'leaf' ? entry.path : entry.basePath}
                 entry={entry}
