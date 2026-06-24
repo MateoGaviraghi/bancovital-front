@@ -57,6 +57,7 @@ export const queries = {
     list: (filters: Record<string, unknown> = {}) => ['practices', filters] as const,
     detail: (id: number) => ['practices', id] as const,
     unidades: (practiceId: number) => ['practices', practiceId, 'unidades'] as const,
+    labConfig: (practiceId: number) => ['practices', practiceId, 'lab-config'] as const,
   },
 
   orders: {

@@ -10,6 +10,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { apiClient } from '@/lib/api/client';
 import { queries } from '@/lib/api/queries';
 import type {
@@ -17,6 +24,7 @@ import type {
   OrderPracticeUnidadValue,
   UpsertOrderPracticeUnidadDto,
 } from '@/lib/api/types';
+import { formatNumericAR } from '@/lib/money';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Loader2, Settings } from 'lucide-react';
@@ -51,7 +59,7 @@ function stripTrailingZeros(s: string): string {
 
 function initialInputValue(item: OrderPracticeUnidadItem): string {
   if (!item.value) return '';
-  if (item.value.valueNumeric) return stripTrailingZeros(item.value.valueNumeric);
+  if (item.value.valueNumeric) return formatNumericAR(item.value.valueNumeric);
   return item.value.valueText ?? '';
 }
 
@@ -86,7 +94,7 @@ const UnidadValueInput = memo(function UnidadValueInput({
       }
       const payload: UpsertOrderPracticeUnidadDto = { unidadId: item.unidadId };
       if (isNumericString(trimmed)) {
-        payload.valueNumeric = trimmed;
+        payload.valueNumeric = trimmed.replace(',', '.').replace(/\.(?=.*\.)/g, '');
       } else {
         payload.valueText = trimmed;
       }
@@ -107,6 +115,17 @@ const UnidadValueInput = memo(function UnidadValueInput({
     upsertMutation.mutate();
   }
 
+  const opciones = item.opcionesPredeterminadas;
+  const hasOpciones = opciones && opciones.length > 0;
+
+  function handleSelectChange(v: string) {
+    setValue(v);
+    const trimmed = v.trim();
+    if (!trimmed) return;
+    const payload: UpsertOrderPracticeUnidadDto = { unidadId: item.unidadId, valueText: trimmed };
+    upsertMutation.mutate();
+  }
+
   return (
     <div className="flex items-center gap-2">
       <label
@@ -121,15 +140,48 @@ const UnidadValueInput = memo(function UnidadValueInput({
           <Loader2 className="h-3 w-3 animate-spin text-[var(--color-fg-muted)]" strokeWidth={2} />
         )}
       </label>
-      <Input
-        id={inputId}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={handleBlur}
-        className="h-8 w-32 text-sm"
-        placeholder="—"
-      />
+      {hasOpciones ? (
+        <Select
+          value={value}
+          onValueChange={(v) => {
+            setValue(v);
+            setTimeout(() => {
+              const trimmed = v.trim();
+              if (!trimmed) return;
+              upsertMutation.mutate();
+            }, 0);
+          }}
+          disabled={disabled}
+        >
+          <SelectTrigger id={inputId} className="h-8 w-40 text-sm">
+            <SelectValue placeholder="Seleccionar…" />
+          </SelectTrigger>
+          <SelectContent>
+            {opciones.map((opt) => (
+              <SelectItem key={opt} value={opt}>
+                {opt}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Input
+          id={inputId}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={handleBlur}
+          className="h-8 w-32 text-sm"
+          placeholder="—"
+        />
+      )}
+      {(item.rangeLow || item.rangeHigh || item.referenceText) && (
+        <span className="text-[10px] text-[var(--color-fg-subtle)]">
+          {item.rangeLow || item.rangeHigh
+            ? `(${item.rangeLow ?? '—'} – ${item.rangeHigh ?? '—'})`
+            : item.referenceText}
+        </span>
+      )}
     </div>
   );
 });

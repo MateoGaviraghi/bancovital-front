@@ -4,7 +4,7 @@ import { PracticeReferenciasEspecieSection } from '@/components/domain/practice-
 import { PracticeUnidadesSection } from '@/components/domain/practice-unidades-section';
 import { PageHeader } from '@/components/layout/page-header';
 import { getServerApi } from '@/lib/api/server';
-import type { Practice } from '@/lib/api/types';
+import type { LabPracticeConfig, Practice } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
 import axios from 'axios';
 import { notFound } from 'next/navigation';
@@ -33,6 +33,15 @@ export default async function PracticaDetailPage({
   if (!Number.isInteger(numId)) notFound();
 
   const practice = await fetchPractice(numId);
+
+  let labConfig: LabPracticeConfig | null = null;
+  try {
+    const api = await getServerApi();
+    const { data } = await api.get<LabPracticeConfig | null>(`/lab-practice-config/${numId}`);
+    labConfig = data;
+  } catch {
+    // Lab config not found — use empty
+  }
 
   return (
     <div className="space-y-6">
@@ -85,7 +94,7 @@ export default async function PracticaDetailPage({
           <PracticeInlineField
             practiceId={practice.id}
             field="notes"
-            value={practice.notes}
+            value={labConfig?.notes ?? null}
             label="Notas internas"
             placeholder="Agregar notas internas…"
             rows={2}
@@ -93,7 +102,7 @@ export default async function PracticaDetailPage({
           <PracticeInlineField
             practiceId={practice.id}
             field="methodology"
-            value={practice.methodology}
+            value={labConfig?.methodology ?? null}
             label="Metodología"
             placeholder="Agregar metodología por defecto…"
             rows={2}
@@ -101,7 +110,7 @@ export default async function PracticaDetailPage({
           <PracticeInlineField
             practiceId={practice.id}
             field="referenceValue"
-            value={practice.referenceValue}
+            value={labConfig?.referenceValue ?? null}
             label="Valores de referencia"
             placeholder="Agregar valores de referencia orientativos…"
             rows={4}

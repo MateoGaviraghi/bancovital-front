@@ -1,17 +1,13 @@
 'use client';
 
 import { ConfirmDialog } from '@/components/domain/confirm-dialog';
-import { PdfCanvas } from '@/components/domain/pdf-canvas';
-import { PdfFieldList, PdfFieldProps } from '@/components/domain/pdf-field-panel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiClient } from '@/lib/api/client';
 import { queries } from '@/lib/api/queries';
 import type {
   FondoSignedUrlResponse,
-  PdfLayoutCampo,
   PreferenciaPdf,
   TipoPdf,
   UpdatePreferenciaPdfDto,
@@ -19,8 +15,8 @@ import type {
 import { cn } from '@/lib/cn';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Eye, FileImage, ImageOff, Loader2, Save, Trash2, Upload } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { Eye, FileImage, ImageOff, Loader2, Trash2, Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 function apiError(err: unknown, fallback: string): string {
@@ -39,13 +35,6 @@ const MAX_BYTES = 10 * 1024 * 1024;
 const TIPO_LABELS: Record<TipoPdf, string> = {
   informe: 'Informe',
   orden: 'Orden',
-};
-
-type MarginForm = {
-  marginTop: number;
-  marginBottom: number;
-  marginLeft: number;
-  marginRight: number;
 };
 
 // ─── Fondo Tab ───────────────────────────────────────────────────────
@@ -269,274 +258,194 @@ function FondoTab({
   );
 }
 
-// ─── Margins Tab ─────────────────────────────────────────────────────
+// ─── Color picker helper ─────────────────────────────────────────────
 
-function MarginsTab({
-  formatoId,
-  margins,
-  onMarginsChange,
-}: {
-  formatoId: number;
-  margins: MarginForm;
-  onMarginsChange: (m: MarginForm) => void;
-}) {
-  const qc = useQueryClient();
-
-  const saveMut = useMutation({
-    mutationFn: (dto: UpdatePreferenciaPdfDto) =>
-      apiClient.put<PreferenciaPdf>(`/preferencia-pdf/${formatoId}`, dto).then((r) => r.data),
-    onSuccess: () => {
-      toast.success('Márgenes guardados');
-      qc.invalidateQueries({ queryKey: queries.preferenciaPdf.detail(formatoId) });
-    },
-    onError: (err) => toast.error(apiError(err, 'Error al guardar márgenes')),
-  });
-
-  function setField(key: keyof MarginForm) {
-    return (e: React.ChangeEvent<HTMLInputElement>) => {
-      const raw = Number.parseInt(e.target.value, 10);
-      const val = Number.isNaN(raw) ? 0 : Math.min(200, Math.max(0, raw));
-      onMarginsChange({ ...margins, [key]: val });
-    };
-  }
-
-  const inputCls =
-    'w-24 rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-3 py-2 text-right text-sm text-[var(--color-fg)] shadow-[var(--shadow-xs)] outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:cursor-not-allowed disabled:opacity-60';
-
+function ColorField({
+  id,
+  label,
+  value,
+  onChange,
+}: { id: string; label: string; value: string; onChange: (v: string) => void }) {
   return (
-    <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-[var(--shadow-xs)]">
-      <h2 className="font-semibold text-[var(--color-fg)] text-base">Márgenes del documento</h2>
-      <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
-        Distancia en mm desde el borde de la página. Rango 0–200.
-      </p>
-
-      <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {(
-          [
-            { key: 'marginTop', label: 'Superior' },
-            { key: 'marginBottom', label: 'Inferior' },
-            { key: 'marginLeft', label: 'Izquierdo' },
-            { key: 'marginRight', label: 'Derecho' },
-          ] as { key: keyof MarginForm; label: string }[]
-        ).map(({ key, label }) => (
-          <div key={key} className="space-y-1.5">
-            <label htmlFor={key} className="block text-xs font-medium text-[var(--color-fg-muted)]">
-              {label}
-            </label>
-            <input
-              id={key}
-              type="number"
-              min={0}
-              max={200}
-              value={margins[key]}
-              onChange={setField(key)}
-              disabled={saveMut.isPending}
-              className={inputCls}
-            />
-          </div>
-        ))}
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-xs font-medium text-[var(--color-fg-muted)]">
+        {label}
+      </label>
+      <div className="flex items-center gap-2">
+        <input
+          id={id}
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-8 w-8 cursor-pointer rounded border border-[var(--color-border-strong)]"
+        />
+        <span className="font-mono text-xs text-[var(--color-fg-muted)]">{value}</span>
       </div>
-
-      <div className="mt-5">
-        <Button onClick={() => saveMut.mutate(margins)} disabled={saveMut.isPending}>
-          {saveMut.isPending && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
-          Guardar márgenes
-        </Button>
-      </div>
-    </section>
+    </div>
   );
 }
 
-// ─── Campos Tab ──────────────────────────────────────────────────────
+// ─── Colores Section ─────────────────────────────────────────────────
 
-const INFORME_FIELDS = [
-  { key: 'paciente.nombre', label: 'Paciente: Nombre' },
-  { key: 'paciente.dni', label: 'Paciente: DNI' },
-  { key: 'paciente.sexo', label: 'Paciente: Sexo' },
-  { key: 'paciente.edad', label: 'Paciente: Edad' },
-  { key: 'paciente.nacimiento', label: 'Paciente: Nacimiento' },
-  { key: 'paciente.domicilio', label: 'Paciente: Domicilio' },
-  { key: 'paciente.ciudad', label: 'Paciente: Ciudad' },
-  { key: 'paciente.telefono', label: 'Paciente: Teléfono' },
-  { key: 'orden.protocolo', label: 'Orden: Protocolo' },
-  { key: 'orden.fecha', label: 'Orden: Fecha' },
-  { key: 'orden.origen', label: 'Orden: Origen' },
-  { key: 'orden.urgente', label: 'Orden: Urgente' },
-  { key: 'orden.diagnostico', label: 'Orden: Diagnóstico' },
-  { key: 'orden.notas', label: 'Orden: Notas' },
-  { key: 'cobertura.obraSocial', label: 'Cobertura: Obra social' },
-  { key: 'cobertura.nroAfiliado', label: 'Cobertura: Nro afiliado' },
-  { key: 'medico.nombre', label: 'Médico: Nombre' },
-  { key: 'medico.mp', label: 'Médico: M.P.' },
-  { key: 'tabla.resultados', label: 'Tabla de resultados' },
-  { key: 'firma.nombre', label: 'Firma: Nombre' },
-  { key: 'firma.matricula', label: 'Firma: Matrícula' },
-] as const;
-
-const ORDEN_FIELDS = [
-  { key: 'paciente.nombre', label: 'Paciente: Nombre' },
-  { key: 'paciente.dni', label: 'Paciente: DNI' },
-  { key: 'paciente.sexo', label: 'Paciente: Sexo' },
-  { key: 'paciente.domicilio', label: 'Paciente: Domicilio' },
-  { key: 'paciente.telefono', label: 'Paciente: Teléfono' },
-  { key: 'orden.protocolo', label: 'Orden: Protocolo' },
-  { key: 'orden.fecha', label: 'Orden: Fecha' },
-  { key: 'orden.origen', label: 'Orden: Origen' },
-  { key: 'orden.diagnostico', label: 'Orden: Diagnóstico' },
-  { key: 'orden.notas', label: 'Orden: Notas' },
-  { key: 'cobertura.obraSocial', label: 'Cobertura: Obra social' },
-  { key: 'cobertura.nroAfiliado', label: 'Cobertura: Nro afiliado' },
-  { key: 'medico.nombre', label: 'Médico: Nombre' },
-  { key: 'medico.mp', label: 'Médico: M.P.' },
-  { key: 'tabla.practicas', label: 'Tabla de prácticas' },
-] as const;
-
-const GRID_OPTIONS = [
-  { value: 5, label: '5 pt' },
-  { value: 10, label: '10 pt' },
-  { value: 20, label: '20 pt' },
-  { value: 0, label: 'Libre' },
-] as const;
-
-function CamposTab({
+function ColoresSection({
   formatoId,
-  tipo,
-  campos,
-  onCamposChange,
-  fondoUrl,
-}: {
-  formatoId: number;
-  tipo: TipoPdf;
-  campos: Record<string, PdfLayoutCampo>;
-  onCamposChange: (c: Record<string, PdfLayoutCampo>) => void;
-  fondoUrl: string | null;
-}) {
+  layoutConfig,
+}: { formatoId: number; layoutConfig: PreferenciaPdf['layoutConfig'] }) {
   const qc = useQueryClient();
-  const [selectedField, setSelectedField] = useState<string | null>(null);
-  const [gridSize, setGridSize] = useState(10);
-  const availableFields = tipo === 'informe' ? INFORME_FIELDS : ORDEN_FIELDS;
+  const tabla = layoutConfig?.campos?.['tabla.resultados'];
+  const cuadros = layoutConfig?.campos?.cuadros;
+
+  // Tabla
+  const [headerBg, setHeaderBg] = useState(tabla?.headerBg ?? '#1f2b5b');
+  const [headerColor, setHeaderColor] = useState(tabla?.headerColor ?? '#ffffff');
+  const [borderColor, setBorderColor] = useState(tabla?.borderColor ?? '#dde2ec');
+  const [rowColor, setRowColor] = useState(tabla?.rowColor ?? '#1a1f33');
+  // Cuadros de paciente/cobertura
+  const [cardTitleColor, setCardTitleColor] = useState(cuadros?.color ?? '#1f2b5b');
+  const [cardBorderColor, setCardBorderColor] = useState(cuadros?.borderColor ?? '#dde2ec');
+  const [cardBg, setCardBg] = useState(cuadros?.headerBg ?? '#f5f7fb');
 
   const saveMut = useMutation({
     mutationFn: () =>
       apiClient
         .put<PreferenciaPdf>(`/preferencia-pdf/${formatoId}`, {
-          campos,
+          campos: {
+            'tabla.resultados': {
+              x: 0,
+              y: 0,
+              headerBg,
+              headerColor,
+              borderColor,
+              rowColor,
+            },
+            cuadros: {
+              x: 0,
+              y: 0,
+              color: cardTitleColor,
+              borderColor: cardBorderColor,
+              headerBg: cardBg,
+            },
+          },
         } satisfies UpdatePreferenciaPdfDto)
         .then((r) => r.data),
     onSuccess: () => {
-      toast.success('Campos guardados');
+      toast.success('Colores guardados');
       qc.invalidateQueries({ queryKey: queries.preferenciaPdf.detail(formatoId) });
     },
-    onError: (err) => toast.error(apiError(err, 'Error al guardar campos')),
+    onError: (err) => toast.error(apiError(err, 'Error al guardar colores')),
   });
 
-  const handleFieldDrop = useCallback(
-    (key: string, x: number, y: number) => {
-      onCamposChange({
-        ...campos,
-        [key]: {
-          ...campos[key],
-          x: Math.round(x),
-          y: Math.round(y),
-          fontSize: campos[key]?.fontSize ?? 10,
-        },
-      });
-    },
-    [campos, onCamposChange],
-  );
-
-  const handleFieldMove = useCallback(
-    (key: string, x: number, y: number) => {
-      onCamposChange({
-        ...campos,
-        [key]: { ...campos[key], x: Math.round(x), y: Math.round(y) },
-      });
-    },
-    [campos, onCamposChange],
-  );
-
-  const handleRemoveField = useCallback(
-    (key: string) => {
-      const next = { ...campos };
-      delete next[key];
-      onCamposChange(next);
-      if (selectedField === key) setSelectedField(null);
-    },
-    [campos, onCamposChange, selectedField],
-  );
-
-  const handleUpdateFieldProp = useCallback(
-    (key: string, prop: string, value: number | string | boolean) => {
-      if (!campos[key]) return;
-      onCamposChange({
-        ...campos,
-        [key]: { ...campos[key], [prop]: value },
-      });
-    },
-    [campos, onCamposChange],
-  );
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-[var(--color-fg-muted)]">Grilla:</span>
-          <div className="flex rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-0.5">
-            {GRID_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setGridSize(opt.value)}
-                className={cn(
-                  'rounded px-2.5 py-1 text-xs font-medium transition-colors',
-                  gridSize === opt.value
-                    ? 'bg-[var(--color-bg-elevated)] text-[var(--color-fg)] shadow-[var(--shadow-xs)]'
-                    : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]',
-                )}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
+    <section className="mt-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-[var(--shadow-xs)]">
+      <h2 className="font-semibold text-[var(--color-fg)] text-base">Colores del informe</h2>
+      <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
+        Personalizá los colores de la tabla de resultados y los cuadros de datos.
+      </p>
+
+      {/* Cuadros de paciente/cobertura */}
+      <h3 className="mt-5 mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">
+        Cuadros de paciente y cobertura
+      </h3>
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3">
+        <ColorField
+          id="col-card-title"
+          label="Título del cuadro"
+          value={cardTitleColor}
+          onChange={setCardTitleColor}
+        />
+        <ColorField
+          id="col-card-border"
+          label="Borde del cuadro"
+          value={cardBorderColor}
+          onChange={setCardBorderColor}
+        />
+        <ColorField id="col-card-bg" label="Fondo del cuadro" value={cardBg} onChange={setCardBg} />
+      </div>
+
+      {/* Preview cuadros */}
+      <div className="mt-3 flex max-w-md gap-3">
+        <div
+          className="flex-1 rounded-md border p-3"
+          style={{ borderColor: cardBorderColor, backgroundColor: cardBg }}
+        >
+          <p
+            className="mb-1 text-[9px] font-semibold uppercase tracking-wide"
+            style={{ color: cardTitleColor }}
+          >
+            Paciente
+          </p>
+          <p className="text-xs">
+            <span className="text-[var(--color-fg-muted)]">Nombre</span>{' '}
+            <span className="font-medium">Pérez, María</span>
+          </p>
         </div>
-        <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending} size="sm">
+        <div
+          className="flex-1 rounded-md border p-3"
+          style={{ borderColor: cardBorderColor, backgroundColor: cardBg }}
+        >
+          <p
+            className="mb-1 text-[9px] font-semibold uppercase tracking-wide"
+            style={{ color: cardTitleColor }}
+          >
+            Cobertura
+          </p>
+          <p className="text-xs">
+            <span className="text-[var(--color-fg-muted)]">Obra social</span>{' '}
+            <span className="font-medium">OSDE</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Tabla de resultados */}
+      <h3 className="mt-6 mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">
+        Tabla de resultados
+      </h3>
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
+        <ColorField
+          id="col-header-bg"
+          label="Fondo encabezado"
+          value={headerBg}
+          onChange={setHeaderBg}
+        />
+        <ColorField
+          id="col-header-color"
+          label="Texto encabezado"
+          value={headerColor}
+          onChange={setHeaderColor}
+        />
+        <ColorField id="col-border" label="Bordes" value={borderColor} onChange={setBorderColor} />
+        <ColorField id="col-row" label="Texto filas" value={rowColor} onChange={setRowColor} />
+      </div>
+
+      {/* Preview tabla */}
+      <div className="mt-3 max-w-md overflow-hidden rounded-md border border-[var(--color-border)]">
+        <div
+          className="flex gap-4 px-3 py-2 text-xs font-semibold"
+          style={{ backgroundColor: headerBg, color: headerColor }}
+        >
+          <span className="w-1/3">PRÁCTICA</span>
+          <span className="w-1/4">RESULTADO</span>
+          <span className="w-1/6">UNIDAD</span>
+          <span>REFERENCIA</span>
+        </div>
+        <div
+          className="flex gap-4 px-3 py-2 text-xs"
+          style={{ borderTop: `1px solid ${borderColor}`, color: rowColor }}
+        >
+          <span className="w-1/3 font-medium">Hemograma</span>
+          <span className="w-1/4">92</span>
+          <span className="w-1/6 opacity-60">mg/dL</span>
+          <span className="opacity-60">70 – 110</span>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
           {saveMut.isPending && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
-          Guardar campos
+          Guardar colores
         </Button>
       </div>
-
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        <div className="w-full shrink-0 lg:w-48">
-          <PdfFieldList
-            availableFields={availableFields}
-            placedFields={campos}
-            selectedField={selectedField}
-            onSelectField={setSelectedField}
-          />
-        </div>
-        <div className="w-full max-w-md">
-          <PdfCanvas
-            campos={campos}
-            availableFields={availableFields}
-            fondoUrl={fondoUrl}
-            selectedField={selectedField}
-            gridSize={gridSize}
-            onSelectField={setSelectedField}
-            onFieldDrop={handleFieldDrop}
-            onFieldMove={handleFieldMove}
-          />
-        </div>
-        <div className="w-full shrink-0 lg:w-52">
-          <PdfFieldProps
-            availableFields={availableFields}
-            placedFields={campos}
-            selectedField={selectedField}
-            onRemoveField={handleRemoveField}
-            onUpdateProp={handleUpdateFieldProp}
-          />
-        </div>
-      </div>
-    </div>
+    </section>
   );
 }
 
@@ -555,29 +464,6 @@ export function PdfEditorClient({ initialFormato }: { initialFormato: Preferenci
 
   const hasFondo = Boolean(formato.fondoPath);
   const usarFondo = formato.layoutConfig?.usarFondo ?? false;
-
-  const { data: signedUrlData } = useQuery({
-    queryKey: queries.preferenciaPdf.fondoUrl(formato.id),
-    queryFn: () =>
-      apiClient
-        .get<FondoSignedUrlResponse>(`/preferencia-pdf/${formato.id}/fondo/signed-url`)
-        .then((r) => r.data),
-    enabled: hasFondo,
-    staleTime: 55 * 60 * 1000,
-  });
-
-  const fondoUrl = signedUrlData?.url ?? null;
-
-  const [margins, setMargins] = useState<MarginForm>({
-    marginTop: formato.marginTop,
-    marginBottom: formato.marginBottom,
-    marginLeft: formato.marginLeft,
-    marginRight: formato.marginRight,
-  });
-
-  const [campos, setCampos] = useState<Record<string, PdfLayoutCampo>>(
-    formato.layoutConfig?.campos ?? {},
-  );
 
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(formato.nombre);
@@ -681,32 +567,8 @@ export function PdfEditorClient({ initialFormato }: { initialFormato: Preferenci
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="fondo">
-        <TabsList>
-          <TabsTrigger value="fondo">Fondo</TabsTrigger>
-          <TabsTrigger value="campos">Campos</TabsTrigger>
-          <TabsTrigger value="margenes">Márgenes</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="fondo">
-          <FondoTab formatoId={formato.id} hasFondo={hasFondo} usarFondo={usarFondo} />
-        </TabsContent>
-
-        <TabsContent value="campos">
-          <CamposTab
-            formatoId={formato.id}
-            tipo={formato.tipo}
-            campos={campos}
-            onCamposChange={setCampos}
-            fondoUrl={fondoUrl}
-          />
-        </TabsContent>
-
-        <TabsContent value="margenes">
-          <MarginsTab formatoId={formato.id} margins={margins} onMarginsChange={setMargins} />
-        </TabsContent>
-      </Tabs>
+      <FondoTab formatoId={formato.id} hasFondo={hasFondo} usarFondo={usarFondo} />
+      <ColoresSection formatoId={formato.id} layoutConfig={formato.layoutConfig} />
     </div>
   );
 }

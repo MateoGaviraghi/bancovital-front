@@ -30,3 +30,16 @@ export const Money = {
     return values.reduce<Decimal>((acc, v) => acc.add(new Decimal(v)), new Decimal(0)).toFixed(2);
   },
 };
+
+const AR_NUMBER = new Intl.NumberFormat('es-AR', {
+  maximumFractionDigits: 6,
+  useGrouping: true,
+});
+
+export function formatNumericAR(value: string | number | null | undefined): string {
+  if (value == null || value === '') return '';
+  const s = String(value).replace(',', '.').trim();
+  const n = Number(s);
+  if (Number.isNaN(n)) return String(value);
+  return AR_NUMBER.format(n);
+}
