@@ -9,11 +9,20 @@ import { Activity, AlertTriangle, CheckCircle2, FileText } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
+// Tolera respuestas tanto en array directo como paginado ({ data, total, ... }).
+function asArray<T>(d: unknown): T[] {
+  if (Array.isArray(d)) return d as T[];
+  if (d && typeof d === 'object' && Array.isArray((d as { data?: unknown }).data)) {
+    return (d as { data: T[] }).data;
+  }
+  return [];
+}
+
 async function fetchRecentOrders(): Promise<OrderListItem[]> {
   try {
     const api = await getServerApi();
-    const { data } = await api.get<OrderListItem[]>('/orders', { params: { limit: 200 } });
-    return data;
+    const { data } = await api.get('/orders', { params: { limit: 200 } });
+    return asArray<OrderListItem>(data);
   } catch {
     return [];
   }
