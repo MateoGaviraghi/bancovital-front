@@ -328,6 +328,7 @@ type FormState = {
   signingProfessionalName: string;
   signingProfessionalMp: string;
   estado: EstadoLab;
+  veterinariaHabilitada: boolean;
 };
 
 const EMPTY_FORM: FormState = {
@@ -343,6 +344,7 @@ const EMPTY_FORM: FormState = {
   signingProfessionalName: '',
   signingProfessionalMp: '',
   estado: 'activo',
+  veterinariaHabilitada: false,
 };
 
 function labToForm(lab: Laboratorio): FormState {
@@ -359,6 +361,7 @@ function labToForm(lab: Laboratorio): FormState {
     signingProfessionalName: lab.signingProfessionalName ?? '',
     signingProfessionalMp: lab.signingProfessionalMp ?? '',
     estado: lab.estado,
+    veterinariaHabilitada: lab.veterinariaHabilitada ?? false,
   };
 }
 
@@ -376,6 +379,7 @@ function formToBaseDto(f: FormState): CreateLaboratorioDto {
     email: n(f.email),
     signingProfessionalName: n(f.signingProfessionalName),
     signingProfessionalMp: n(f.signingProfessionalMp),
+    veterinariaHabilitada: f.veterinariaHabilitada,
   };
 }
 
@@ -614,6 +618,25 @@ function LaboratorioDialog({
                 </Select>
               </FormField>
             )}
+            <FormField
+              label="Veterinaria"
+              htmlFor="veterinariaHabilitada"
+              description="Habilita el área veterinaria (propietarios, animales, veterinarios) para este lab"
+            >
+              <label className="flex items-center gap-2 py-2 text-sm text-[var(--color-fg)]">
+                <input
+                  id="veterinariaHabilitada"
+                  type="checkbox"
+                  checked={form.veterinariaHabilitada}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, veterinariaHabilitada: e.target.checked }))
+                  }
+                  disabled={isPending}
+                  className="h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-primary)]"
+                />
+                Habilitar veterinaria para este laboratorio
+              </label>
+            </FormField>
           </div>
 
           {/* Logo upload — solo en edición, sube automáticamente al elegir archivo */}

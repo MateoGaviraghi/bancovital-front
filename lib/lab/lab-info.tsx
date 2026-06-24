@@ -7,6 +7,7 @@ export interface LabInfo {
   logoUrl: string | null;
   primaryColor: string | null;
   accentColor: string | null;
+  veterinariaHabilitada: boolean;
 }
 
 const LabContext = createContext<LabInfo | null>(null);
