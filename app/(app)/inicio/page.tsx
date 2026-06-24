@@ -32,18 +32,28 @@ function fmtDate(d: string | Date): string {
   return `${dd}/${mm}/${yyyy}`;
 }
 
+// Tolera respuestas tanto en array directo como paginado ({ data, total, ... }).
+// Evita "x.filter is not a function" cuando un endpoint pasa a ser paginado.
+function asArray<T>(d: unknown): T[] {
+  if (Array.isArray(d)) return d as T[];
+  if (d && typeof d === 'object' && Array.isArray((d as { data?: unknown }).data)) {
+    return (d as { data: T[] }).data;
+  }
+  return [];
+}
+
 async function loadDashboard() {
   try {
     const api = await getServerApi();
     const [ordersRes, patientsRes, practicesRes] = await Promise.all([
-      api.get<OrderListItem[]>('/orders', { params: { limit: 200 } }),
-      api.get<Patient[]>('/patients', { params: { limit: 200 } }),
-      api.get<Practice[]>('/practices', { params: { limit: 200 } }),
+      api.get('/orders', { params: { limit: 200 } }),
+      api.get('/patients', { params: { limit: 200 } }),
+      api.get('/practices', { params: { limit: 200 } }),
     ]);
     return {
-      orders: ordersRes.data,
-      patientCount: patientsRes.data.length,
-      practiceCount: practicesRes.data.length,
+      orders: asArray<OrderListItem>(ordersRes.data),
+      patientCount: asArray<Patient>(patientsRes.data).length,
+      practiceCount: asArray<Practice>(practicesRes.data).length,
     };
   } catch {
     return { orders: [] as OrderListItem[], patientCount: 0, practiceCount: 0 };
