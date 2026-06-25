@@ -131,6 +131,7 @@ const VETERINARIA: Entry[] = [
       { path: '/veterinarios/nuevo', label: 'Nuevo veterinario', icon: UserPlus },
     ],
   },
+  { kind: 'leaf', path: '/admin/especies', label: 'Especies y razas', icon: PawPrint, roles: ['admin'] },
 ];
 
 const ADMIN: Entry[] = [
@@ -294,7 +295,7 @@ export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
           />
         ))}
 
-        {veterinariaHabilitada && (
+        {(veterinariaHabilitada || userRole === 'admin') && (
           <>
             <p className="px-2.5 pt-5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
               Veterinaria

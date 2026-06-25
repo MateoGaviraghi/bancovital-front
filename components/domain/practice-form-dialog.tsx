@@ -49,6 +49,7 @@ function emptyFields() {
     units: '',
     notes: '',
     referenceValue: '',
+    defaultUnit: '',
     requiresAuthorization: false,
     isSpecialAct: false,
     isElaborated: false,
@@ -66,6 +67,7 @@ function practiceToFields(p: Practice) {
     units: p.units ?? '',
     notes: p.notes ?? '',
     referenceValue: p.referenceValue ?? '',
+    defaultUnit: p.defaultUnit ?? '',
     requiresAuthorization: p.requiresAuthorization,
     isSpecialAct: p.isSpecialAct,
     isElaborated: p.isElaborated,
@@ -147,6 +149,7 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
       units: fields.units.trim() || null,
       notes: fields.notes.trim() || null,
       referenceValue: fields.referenceValue.trim() || null,
+      defaultUnit: fields.defaultUnit.trim() || null,
       requiresAuthorization: fields.requiresAuthorization,
       isSpecialAct: fields.isSpecialAct,
       isElaborated: fields.isElaborated,
@@ -242,6 +245,21 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
                 />
               </FormField>
             </div>
+
+            <FormField
+              label="Unidad de medida por defecto"
+              htmlFor="defaultUnit"
+              description="Se presetea automáticamente al cargar resultados (ej: mg/dL, %, U/L)."
+            >
+              <Input
+                id="defaultUnit"
+                value={fields.defaultUnit}
+                onChange={(e) => set('defaultUnit', e.target.value)}
+                placeholder="ej: mg/dL"
+                className="max-w-xs"
+                disabled={isPending}
+              />
+            </FormField>
 
             <FormField label="Notas internas" htmlFor="notes">
               <Textarea

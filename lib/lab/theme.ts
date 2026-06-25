@@ -67,8 +67,8 @@ export function labThemeVars({ primaryColor, accentColor }: LabPalette): CSSProp
     vars['--color-primary-hover'] = `color-mix(in oklab, ${primary} 85%, black)`;
     vars['--color-primary-soft'] = `color-mix(in oklab, ${primary} 12%, white)`;
     vars['--color-primary-foreground'] = readableForeground(primary);
-    const railMix = isLight ? 20 : 32;
-    vars['--color-rail'] = `color-mix(in oklab, ${primary} ${railMix}%, #070a14)`;
+    const railMix = isLight ? 45 : 38;
+    vars['--color-rail'] = `color-mix(in oklab, ${primary} ${railMix}%, #0a0e1a)`;
   }
 
   if (accent) {

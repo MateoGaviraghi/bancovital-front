@@ -14,11 +14,12 @@ const LIMIT = 200;
 async function fetchPacientesAnimales(q: string): Promise<PacienteAnimal[]> {
   try {
     const api = await getServerApi();
-    const { data } = await api.get<PacienteAnimal[]>('/pacientes-animales', {
-      params: { q, limit: LIMIT },
-    });
+    const params: Record<string, unknown> = { limit: LIMIT };
+    if (q) params.q = q;
+    const { data } = await api.get<PacienteAnimal[]>('/pacientes-animales', { params });
     return data;
-  } catch {
+  } catch (err: any) {
+    console.error('[pacientes-animales] fetch error:', err?.response?.status, err?.response?.data);
     return [];
   }
 }
