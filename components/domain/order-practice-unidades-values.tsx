@@ -1,5 +1,10 @@
 'use client';
 
+function trimDecimals(v: string | null | undefined): string | null {
+  if (!v) return null;
+  return v.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+}
+
 import { PracticeUnidadesSection } from '@/components/domain/practice-unidades-section';
 import { Button } from '@/components/ui/button';
 import {
@@ -178,7 +183,7 @@ const UnidadValueInput = memo(function UnidadValueInput({
       {(item.rangeLow || item.rangeHigh || item.referenceText) && (
         <span className="text-[10px] text-[var(--color-fg-subtle)]">
           {item.rangeLow || item.rangeHigh
-            ? `(${item.rangeLow ?? '—'} – ${item.rangeHigh ?? '—'})`
+            ? `(${trimDecimals(item.rangeLow) ?? '—'} – ${trimDecimals(item.rangeHigh) ?? '—'})`
             : item.referenceText}
         </span>
       )}

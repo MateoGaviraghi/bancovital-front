@@ -1,8 +1,10 @@
 'use client';
 
 import { AnimalPatientCombobox } from '@/components/domain/animal-patient-combobox';
+import { CreateAnimalPatientDialog } from '@/components/domain/create-animal-patient-dialog';
 import { CreateDoctorDialog } from '@/components/domain/create-doctor-dialog';
 import { CreatePatientDialog } from '@/components/domain/create-patient-dialog';
+import { CreateVeterinarioDialog } from '@/components/domain/create-veterinario-dialog';
 import { DoctorCombobox } from '@/components/domain/doctor-combobox';
 import { NbuGrid } from '@/components/domain/nbu-grid';
 import { PatientCombobox } from '@/components/domain/patient-combobox';
@@ -33,7 +35,7 @@ import type {
   Veterinario,
 } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
-import { useLab } from '@/lib/lab/lab-info';
+
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { AlertCircle, Loader2, PawPrint, Plus, Stethoscope } from 'lucide-react';
@@ -62,8 +64,6 @@ type Errors = Partial<
 
 export function NewOrderForm() {
   const router = useRouter();
-  const { veterinariaHabilitada } = useLab();
-
   const [orderType, setOrderType] = useState<OrderType>('humana');
   const isVet = orderType === 'veterinaria';
 
@@ -79,6 +79,8 @@ export function NewOrderForm() {
   // Vet patient state
   const [animalPatient, setAnimalPatient] = useState<PacienteAnimal | null>(null);
   const [veterinario, setVeterinario] = useState<Veterinario | null>(null);
+  const [animalDialogOpen, setAnimalDialogOpen] = useState(false);
+  const [vetDialogOpen, setVetDialogOpen] = useState(false);
 
   // Shared state
   const [insurerId, setInsurerId] = useState<string>('');
@@ -124,7 +126,7 @@ export function NewOrderForm() {
     } else {
       if (!patient) e.patient = 'Seleccioná un paciente.';
     }
-    if (!insurerId) e.insurer = 'Seleccioná una obra social.';
+    if (!isVet && !insurerId) e.insurer = 'Seleccioná una obra social.';
     if (!origin) e.origin = 'Seleccioná un origen.';
     if (practices.length === 0) e.practices = 'Agregá al menos una práctica.';
     return e;
@@ -135,7 +137,7 @@ export function NewOrderForm() {
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
-    if (!insurerId || !origin) return;
+    if ((!isVet && !insurerId) || !origin) return;
 
     if (isVet) {
       if (!animalPatient) return;
@@ -180,37 +182,35 @@ export function NewOrderForm() {
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-8" noValidate>
-        {/* Order type toggle — solo si el lab tiene veterinaria habilitada */}
-        {veterinariaHabilitada && (
-          <div className="flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-1">
-            <button
-              type="button"
-              onClick={() => switchType('humana')}
-              className={cn(
-                'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors',
-                !isVet
-                  ? 'bg-[var(--color-bg-elevated)] text-[var(--color-fg)] shadow-[var(--shadow-xs)]'
-                  : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]',
-              )}
-            >
-              <Stethoscope className="h-4 w-4" strokeWidth={2} />
-              Orden humana
-            </button>
-            <button
-              type="button"
-              onClick={() => switchType('veterinaria')}
-              className={cn(
-                'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors',
-                isVet
-                  ? 'bg-[var(--color-bg-elevated)] text-[var(--color-fg)] shadow-[var(--shadow-xs)]'
-                  : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]',
-              )}
-            >
-              <PawPrint className="h-4 w-4" strokeWidth={2} />
-              Orden veterinaria
-            </button>
-          </div>
-        )}
+        {/* Tipo de servicio */}
+        <div className="flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-1">
+          <button
+            type="button"
+            onClick={() => switchType('humana')}
+            className={cn(
+              'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors',
+              !isVet
+                ? 'bg-[var(--color-bg-elevated)] text-[var(--color-fg)] shadow-[var(--shadow-xs)]'
+                : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]',
+            )}
+          >
+            <Stethoscope className="h-4 w-4" strokeWidth={2} />
+            Humana
+          </button>
+          <button
+            type="button"
+            onClick={() => switchType('veterinaria')}
+            className={cn(
+              'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors',
+              isVet
+                ? 'bg-[var(--color-bg-elevated)] text-[var(--color-fg)] shadow-[var(--shadow-xs)]'
+                : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]',
+            )}
+          >
+            <PawPrint className="h-4 w-4" strokeWidth={2} />
+            Veterinaria
+          </button>
+        </div>
 
         {/* Patient & coverage */}
         <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-[var(--shadow-xs)]">
@@ -226,22 +226,48 @@ export function NewOrderForm() {
                   required
                   error={errors.animalPatient}
                 >
-                  <AnimalPatientCombobox
-                    id="animalPatient"
-                    value={animalPatient}
-                    onChange={(a) => {
-                      setAnimalPatient(a);
-                      if (a) setErrors((prev) => ({ ...prev, animalPatient: undefined }));
-                    }}
-                    invalid={!!errors.animalPatient}
-                  />
+                  <div className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <AnimalPatientCombobox
+                        id="animalPatient"
+                        value={animalPatient}
+                        onChange={(a) => {
+                          setAnimalPatient(a);
+                          if (a) setErrors((prev) => ({ ...prev, animalPatient: undefined }));
+                        }}
+                        invalid={!!errors.animalPatient}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      title="Crear paciente animal"
+                      onClick={() => setAnimalDialogOpen(true)}
+                    >
+                      <Plus strokeWidth={2} />
+                    </Button>
+                  </div>
                 </FormField>
                 <FormField label="Veterinario" htmlFor="veterinario">
-                  <VeterinarioCombobox
-                    id="veterinario"
-                    value={veterinario}
-                    onChange={setVeterinario}
-                  />
+                  <div className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <VeterinarioCombobox
+                        id="veterinario"
+                        value={veterinario}
+                        onChange={setVeterinario}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      title="Crear veterinario"
+                      onClick={() => setVetDialogOpen(true)}
+                    >
+                      <Plus strokeWidth={2} />
+                    </Button>
+                  </div>
                 </FormField>
               </>
             ) : (
@@ -305,34 +331,38 @@ export function NewOrderForm() {
               </>
             )}
 
-            <FormField label="Obra social" htmlFor="insurer" required error={errors.insurer}>
-              <Select
-                value={insurerId}
-                onValueChange={(v) => {
-                  setInsurerId(v);
-                  setErrors((prev) => ({ ...prev, insurer: undefined }));
-                }}
-              >
-                <SelectTrigger id="insurer">
-                  <SelectValue placeholder="Seleccionar…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {insurers.map((i) => (
-                    <SelectItem key={i.id} value={String(i.id)}>
-                      {i.code} · {i.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormField>
+            {!isVet && (
+              <>
+                <FormField label="Obra social" htmlFor="insurer" required error={errors.insurer}>
+                  <Select
+                    value={insurerId}
+                    onValueChange={(v) => {
+                      setInsurerId(v);
+                      setErrors((prev) => ({ ...prev, insurer: undefined }));
+                    }}
+                  >
+                    <SelectTrigger id="insurer">
+                      <SelectValue placeholder="Seleccionar…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {insurers.map((i) => (
+                        <SelectItem key={i.id} value={String(i.id)}>
+                          {i.code} · {i.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormField>
 
-            <FormField label="Número de afiliado" htmlFor="affiliate">
-              <Input
-                id="affiliate"
-                value={affiliateNumber}
-                onChange={(e) => setAffiliateNumber(e.target.value)}
-              />
-            </FormField>
+                <FormField label="Número de afiliado" htmlFor="affiliate">
+                  <Input
+                    id="affiliate"
+                    value={affiliateNumber}
+                    onChange={(e) => setAffiliateNumber(e.target.value)}
+                  />
+                </FormField>
+              </>
+            )}
 
             {!isVet && (
               <div className="flex items-end">
@@ -463,7 +493,7 @@ export function NewOrderForm() {
         </div>
       </form>
 
-      {!isVet && (
+      {!isVet ? (
         <>
           <CreatePatientDialog
             open={patientDialogOpen}
@@ -477,6 +507,22 @@ export function NewOrderForm() {
             open={doctorDialogOpen}
             onOpenChange={setDoctorDialogOpen}
             onCreated={(d) => setDoctor(d)}
+          />
+        </>
+      ) : (
+        <>
+          <CreateAnimalPatientDialog
+            open={animalDialogOpen}
+            onOpenChange={setAnimalDialogOpen}
+            onCreated={(a) => {
+              setAnimalPatient(a);
+              setErrors((prev) => ({ ...prev, animalPatient: undefined }));
+            }}
+          />
+          <CreateVeterinarioDialog
+            open={vetDialogOpen}
+            onOpenChange={setVetDialogOpen}
+            onCreated={(v) => setVeterinario(v)}
           />
         </>
       )}

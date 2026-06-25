@@ -25,6 +25,11 @@ import { Check, Loader2, Pencil, Plus, Ruler, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+function cleanNum(s: string | null): string {
+  if (!s) return '—';
+  return s.replace(/\.?0+$/, '') || '0';
+}
+
 function apiError(err: unknown, fallback: string): string {
   if (axios.isAxiosError(err)) {
     const msg = err.response?.data?.message;
@@ -51,6 +56,9 @@ function UnidadesDialog({
   const [newNombre, setNewNombre] = useState('');
   const [newSimbolo, setNewSimbolo] = useState('');
   const [newOpciones, setNewOpciones] = useState<string[]>([]);
+  const [newRangeLow, setNewRangeLow] = useState('');
+  const [newRangeHigh, setNewRangeHigh] = useState('');
+  const [newRefText, setNewRefText] = useState('');
   const [editingUnit, setEditingUnit] = useState<UnidadMedida | null>(null);
   const [editOpciones, setEditOpciones] = useState<string[]>([]);
   const [editRangeLow, setEditRangeLow] = useState('');
@@ -103,11 +111,10 @@ function UnidadesDialog({
   }
 
   const addMutation = useMutation({
-    mutationFn: async (unidadId: number) => {
-      const payload: AddPracticeUnidadDto = { unidadId };
+    mutationFn: async (dto: AddPracticeUnidadDto) => {
       const { data } = await apiClient.post<PracticeUnidad>(
         `/practices/${practiceId}/unidades`,
-        payload,
+        dto,
       );
       return data;
     },
@@ -138,13 +145,19 @@ function UnidadesDialog({
       return data;
     },
     onSuccess: async (newUnit) => {
+      const rl = newRangeLow.trim() || null;
+      const rh = newRangeHigh.trim() || null;
+      const rt = newRefText.trim() || null;
       toast.success(`Unidad "${newUnit.nombre}" creada`);
       setNewNombre('');
       setNewSimbolo('');
       setNewOpciones([]);
+      setNewRangeLow('');
+      setNewRangeHigh('');
+      setNewRefText('');
       setShowCreate(false);
       qc.invalidateQueries({ queryKey: ['unidades-medida', 'all'] });
-      addMutation.mutate(newUnit.id);
+      addMutation.mutate({ unidadId: newUnit.id, rangeLow: rl, rangeHigh: rh, referenceText: rt });
     },
     onError: (err) => toast.error(apiError(err, 'No se pudo crear la unidad')),
   });
@@ -205,7 +218,7 @@ function UnidadesDialog({
     if (associatedIds.has(unit.id)) {
       removeMutation.mutate(unit.id);
     } else {
-      addMutation.mutate(unit.id);
+      addMutation.mutate({ unidadId: unit.id });
     }
   }
 
@@ -274,7 +287,7 @@ function UnidadesDialog({
               {filtered.map((unit) => {
                 const isAssoc = associatedIds.has(unit.id);
                 const isPending =
-                  (addMutation.isPending && addMutation.variables === unit.id) ||
+                  (addMutation.isPending && addMutation.variables?.unidadId === unit.id) ||
                   (removeMutation.isPending && removeMutation.variables === unit.id);
                 return (
                   <li key={unit.id}>
@@ -484,6 +497,40 @@ function UnidadesDialog({
                 />
               </div>
               <div className="flex gap-2">
+                <div className="flex-1 space-y-1">
+                  <span className="text-[var(--color-fg-muted)] text-xs">Rango bajo</span>
+                  <input
+                    value={newRangeLow}
+                    onChange={(e) => setNewRangeLow(e.target.value)}
+                    placeholder="ej: 70"
+                    disabled={createMutation.isPending}
+                    className="block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-2.5 py-1.5 text-[var(--color-fg)] text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)]"
+                  />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <span className="text-[var(--color-fg-muted)] text-xs">Rango alto</span>
+                  <input
+                    value={newRangeHigh}
+                    onChange={(e) => setNewRangeHigh(e.target.value)}
+                    placeholder="ej: 110"
+                    disabled={createMutation.isPending}
+                    className="block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-2.5 py-1.5 text-[var(--color-fg)] text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)]"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[var(--color-fg-muted)] text-xs">
+                  Texto de referencia (opcional)
+                </span>
+                <input
+                  value={newRefText}
+                  onChange={(e) => setNewRefText(e.target.value)}
+                  placeholder="ej: Valores normales entre 70 y 110 mg/dL"
+                  disabled={createMutation.isPending}
+                  className="block w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-2.5 py-1.5 text-[var(--color-fg)] text-sm outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft)]"
+                />
+              </div>
+              <div className="flex gap-2">
                 <Button
                   type="submit"
                   size="sm"
@@ -504,6 +551,9 @@ function UnidadesDialog({
                     setNewNombre('');
                     setNewSimbolo('');
                     setNewOpciones([]);
+                    setNewRangeLow('');
+                    setNewRangeHigh('');
+                    setNewRefText('');
                   }}
                   disabled={createMutation.isPending}
                 >
@@ -602,7 +652,7 @@ export function PracticeUnidadesSection({ practiceId, readOnly = false, onChange
               </span>
               {(item.rangeLow || item.rangeHigh) && (
                 <span className="text-[var(--color-fg-muted)]">
-                  Ref: {item.rangeLow ?? '—'} – {item.rangeHigh ?? '—'}
+                  Ref: {cleanNum(item.rangeLow)} – {cleanNum(item.rangeHigh)}
                 </span>
               )}
               {item.referenceText && (

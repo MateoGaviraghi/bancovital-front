@@ -63,17 +63,13 @@ export function ResultRow({
   }
 
   const initial = {
-    valueNumeric: displayNumeric(line.result?.valueNumeric),
-    valueText: line.result?.valueText ?? '',
-    unit: line.result?.unit ?? '',
-    methodology: line.result?.methodology ?? '',
+    resultado: line.result?.valueNumeric
+      ? displayNumeric(line.result.valueNumeric)
+      : (line.result?.valueText ?? ''),
     notes: line.result?.notes ?? '',
   };
 
-  const [valueNumeric, setValueNumeric] = useState(initial.valueNumeric);
-  const [valueText, setValueText] = useState(initial.valueText);
-  const [unit, setUnit] = useState(initial.unit);
-  const [methodology, setMethodology] = useState(initial.methodology);
+  const [resultado, setResultado] = useState(initial.resultado);
   const [notes, setNotes] = useState(initial.notes);
   const [savedAt, setSavedAt] = useState<Date | null>(
     line.result?.enteredAt ? new Date(line.result.enteredAt) : null,
@@ -83,10 +79,7 @@ export function ResultRow({
   );
 
   const dirty =
-    valueNumeric !== initial.valueNumeric ||
-    valueText !== initial.valueText ||
-    unit !== initial.unit ||
-    methodology !== initial.methodology ||
+    resultado !== initial.resultado ||
     notes !== initial.notes;
 
   // Report dirty state to parent
@@ -97,29 +90,31 @@ export function ResultRow({
 
   // Live flag preview
   const [flag, setFlag] = useState<string | null>(null);
+  const resultadoNormalized = resultado.trim().replace(',', '.');
+  const isNumeric = /^-?\d+(\.\d+)?$/.test(resultadoNormalized);
   useEffect(() => {
-    if (!valueNumeric.trim() || !line.referenceRule) {
+    if (!isNumeric || !line.referenceRule) {
       setFlag(null);
       return;
     }
-    setFlag(classifyResult(valueNumeric.replace(',', '.'), line.referenceRule));
-  }, [valueNumeric, line.referenceRule]);
+    setFlag(classifyResult(resultadoNormalized, line.referenceRule));
+  }, [resultadoNormalized, isNumeric, line.referenceRule]);
 
-  const refHint = formatRangeHint(line.referenceRule, line.result?.unit ?? unit ?? null);
+  const refHint = formatRangeHint(line.referenceRule, line.defaultUnit ?? line.result?.unit ?? null);
 
   const mutation = useMutation({
     mutationFn: async () => {
+      const raw = resultado.trim();
+      if (!raw) throw new Error('Cargá un resultado.');
+      const normalized = raw.replace(',', '.');
+      const numericValue = /^-?\d+(\.\d+)?$/.test(normalized) ? normalized : undefined;
       const payload: UpsertResultDto = {
         orderPracticeId: line.orderPractice.id,
-        valueNumeric: valueNumeric.trim().replace(',', '.') || undefined,
-        valueText: valueText.trim() || undefined,
-        unit: unit.trim() || undefined,
-        methodology: methodology.trim() || undefined,
+        valueNumeric: numericValue,
+        valueText: numericValue ? undefined : raw,
+        unit: (line.defaultUnit ?? '').trim() || undefined,
         notes: notes.trim() || undefined,
       };
-      if (!payload.valueNumeric && !payload.valueText) {
-        throw new Error('Cargá un valor numérico o textual.');
-      }
       await onBeforeSave();
       const res = await apiClient.post<OrderResult>('/results', payload);
       return res.data;
@@ -143,9 +138,7 @@ export function ResultRow({
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally only fires on saveTrigger change; other deps are read from closure
   useEffect(() => {
     if (saveTrigger > 0 && dirty && !mutation.isPending) {
-      // Skip silently if neither value is filled — don't block other rows
-      const hasValue = valueNumeric.trim() || valueText.trim();
-      if (hasValue) mutation.mutate();
+      if (resultado.trim()) mutation.mutate();
     }
   }, [saveTrigger]);
 
@@ -182,32 +175,18 @@ export function ResultRow({
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-[160px_1fr_120px_180px]">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_120px]">
         <Input
-          placeholder="Numérico"
-          inputMode="decimal"
-          value={valueNumeric}
+          placeholder="Resultado (numérico o texto)"
+          value={resultado}
           disabled={disabled}
-          onChange={(e) => setValueNumeric(e.target.value)}
-          className="text-right font-mono"
+          onChange={(e) => setResultado(e.target.value)}
         />
         <Input
-          placeholder="Texto (POSITIVO / NEGATIVO / …)"
-          value={valueText}
-          disabled={disabled}
-          onChange={(e) => setValueText(e.target.value)}
-        />
-        <Input
-          placeholder="Unidad"
-          value={unit}
-          disabled={disabled}
-          onChange={(e) => setUnit(e.target.value)}
-        />
-        <Input
-          placeholder="Metodología"
-          value={methodology}
-          disabled={disabled}
-          onChange={(e) => setMethodology(e.target.value)}
+          value={line.defaultUnit ?? ''}
+          disabled
+          className="bg-[var(--color-bg-subtle)]"
+          placeholder="—"
         />
       </div>
 

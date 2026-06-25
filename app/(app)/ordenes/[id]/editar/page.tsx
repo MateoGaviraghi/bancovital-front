@@ -72,6 +72,7 @@ export default async function EditOrderPage({
       active: true,
       notes: null,
       methodology: null,
+      defaultUnit: null,
       referenceValue: null,
       condicionVisibilidad: null,
       createdAt: '',

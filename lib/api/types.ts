@@ -399,6 +399,7 @@ export interface Practice {
   notes: string | null;
   referenceValue: string | null;
   methodology: string | null;
+  defaultUnit: string | null;
   condicionVisibilidad: CondicionVisibilidad | null;
   createdAt: string;
   updatedAt: string;
@@ -418,6 +419,7 @@ export interface CreatePracticeDto {
   units?: string | null;
   notes?: string | null;
   referenceValue?: string | null;
+  defaultUnit?: string | null;
   requiresAuthorization?: boolean;
   isSpecialAct?: boolean;
   isElaborated?: boolean;
@@ -685,6 +687,7 @@ export interface ResultLine {
   referenceValue?: string | null;
   parentId?: number | null;
   condicionVisibilidad?: CondicionVisibilidad | null;
+  defaultUnit?: string | null;
 }
 
 export interface UpsertResultDto {

@@ -32,9 +32,13 @@ export function classifyResult(valueStr: string, rule: RangeRule): ResultFlag {
   return 'normal';
 }
 
+function trimDec(v: string): string {
+  return v.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+}
+
 export function formatRangeHint(rule: RangeRule | null, unit: string | null): string | null {
   if (!rule) return null;
   const { low, high } = rule.band;
   if (!low && !high) return null;
-  return `${low ?? '−∞'} – ${high ?? '+∞'}${unit ? ` ${unit}` : ''}`;
+  return `${low ? trimDec(low) : '−∞'} – ${high ? trimDec(high) : '+∞'}${unit ? ` ${unit}` : ''}`;
 }

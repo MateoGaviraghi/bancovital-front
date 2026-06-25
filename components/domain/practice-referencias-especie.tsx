@@ -1,5 +1,9 @@
 'use client';
 
+function trimDec(v: string): string {
+  return v.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+}
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -295,10 +299,10 @@ export function PracticeReferenciasEspecieSection({ practiceId }: { practiceId: 
                       {especieMap.get(ref.especieId)?.nombre ?? `#${ref.especieId}`}
                     </td>
                     <td className="tabular px-4 py-2.5 font-mono text-[var(--color-fg)]">
-                      {ref.rangeLow ?? '—'}
+                      {ref.rangeLow ? trimDec(ref.rangeLow) : '—'}
                     </td>
                     <td className="tabular px-4 py-2.5 font-mono text-[var(--color-fg)]">
-                      {ref.rangeHigh ?? '—'}
+                      {ref.rangeHigh ? trimDec(ref.rangeHigh) : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-[var(--color-fg-muted)]">{ref.unit ?? '—'}</td>
                     <td className="px-4 py-2.5 text-[var(--color-fg-muted)]">
