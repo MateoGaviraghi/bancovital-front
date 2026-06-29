@@ -42,9 +42,7 @@ export default async function EditOrderPage({
   if (order.status !== 'borrador') redirect(`/ordenes/${numId}`);
 
   const [patientRes, doctorRes] = await Promise.all([
-    order.patientId
-      ? api.get<Patient>(`/patients/${order.patientId}`)
-      : Promise.resolve(null),
+    order.patientId ? api.get<Patient>(`/patients/${order.patientId}`) : Promise.resolve(null),
     order.referringDoctorId
       ? api.get<Doctor>(`/doctors/${order.referringDoctorId}`).catch(() => null)
       : Promise.resolve(null),
@@ -84,7 +82,13 @@ export default async function EditOrderPage({
     <div>
       <PageHeader
         title={`Editar orden #${order.protocolNumber}`}
-        description={order.patient ? `${order.patient.lastName}, ${order.patient.firstName} · DNI ${order.patient.dni}` : order.animalPatient ? `${order.animalPatient.nombre} · ${order.animalPatient.especie}` : ''}
+        description={
+          order.patient
+            ? `${order.patient.lastName}, ${order.patient.firstName} · DNI ${order.patient.dni}`
+            : order.animalPatient
+              ? `${order.animalPatient.nombre} · ${order.animalPatient.especie}`
+              : ''
+        }
       />
       <EditOrderForm
         order={order}

@@ -201,7 +201,7 @@ export default async function HomePage() {
                     <td className="px-5 py-3 text-[var(--color-fg)]">
                       {o.patient
                         ? `${o.patient.lastName}, ${o.patient.firstName}`
-                        : o.animalPatient?.nombre ?? '—'}
+                        : (o.animalPatient?.nombre ?? '—')}
                     </td>
                     <td className="px-5 py-3 text-[var(--color-fg-muted)] text-xs">
                       {o.insurer.name}

@@ -10,6 +10,12 @@ export const queries = {
     fondoUrl: (id: number) => ['preferencia-pdf', id, 'fondo-url'] as const,
   },
 
+  servicios: {
+    list: () => ['servicios'] as const,
+    listAll: () => ['servicios', 'all'] as const,
+    detail: (id: number) => ['servicios', id] as const,
+  },
+
   sedes: {
     list: () => ['sedes'] as const,
     detail: (id: number) => ['sedes', id] as const,
@@ -129,4 +135,14 @@ export const queries = {
 
   /** Lab-facing: anuncios activos para el lab autenticado (global + propio). */
   announcements: () => ['announcements'] as const,
+
+  solicitantesAgua: {
+    list: () => ['solicitantes-agua'] as const,
+    detail: (id: number) => ['solicitantes-agua', id] as const,
+  },
+
+  muestrasAgua: {
+    list: () => ['muestras-agua'] as const,
+    detail: (id: number) => ['muestras-agua', id] as const,
+  },
 };

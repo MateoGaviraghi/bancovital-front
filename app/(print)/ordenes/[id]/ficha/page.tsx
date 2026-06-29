@@ -41,7 +41,9 @@ export default async function FichaPage({
           Ficha de trabajo — Orden #{order.protocolNumber}
         </h1>
         <p className="mt-2 text-[var(--color-fg-muted)] text-sm">
-          {order.patient ? `${order.patient.lastName}, ${order.patient.firstName}` : order.animalPatient?.nombre ?? '—'}
+          {order.patient
+            ? `${order.patient.lastName}, ${order.patient.firstName}`
+            : (order.animalPatient?.nombre ?? '—')}
         </p>
         <p className="mt-4 text-[var(--color-fg-subtle)] text-xs">
           Hacé click en "Descargar ficha PDF" para generar y guardar el archivo.
