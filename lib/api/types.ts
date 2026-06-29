@@ -485,6 +485,17 @@ export interface PracticeUnidadListItem {
   referenceText: string | null;
 }
 
+export interface PracticeUnidadRefEspecie {
+  id: number;
+  practiceUnidadId: number;
+  especieId: number;
+  rangeLow: string | null;
+  rangeHigh: string | null;
+  referenceText: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AddPracticeUnidadDto {
   unidadId: number;
   sortOrder?: number;

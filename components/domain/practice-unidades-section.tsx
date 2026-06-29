@@ -24,6 +24,7 @@ import axios from 'axios';
 import { Check, Loader2, Pencil, Plus, Ruler, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { UnidadRefEspecieSection } from './unidad-ref-especie-section';
 
 function cleanNum(s: string | null): string {
   if (!s) return '—';
@@ -444,6 +445,9 @@ function UnidadesDialog({
               >
                 Cancelar
               </Button>
+            </div>
+            <div className="border-[var(--color-border)] border-t pt-3">
+              <UnidadRefEspecieSection practiceId={practiceId} unidadId={editingUnit.id} />
             </div>
           </div>
         )}
