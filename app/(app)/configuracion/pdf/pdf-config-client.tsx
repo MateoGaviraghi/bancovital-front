@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { apiClient } from '@/lib/api/client';
 import { queries } from '@/lib/api/queries';
-import type { CreatePreferenciaPdfDto, PreferenciaPdf, TipoPdf } from '@/lib/api/types';
+import type { CreatePreferenciaPdfDto, PreferenciaPdf, Servicio, TipoPdf } from '@/lib/api/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { FileText, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
@@ -46,10 +46,12 @@ const TIPO_LABELS: Record<TipoPdf, string> = {
 
 function FormatCard({
   formato,
+  servicioNombre,
   onEdit,
   onDelete,
 }: {
   formato: PreferenciaPdf;
+  servicioNombre?: string;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -73,6 +75,7 @@ function FormatCard({
             <Badge variant={formato.tipo === 'informe' ? 'default' : 'secondary'}>
               {TIPO_LABELS[formato.tipo]}
             </Badge>
+            {servicioNombre && <Badge variant="outline">{servicioNombre}</Badge>}
           </div>
           <p className="mt-0.5 text-xs text-[var(--color-fg-muted)]">
             Actualizado {updated}
@@ -101,14 +104,17 @@ function FormatCard({
 function CreateFormatDialog({
   open,
   onOpenChange,
+  servicios,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  servicios: Servicio[];
 }) {
   const router = useRouter();
   const qc = useQueryClient();
   const [nombre, setNombre] = useState('');
   const [tipo, setTipo] = useState<TipoPdf>('informe');
+  const [servicioId, setServicioId] = useState<string>('');
 
   const createMut = useMutation({
     mutationFn: (dto: CreatePreferenciaPdfDto) =>
@@ -119,6 +125,7 @@ function CreateFormatDialog({
       onOpenChange(false);
       setNombre('');
       setTipo('informe');
+      setServicioId('');
       router.push(`/configuracion/pdf/${created.id}`);
     },
     onError: (err) => toast.error(apiError(err, 'Error al crear formato')),
@@ -152,6 +159,23 @@ function CreateFormatDialog({
               </SelectContent>
             </Select>
           </FormField>
+          {servicios.length > 0 && (
+            <FormField label="Servicio" htmlFor="fmt-servicio">
+              <Select value={servicioId} onValueChange={setServicioId}>
+                <SelectTrigger id="fmt-servicio">
+                  <SelectValue placeholder="General (todos los servicios)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">General (todos los servicios)</SelectItem>
+                  {servicios.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+          )}
         </div>
         <DialogFooter>
           <Button
@@ -162,7 +186,13 @@ function CreateFormatDialog({
             Cancelar
           </Button>
           <Button
-            onClick={() => createMut.mutate({ nombre: nombre.trim(), tipo })}
+            onClick={() =>
+              createMut.mutate({
+                nombre: nombre.trim(),
+                tipo,
+                ...(servicioId && servicioId !== 'none' ? { servicioId: Number(servicioId) } : {}),
+              })
+            }
             disabled={!nombre.trim() || createMut.isPending}
           >
             {createMut.isPending && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
@@ -184,6 +214,14 @@ export function PdfFormatListClient() {
     queryKey: queries.preferenciaPdf.list(),
     queryFn: () => apiClient.get<PreferenciaPdf[]>('/preferencia-pdf').then((r) => r.data),
   });
+
+  const { data: servicios = [] } = useQuery({
+    queryKey: queries.servicios.list(),
+    queryFn: () => apiClient.get<Servicio[]>('/servicios').then((r) => r.data),
+    staleTime: 5 * 60_000,
+  });
+
+  const servicioMap = new Map(servicios.map((s) => [s.id, s]));
 
   const deleteMut = useMutation({
     mutationFn: (id: number) => apiClient.delete(`/preferencia-pdf/${id}`),
@@ -235,6 +273,7 @@ export function PdfFormatListClient() {
             <FormatCard
               key={f.id}
               formato={f}
+              servicioNombre={f.servicioId ? servicioMap.get(f.servicioId)?.nombre : undefined}
               onEdit={() => router.push(`/configuracion/pdf/${f.id}`)}
               onDelete={() => setDeleteTarget(f)}
             />
@@ -242,7 +281,7 @@ export function PdfFormatListClient() {
         </div>
       )}
 
-      <CreateFormatDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateFormatDialog open={createOpen} onOpenChange={setCreateOpen} servicios={servicios} />
 
       <ConfirmDialog
         open={deleteTarget != null}

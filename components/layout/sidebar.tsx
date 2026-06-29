@@ -2,9 +2,14 @@
 
 import { ConsumoWidget } from '@/components/domain/consumo-widget';
 import { ThemePickerButton } from '@/components/domain/theme-picker-button';
+import { DynamicLucideIcon } from '@/components/ui/dynamic-lucide-icon';
+import { apiClient } from '@/lib/api/client';
+import { queries } from '@/lib/api/queries';
+import type { Servicio } from '@/lib/api/types';
 import type { AppRole } from '@/lib/auth/session';
 import { cn } from '@/lib/cn';
 import { useLab } from '@/lib/lab/lab-info';
+import { useQuery } from '@tanstack/react-query';
 import {
   BookOpen,
   Building2,
@@ -12,6 +17,7 @@ import {
   ChevronDown,
   ClipboardList,
   DollarSign,
+  Droplets,
   FilePlus,
   FileText,
   FlaskConical,
@@ -21,8 +27,10 @@ import {
   type LucideIcon,
   MapPin,
   PawPrint,
+  ScrollText,
   ShieldCheck,
   Stethoscope,
+  TestTube,
   TrendingUp,
   UserPlus,
   Users,
@@ -62,28 +70,8 @@ const PRIMARY: Entry[] = [
     icon: ClipboardList,
     basePath: '/ordenes',
     children: [
-      { path: '/ordenes', label: 'Ver órdenes', icon: ClipboardList },
-      { path: '/ordenes/nueva', label: 'Nueva orden', icon: FilePlus },
-    ],
-  },
-  {
-    kind: 'group',
-    label: 'Pacientes',
-    icon: Users,
-    basePath: '/pacientes',
-    children: [
-      { path: '/pacientes', label: 'Ver pacientes', icon: Users },
-      { path: '/pacientes/nuevo', label: 'Nuevo paciente', icon: UserPlus },
-    ],
-  },
-  {
-    kind: 'group',
-    label: 'Médicos',
-    icon: Stethoscope,
-    basePath: '/medicos',
-    children: [
-      { path: '/medicos', label: 'Ver médicos', icon: Stethoscope },
-      { path: '/medicos/nuevo', label: 'Nuevo médico', icon: UserPlus },
+      { path: '/ordenes', label: 'Órdenes', icon: ClipboardList },
+      { path: '/ordenes/nueva', label: 'Crear orden', icon: FilePlus },
     ],
   },
   {
@@ -100,38 +88,28 @@ const PRIMARY: Entry[] = [
   { kind: 'leaf', path: '/reportes', label: 'Reportes', icon: TrendingUp },
 ];
 
+const HISTORIA_CLINICA: Entry[] = [
+  { kind: 'leaf', path: '/pacientes', label: 'Pacientes', icon: Users },
+  { kind: 'leaf', path: '/medicos', label: 'Médicos', icon: Stethoscope },
+];
+
 const VETERINARIA: Entry[] = [
+  { kind: 'leaf', path: '/propietarios', label: 'Propietarios', icon: Users },
+  { kind: 'leaf', path: '/pacientes-animales', label: 'Pacientes animales', icon: PawPrint },
+  { kind: 'leaf', path: '/veterinarios', label: 'Veterinarios', icon: Heart },
   {
-    kind: 'group',
-    label: 'Propietarios',
-    icon: Users,
-    basePath: '/propietarios',
-    children: [
-      { path: '/propietarios', label: 'Ver propietarios', icon: Users },
-      { path: '/propietarios/nuevo', label: 'Nuevo propietario', icon: UserPlus },
-    ],
-  },
-  {
-    kind: 'group',
-    label: 'Pacientes animales',
+    kind: 'leaf',
+    path: '/admin/especies',
+    label: 'Especies y razas',
     icon: PawPrint,
-    basePath: '/pacientes-animales',
-    children: [
-      { path: '/pacientes-animales', label: 'Ver pacientes', icon: PawPrint },
-      { path: '/pacientes-animales/nuevo', label: 'Nuevo paciente', icon: Cat },
-    ],
+    roles: ['admin'],
   },
-  {
-    kind: 'group',
-    label: 'Veterinarios',
-    icon: Heart,
-    basePath: '/veterinarios',
-    children: [
-      { path: '/veterinarios', label: 'Ver veterinarios', icon: Heart },
-      { path: '/veterinarios/nuevo', label: 'Nuevo veterinario', icon: UserPlus },
-    ],
-  },
-  { kind: 'leaf', path: '/admin/especies', label: 'Especies y razas', icon: PawPrint, roles: ['admin'] },
+];
+
+const AGUA_EFLUENTES: Entry[] = [
+  { kind: 'leaf', path: '/agua-efluentes/solicitantes', label: 'Solicitantes', icon: Users },
+  { kind: 'leaf', path: '/agua-efluentes/muestras', label: 'Muestras', icon: Droplets },
+  { kind: 'leaf', path: '/agua-efluentes/analisis', label: 'Análisis', icon: TestTube },
 ];
 
 const ADMIN: Entry[] = [
@@ -146,6 +124,7 @@ const ADMIN: Entry[] = [
       { path: '/admin/valor-ub', label: 'Valor UB', icon: DollarSign },
       { path: '/admin/config-lab', label: 'Config. laboratorio', icon: Building2 },
       { path: '/admin/sedes', label: 'Sedes', icon: MapPin },
+      { path: '/admin/servicios', label: 'Servicios', icon: FlaskConical },
       { path: '/admin/especies', label: 'Especies y razas', icon: PawPrint },
     ],
   },
@@ -248,18 +227,35 @@ function NavEntry({
 
 // ─── Sidebar ─────────────────────────────────────────────────
 
-export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
+export function SidebarNavBody({
+  userRole,
+  isSuper = false,
+}: { userRole: AppRole; isSuper?: boolean }) {
   const pathname = usePathname();
   const { labName, logoUrl, primaryColor, accentColor, veterinariaHabilitada } = useLab();
   const name = labName ?? 'Mi laboratorio';
-  // Sin veterinaria habilitada, ocultamos "Especies y razas" del panel de Administración.
-  const adminEntries: Entry[] = veterinariaHabilitada
-    ? ADMIN
-    : ADMIN.map((e) =>
-        e.kind === 'group' && e.basePath === '/admin'
-          ? { ...e, children: e.children.filter((c) => c.path !== '/admin/especies') }
-          : e,
-      );
+
+  const { data: servicios = [] } = useQuery({
+    queryKey: queries.servicios.list(),
+    queryFn: () => apiClient.get<Servicio[]>('/servicios').then((r) => r.data),
+    staleTime: 5 * 60_000,
+  });
+
+  const hasVeterinaria =
+    veterinariaHabilitada || servicios.some((s) => s.usaPacienteAnimal || s.usaVeterinario);
+
+  const hasAguaEfluentes = servicios.some(
+    (s) => s.activo && (s.usaSolicitanteAgua || s.usaMuestraAgua),
+  );
+
+  // Filtrar entradas de admin según permisos
+  const adminEntries: Entry[] = ADMIN.map((e) => {
+    if (e.kind !== 'group' || e.basePath !== '/admin') return e;
+    let children = e.children;
+    if (!hasVeterinaria) children = children.filter((c) => c.path !== '/admin/especies');
+    if (!isSuper) children = children.filter((c) => c.path !== '/admin/servicios');
+    return { ...e, children };
+  });
 
   return (
     <>
@@ -295,12 +291,40 @@ export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
           />
         ))}
 
-        {(veterinariaHabilitada || userRole === 'admin') && (
+        <p className="px-2.5 pt-5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
+          Historia clínica
+        </p>
+        {HISTORIA_CLINICA.map((entry) => (
+          <NavEntry
+            key={entry.kind === 'leaf' ? entry.path : entry.basePath}
+            entry={entry}
+            pathname={pathname}
+            userRole={userRole}
+          />
+        ))}
+
+        {(hasVeterinaria || userRole === 'admin') && (
           <>
             <p className="px-2.5 pt-5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
               Veterinaria
             </p>
             {VETERINARIA.map((entry) => (
+              <NavEntry
+                key={entry.kind === 'leaf' ? entry.path : entry.basePath}
+                entry={entry}
+                pathname={pathname}
+                userRole={userRole}
+              />
+            ))}
+          </>
+        )}
+
+        {hasAguaEfluentes && (
+          <>
+            <p className="px-2.5 pt-5 pb-1.5 font-medium text-[10px] text-white/35 uppercase tracking-[0.16em]">
+              Agua y efluentes
+            </p>
+            {AGUA_EFLUENTES.map((entry) => (
               <NavEntry
                 key={entry.kind === 'leaf' ? entry.path : entry.basePath}
                 entry={entry}
@@ -337,10 +361,10 @@ export function SidebarNavBody({ userRole }: { userRole: AppRole }) {
   );
 }
 
-export function Sidebar({ userRole }: { userRole: AppRole }) {
+export function Sidebar({ userRole, isSuper = false }: { userRole: AppRole; isSuper?: boolean }) {
   return (
     <aside className="hidden w-60 shrink-0 flex-col bg-rail md:flex">
-      <SidebarNavBody userRole={userRole} />
+      <SidebarNavBody userRole={userRole} isSuper={isSuper} />
     </aside>
   );
 }

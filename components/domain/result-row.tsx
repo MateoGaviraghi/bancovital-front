@@ -78,9 +78,7 @@ export function ResultRow({
     line.result?.flag ? (SHORT_TO_LONG[line.result.flag] ?? null) : null,
   );
 
-  const dirty =
-    resultado !== initial.resultado ||
-    notes !== initial.notes;
+  const dirty = resultado !== initial.resultado || notes !== initial.notes;
 
   // Report dirty state to parent
   // biome-ignore lint/correctness/useExhaustiveDependencies: onDirtyChange and id are stable; only dirty drives this
@@ -100,7 +98,10 @@ export function ResultRow({
     setFlag(classifyResult(resultadoNormalized, line.referenceRule));
   }, [resultadoNormalized, isNumeric, line.referenceRule]);
 
-  const refHint = formatRangeHint(line.referenceRule, line.defaultUnit ?? line.result?.unit ?? null);
+  const refHint = formatRangeHint(
+    line.referenceRule,
+    line.defaultUnit ?? line.result?.unit ?? null,
+  );
 
   const mutation = useMutation({
     mutationFn: async () => {

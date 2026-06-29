@@ -91,9 +91,7 @@ export function UnidadRefEspecieSection({
 
   const deleteMut = useMutation({
     mutationFn: (especieId: number) =>
-      apiClient.delete(
-        `/practices/${practiceId}/unidades/${unidadId}/ref-especie/${especieId}`,
-      ),
+      apiClient.delete(`/practices/${practiceId}/unidades/${unidadId}/ref-especie/${especieId}`),
     onSuccess: () => {
       toast.success('Referencia eliminada');
       invalidate();
@@ -148,7 +146,10 @@ export function UnidadRefEspecieSection({
           onChange={setAddRow}
           especies={available}
           onSubmit={() => submit(addRow)}
-          onCancel={() => { setShowAdd(false); setAddRow(EMPTY); }}
+          onCancel={() => {
+            setShowAdd(false);
+            setAddRow(EMPTY);
+          }}
           isPending={upsertMut.isPending}
           label="Guardar"
         />
@@ -172,9 +173,7 @@ export function UnidadRefEspecieSection({
                   key={ref.especieId}
                   row={editRow}
                   onChange={setEditRow}
-                  especies={especies.filter(
-                    (e) => !usedIds.has(e.id) || e.id === ref.especieId,
-                  )}
+                  especies={especies.filter((e) => !usedIds.has(e.id) || e.id === ref.especieId)}
                   onSubmit={() => submit(editRow)}
                   onCancel={() => setEditingId(null)}
                   isPending={upsertMut.isPending}
@@ -195,13 +194,9 @@ export function UnidadRefEspecieSection({
                   <span className="font-medium text-[var(--color-fg)]">
                     {especieMap.get(ref.especieId)?.nombre ?? `#${ref.especieId}`}
                   </span>
-                  {range && (
-                    <span className="font-mono text-[var(--color-fg-muted)]">{range}</span>
-                  )}
+                  {range && <span className="font-mono text-[var(--color-fg-muted)]">{range}</span>}
                   {ref.referenceText && (
-                    <span className="text-[var(--color-fg-muted)] italic">
-                      {ref.referenceText}
-                    </span>
+                    <span className="text-[var(--color-fg-muted)] italic">{ref.referenceText}</span>
                   )}
                 </div>
                 <div className="flex items-center gap-0.5">
@@ -300,11 +295,24 @@ function RefForm({
         </div>
       </div>
       <div className="flex gap-1.5">
-        <Button type="button" size="sm" className="h-6 text-[10px]" onClick={onSubmit} disabled={!row.especieId || isPending}>
+        <Button
+          type="button"
+          size="sm"
+          className="h-6 text-[10px]"
+          onClick={onSubmit}
+          disabled={!row.especieId || isPending}
+        >
           {isPending && <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />}
           {label}
         </Button>
-        <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px]" onClick={onCancel} disabled={isPending}>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-6 text-[10px]"
+          onClick={onCancel}
+          disabled={isPending}
+        >
           Cancelar
         </Button>
       </div>

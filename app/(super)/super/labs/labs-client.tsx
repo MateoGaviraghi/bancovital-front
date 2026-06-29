@@ -642,19 +642,31 @@ function LaboratorioDialog({
           {/* Logo upload — solo en edición, sube automáticamente al elegir archivo */}
           {isEdit && (
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-4">
-              <p className="mb-2 text-xs font-medium text-[var(--color-fg-muted)] uppercase tracking-wide">Logo del laboratorio</p>
+              <p className="mb-2 text-xs font-medium text-[var(--color-fg-muted)] uppercase tracking-wide">
+                Logo del laboratorio
+              </p>
               <div className="flex items-center gap-4">
                 {logoPreview || lab?.logoPath ? (
                   <div className="flex h-14 w-14 items-center justify-center rounded-md border border-[var(--color-border)] bg-white p-1">
                     {logoPreview ? (
-                      <img src={logoPreview} alt="Preview logo" className="max-h-12 max-w-12 object-contain" />
+                      <img
+                        src={logoPreview}
+                        alt="Preview logo"
+                        className="max-h-12 max-w-12 object-contain"
+                      />
                     ) : (
-                      <ImageIcon className="h-6 w-6 text-[var(--color-success)]" strokeWidth={1.5} />
+                      <ImageIcon
+                        className="h-6 w-6 text-[var(--color-success)]"
+                        strokeWidth={1.5}
+                      />
                     )}
                   </div>
                 ) : (
                   <div className="flex h-14 w-14 items-center justify-center rounded-md border border-dashed border-[var(--color-border-strong)] bg-white">
-                    <ImageIcon className="h-6 w-6 text-[var(--color-fg-subtle)]" strokeWidth={1.5} />
+                    <ImageIcon
+                      className="h-6 w-6 text-[var(--color-fg-subtle)]"
+                      strokeWidth={1.5}
+                    />
                   </div>
                 )}
                 <div className="flex flex-col gap-2">
@@ -666,7 +678,10 @@ function LaboratorioDialog({
                     onChange={(e) => {
                       const f = e.target.files?.[0];
                       if (!f) return;
-                      if (f.size > 5 * 1024 * 1024) { toast.error('El logo supera los 5 MB.'); return; }
+                      if (f.size > 5 * 1024 * 1024) {
+                        toast.error('El logo supera los 5 MB.');
+                        return;
+                      }
                       setLogoPreview(URL.createObjectURL(f));
                       logoMut.mutate(f);
                     }}
@@ -683,9 +698,15 @@ function LaboratorioDialog({
                     ) : (
                       <Upload className="h-3.5 w-3.5" strokeWidth={2} />
                     )}
-                    {logoMut.isPending ? 'Subiendo...' : lab?.logoPath ? 'Cambiar logo' : 'Subir logo'}
+                    {logoMut.isPending
+                      ? 'Subiendo...'
+                      : lab?.logoPath
+                        ? 'Cambiar logo'
+                        : 'Subir logo'}
                   </Button>
-                  <p className="text-[10px] text-[var(--color-fg-subtle)]">PNG, JPG o WEBP. Máx 5 MB.</p>
+                  <p className="text-[10px] text-[var(--color-fg-subtle)]">
+                    PNG, JPG o WEBP. Máx 5 MB.
+                  </p>
                 </div>
               </div>
             </div>

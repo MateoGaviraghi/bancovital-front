@@ -20,8 +20,6 @@ export type OrderOrigin = 'ambulatorio' | 'internacion' | 'urgencia';
 
 export type AuthorizationStatus = 'no_aplica' | 'pendiente' | 'autorizada' | 'rechazada';
 
-export type OrderType = 'humana' | 'veterinaria';
-
 export type AnimalSex = 'macho' | 'hembra' | 'indeterminado';
 
 export type ReproductiveStatus =
@@ -539,11 +537,80 @@ export interface UpsertOrderPracticeUnidadDto {
   notes?: string;
 }
 
+// ─────────────── Servicios ───────────────
+
+export type FormFieldType =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'select'
+  | 'checkbox'
+  | 'date'
+  | 'datetime'
+  | 'email';
+
+export interface FormFieldConfig {
+  key: string;
+  label: string;
+  type: FormFieldType;
+  required?: boolean;
+  options?: string[];
+  placeholder?: string;
+  colSpan?: 1 | 2;
+}
+
+export interface FormSectionConfig {
+  key: string;
+  title: string;
+  fields: FormFieldConfig[];
+}
+
+export interface ServicioFormConfig {
+  sections: FormSectionConfig[];
+}
+
+export interface Servicio {
+  id: number;
+  labId: number;
+  nombre: string;
+  slug: string;
+  icono: string | null;
+  orden: number;
+  activo: boolean;
+  usaPacienteHumano: boolean;
+  usaPacienteAnimal: boolean;
+  usaMedico: boolean;
+  usaVeterinario: boolean;
+  usaPropietario: boolean;
+  usaSolicitanteAgua: boolean;
+  usaMuestraAgua: boolean;
+  formConfig: ServicioFormConfig | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateServicioDto {
+  nombre: string;
+  slug?: string;
+  icono?: string;
+  orden?: number;
+  usaPacienteHumano?: boolean;
+  usaPacienteAnimal?: boolean;
+  usaMedico?: boolean;
+  usaVeterinario?: boolean;
+  usaPropietario?: boolean;
+  usaSolicitanteAgua?: boolean;
+  usaMuestraAgua?: boolean;
+  formConfig?: ServicioFormConfig;
+}
+
+export type UpdateServicioDto = Partial<CreateServicioDto>;
+
 // ─────────────── Orders ───────────────
 
 export interface OrderListItem {
   id: number;
-  orderType: OrderType;
+  servicioId: number;
   protocolNumber: number;
   patientId: number | null;
   animalPatientId: number | null;
@@ -600,7 +667,7 @@ export interface OrderPracticeInputDto {
 }
 
 export interface CreateOrderDto {
-  orderType?: OrderType;
+  servicioId: number;
   patientId?: number | null;
   animalPatientId?: number | null;
   veterinarioId?: number | null;
@@ -614,10 +681,13 @@ export interface CreateOrderDto {
   isUrgent: boolean;
   notes?: string | null;
   practices: OrderPracticeInputDto[];
+  customData?: Record<string, unknown>;
+  solicitanteAguaId?: number;
+  muestraAguaId?: number;
 }
 
 export interface UpdateOrderDto {
-  orderType?: OrderType;
+  servicioId?: number;
   patientId?: number | null;
   animalPatientId?: number | null;
   veterinarioId?: number | null;
@@ -739,6 +809,7 @@ export interface PreferenciaPdf {
   tipo: TipoPdf;
   fondoPath: string | null;
   layoutConfig: PdfLayoutConfig | null;
+  servicioId: number | null;
   marginTop: number;
   marginBottom: number;
   marginLeft: number;
@@ -751,6 +822,7 @@ export interface PreferenciaPdf {
 export interface CreatePreferenciaPdfDto {
   nombre: string;
   tipo?: TipoPdf;
+  servicioId?: number;
 }
 
 export interface UpdatePreferenciaPdfDto {
@@ -1247,3 +1319,104 @@ export interface BookingActionResponse {
   estado: 'confirmada' | 'cancelada';
   asistenciaConfirmada?: boolean;
 }
+
+// ─────────────── Agua y efluentes ───────────────
+
+export interface SolicitanteAgua {
+  id: number;
+  labId: number;
+  nombreApellido: string;
+  razonSocial: string | null;
+  cuit: string | null;
+  domicilio: string | null;
+  localidad: string | null;
+  provincia: string | null;
+  telefono: string | null;
+  email: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface CreateSolicitanteAguaDto {
+  nombreApellido: string;
+  razonSocial?: string;
+  cuit?: string;
+  domicilio?: string;
+  localidad?: string;
+  provincia?: string;
+  telefono?: string;
+  email?: string;
+}
+
+export type UpdateSolicitanteAguaDto = Partial<CreateSolicitanteAguaDto>;
+
+export const TIPOS_MUESTRA_AGUA = [
+  'Agua para consumo',
+  'Agua de pozo',
+  'Agua de red',
+  'Agua superficial',
+  'Agua de piscina',
+  'Efluente',
+  'Otra',
+] as const;
+
+export const MOTIVOS_ANALISIS_AGUA = [
+  'Control de rutina',
+  'Habilitación',
+  'Reclamo',
+  'Auditoría',
+  'Particular',
+  'Otro',
+] as const;
+
+export interface MuestraAgua {
+  id: number;
+  labId: number;
+  solicitanteId: number;
+  fechaToma: string;
+  fechaRecepcion: string;
+  tipoMuestra: string;
+  lugarToma: string | null;
+  descripcionPunto: string | null;
+  direccionPunto: string | null;
+  localidadPunto: string | null;
+  motivoAnalisis: string;
+  recipienteAdecuado: boolean;
+  recipienteEsteril: boolean;
+  conservacionTransporte: string | null;
+  temperaturaRecepcion: string | null;
+  volumenRecibido: string | null;
+  muestraApta: boolean;
+  observacionesRecepcion: string | null;
+  analisisFisicoquimico: boolean;
+  analisisMicrobiologico: boolean;
+  observaciones: string | null;
+  createdAt: string;
+  updatedAt: string;
+  solicitante?: { id: number; nombreApellido: string; razonSocial: string | null };
+}
+
+export interface CreateMuestraAguaDto {
+  solicitanteId: number;
+  fechaToma: string;
+  fechaRecepcion: string;
+  tipoMuestra: string;
+  lugarToma?: string;
+  descripcionPunto?: string;
+  direccionPunto?: string;
+  localidadPunto?: string;
+  motivoAnalisis: string;
+  recipienteAdecuado?: boolean;
+  recipienteEsteril?: boolean;
+  conservacionTransporte?: string;
+  temperaturaRecepcion?: number;
+  volumenRecibido?: string;
+  muestraApta?: boolean;
+  observacionesRecepcion?: string;
+  analisisFisicoquimico?: boolean;
+  analisisMicrobiologico?: boolean;
+  observaciones?: string;
+}
+
+export type UpdateMuestraAguaDto = Partial<CreateMuestraAguaDto>;

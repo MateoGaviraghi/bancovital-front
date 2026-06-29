@@ -67,15 +67,11 @@ export function ResultsForm({ lines, orderId, orderStatus }: Props) {
     (line: ResultLine): boolean => {
       if (!line.parentId || !line.condicionVisibilidad) return true;
       const cond: CondicionVisibilidad = line.condicionVisibilidad;
-      const parentLine = lines.find(
-        (l) => l.orderPractice.practiceId === line.parentId,
-      );
+      const parentLine = lines.find((l) => l.orderPractice.practiceId === line.parentId);
       if (!parentLine) return true;
-      const parentValue =
-        parentLine.result?.valueText ?? parentLine.result?.valueNumeric ?? null;
+      const parentValue = parentLine.result?.valueText ?? parentLine.result?.valueNumeric ?? null;
       if (parentValue === null) return true;
-      if (cond.parentValue?.equals !== undefined)
-        return parentValue === cond.parentValue.equals;
+      if (cond.parentValue?.equals !== undefined) return parentValue === cond.parentValue.equals;
       if (cond.parentValue?.notEquals !== undefined)
         return parentValue !== cond.parentValue.notEquals;
       return true;
