@@ -212,6 +212,38 @@ export function NewOrderForm() {
     setErrors({});
     setCustomData({});
     setCustomErrors({});
+    setPractices([]);
+
+    // Limpiá los campos que no correspondan al servicio nuevo (evita arrastrar
+    // selecciones de un flujo — paciente humano/animal/agua — a otro).
+    if (!s.usaPacienteHumano) {
+      setPatient(null);
+      setDoctor(null);
+      setExternalDoctor(false);
+      setExternalDoctorName('');
+      setExternalDoctorMp('');
+      setInsurerId('');
+      setAffiliateNumber('');
+    }
+    if (!s.usaMedico) {
+      setDoctor(null);
+      setExternalDoctor(false);
+      setExternalDoctorName('');
+      setExternalDoctorMp('');
+    }
+    if (!s.usaPacienteAnimal) {
+      setAnimalPatient(null);
+      setVeterinario(null);
+    }
+    if (!s.usaVeterinario) {
+      setVeterinario(null);
+    }
+    if (!s.usaSolicitanteAgua) {
+      setSolicitanteAgua(null);
+    }
+    if (!s.usaMuestraAgua) {
+      setMuestraAgua(null);
+    }
   }
 
   return (

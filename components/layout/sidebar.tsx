@@ -35,6 +35,7 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -262,7 +263,13 @@ export function SidebarNavBody({
       <div className="flex h-14 items-center gap-2.5 border-white/10 border-b px-4">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white">
           {logoUrl ? (
-            <img src={logoUrl} alt="" className="h-full w-full object-contain" />
+            <Image
+              src={logoUrl}
+              alt=""
+              width={36}
+              height={36}
+              className="h-full w-full object-contain"
+            />
           ) : (
             <span className="font-bold text-[var(--color-primary)] text-sm uppercase">
               {name.slice(0, 2)}

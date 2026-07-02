@@ -23,10 +23,6 @@ function arDateKey(d: string | Date): string {
   return AR_DATE.format(typeof d === 'string' ? new Date(d) : d);
 }
 
-function isToday(d: string | Date): boolean {
-  return arDateKey(d) === arDateKey(new Date());
-}
-
 function fmtDate(d: string | Date): string {
   const [yyyy, mm, dd] = arDateKey(d).split('-');
   return `${dd}/${mm}/${yyyy}`;
@@ -42,21 +38,48 @@ function asArray<T>(d: unknown): T[] {
   return [];
 }
 
+interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 async function loadDashboard() {
   try {
     const api = await getServerApi();
-    const [ordersRes, patientsRes, practicesRes] = await Promise.all([
-      api.get('/orders', { params: { limit: 200 } }),
+    const todayKey = arDateKey(new Date());
+    // /orders es paginado ({data,total,page,pageSize}): pedimos las 8 recientes para
+    // la tabla y leemos "total" de esa misma respuesta en vez de traer 200 filas solo
+    // para contar. "Órdenes hoy" se resuelve igual, con un pedido liviano (limit=1)
+    // filtrado por fecha y leyendo su total. /patients y /practices (plano) devuelven
+    // array directo sin total, así que su contador sigue basado en el length de una
+    // lista acotada (limit=200).
+    const [ordersRes, todayRes, patientsRes, practicesRes] = await Promise.all([
+      api.get<PaginatedResponse<OrderListItem>>('/orders', { params: { page: 1, limit: 8 } }),
+      api.get<PaginatedResponse<OrderListItem>>('/orders', {
+        params: { page: 1, limit: 1, dateFrom: todayKey, dateTo: todayKey },
+      }),
       api.get('/patients', { params: { limit: 200 } }),
       api.get('/practices', { params: { limit: 200 } }),
     ]);
+    const ordersPage = ordersRes.data;
+    const todayPage = todayRes.data;
     return {
-      orders: asArray<OrderListItem>(ordersRes.data),
+      recent: asArray<OrderListItem>(ordersPage),
+      orderCount: typeof ordersPage?.total === 'number' ? ordersPage.total : 0,
+      ordersToday: typeof todayPage?.total === 'number' ? todayPage.total : 0,
       patientCount: asArray<Patient>(patientsRes.data).length,
       practiceCount: asArray<Practice>(practicesRes.data).length,
     };
   } catch {
-    return { orders: [] as OrderListItem[], patientCount: 0, practiceCount: 0 };
+    return {
+      recent: [] as OrderListItem[],
+      orderCount: 0,
+      ordersToday: 0,
+      patientCount: 0,
+      practiceCount: 0,
+    };
   }
 }
 
@@ -96,12 +119,11 @@ function KpiCard({
 export default async function HomePage() {
   const user = await getSessionUser();
   const canCreate = user?.role === 'admin' || user?.role === 'bioquimico';
-  const { orders, patientCount, practiceCount } = await loadDashboard();
+  const { recent, orderCount, ordersToday, patientCount, practiceCount } = await loadDashboard();
 
-  const ordersToday = orders.filter((o) => isToday(o.orderDate)).length;
-  const recent = orders.slice(0, 8);
-
-  const byStatus = orders.reduce(
+  // Distribución de estados sobre las órdenes recientes mostradas en la tabla
+  // (ya no se trae el listado completo solo para calcular esto).
+  const byStatus = recent.reduce(
     (acc, o) => {
       acc[o.status] = (acc[o.status] ?? 0) + 1;
       return acc;
@@ -116,7 +138,7 @@ export default async function HomePage() {
     <>
       <PageHeader
         title="Inicio"
-        description={`${ordersToday} ${ordersToday === 1 ? 'orden' : 'órdenes'} hoy · ${orders.length} en total`}
+        description={`${ordersToday} ${ordersToday === 1 ? 'orden' : 'órdenes'} hoy · ${orderCount} en total`}
         actions={
           canCreate && (
             <Button asChild>
@@ -131,7 +153,7 @@ export default async function HomePage() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard icon={ClipboardList} label="Órdenes hoy" value={ordersToday} accent />
-        <KpiCard icon={TrendingUp} label="Órdenes totales" value={orders.length} />
+        <KpiCard icon={TrendingUp} label="Órdenes totales" value={orderCount} />
         <KpiCard icon={Users} label="Pacientes" value={patientCount} />
         <KpiCard icon={FlaskConical} label="Prácticas en catálogo" value={practiceCount} />
       </div>

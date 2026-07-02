@@ -146,3 +146,9 @@ export const queries = {
     detail: (id: number) => ['muestras-agua', id] as const,
   },
 };
+
+/** Centralized TanStack Mutation keys, for cross-component pending-state tracking (useIsMutating). */
+export const mutations = {
+  /** Guardado de un resultado individual (ResultRow), agrupado para useIsMutating en ResultsForm. */
+  saveResult: () => ['results', 'save'] as const,
+};

@@ -3,6 +3,7 @@
 import { OrderPracticeUnidadesValues } from '@/components/domain/order-practice-unidades-values';
 import { Input } from '@/components/ui/input';
 import { apiClient } from '@/lib/api/client';
+import { mutations } from '@/lib/api/queries';
 import type { OrderResult, ResultLine, UpsertResultDto } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
 import { classifyResult, formatRangeHint } from '@/lib/reference-range';
@@ -104,6 +105,7 @@ export function ResultRow({
   );
 
   const mutation = useMutation({
+    mutationKey: mutations.saveResult(),
     mutationFn: async () => {
       const raw = resultado.trim();
       if (!raw) throw new Error('Cargá un resultado.');
