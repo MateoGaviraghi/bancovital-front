@@ -48,6 +48,7 @@ export function Combobox<T>({
   const triggerId = id ?? autoId;
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const latestQueryRef = useRef<string>('');
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [items, setItems] = useState<T[]>([]);
@@ -68,13 +69,18 @@ export function Combobox<T>({
     }
     setLoading(true);
     const t = setTimeout(async () => {
+      latestQueryRef.current = q;
       try {
         const rows = await searchFn(q);
+        // Descarta respuestas obsoletas: si el usuario siguió tipeando, "q" ya
+        // no es la query vigente y no debemos pisar los resultados más recientes.
+        if (latestQueryRef.current !== q) return;
         setItems(rows);
       } catch {
+        if (latestQueryRef.current !== q) return;
         setItems([]);
       } finally {
-        setLoading(false);
+        if (latestQueryRef.current === q) setLoading(false);
       }
     }, 250);
     return () => clearTimeout(t);

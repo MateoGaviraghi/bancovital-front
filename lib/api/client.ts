@@ -67,9 +67,9 @@ export function getApiClient(): AxiosInstance {
       if (err.response?.status === 401 && typeof window !== 'undefined') {
         const path = window.location.pathname;
         // Don't bounce if we're already on a login page (avoids redirect loops).
+        // App única, sin slug routing: siempre redirige a /login.
         if (!path.endsWith('/login')) {
-          const seg = path.split('/')[1];
-          window.location.href = seg && seg !== 'super' ? `/${seg}/login` : '/login';
+          window.location.href = '/login';
         }
       }
       return Promise.reject(err);

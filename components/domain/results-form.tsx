@@ -3,8 +3,10 @@
 import { ResultRow } from '@/components/domain/result-row';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api/client';
+import { mutations } from '@/lib/api/queries';
 import type { CondicionVisibilidad, OrderStatus, ResultLine } from '@/lib/api/types';
-import { Save } from 'lucide-react';
+import { useIsMutating } from '@tanstack/react-query';
+import { Loader2, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useRef, useState } from 'react';
 
@@ -27,6 +29,11 @@ export function ResultsForm({ lines, orderId, orderStatus }: Props) {
 
   const [dirtyCount, setDirtyCount] = useState(0);
   const [saveTrigger, setSaveTrigger] = useState(0);
+
+  // Cuántos ResultRow tienen un guardado en curso ahora mismo (comparten mutationKey).
+  // Deshabilita "Guardar todo" mientras haya guardados pendientes, evitando disparar
+  // otra tanda de PATCH /results sobre filas que ya están en vuelo.
+  const savingCount = useIsMutating({ mutationKey: mutations.saveResult() });
 
   // Shared one-time confirm: all rows that call ensureConfirmed() simultaneously
   // share the same promise — only one PATCH /confirm goes out.
@@ -96,11 +103,17 @@ export function ResultsForm({ lines, orderId, orderStatus }: Props) {
         <div className="flex justify-end">
           <Button
             type="button"
-            disabled={dirtyCount === 0}
+            disabled={dirtyCount === 0 || savingCount > 0}
             onClick={() => setSaveTrigger((t) => t + 1)}
           >
-            <Save className="h-4 w-4" strokeWidth={2} />
-            Guardar todo{dirtyCount > 0 ? ` (${dirtyCount})` : ''}
+            {savingCount > 0 ? (
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+            ) : (
+              <Save className="h-4 w-4" strokeWidth={2} />
+            )}
+            {savingCount > 0
+              ? 'Guardando…'
+              : `Guardar todo${dirtyCount > 0 ? ` (${dirtyCount})` : ''}`}
           </Button>
         </div>
       )}
