@@ -86,6 +86,16 @@ const PRIMARY: Entry[] = [
     ],
   },
   { kind: 'leaf', path: '/obras-sociales', label: 'Obras sociales', icon: ShieldCheck },
+  {
+    kind: 'group',
+    label: 'Cotizaciones',
+    icon: ScrollText,
+    basePath: '/cotizaciones',
+    children: [
+      { path: '/cotizaciones', label: 'Cotizaciones', icon: ScrollText },
+      { path: '/cotizaciones/precios', label: 'Catálogo de precios', icon: DollarSign, roles: ['admin'] },
+    ],
+  },
   { kind: 'leaf', path: '/reportes', label: 'Reportes', icon: TrendingUp },
 ];
 

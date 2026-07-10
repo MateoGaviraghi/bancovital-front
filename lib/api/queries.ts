@@ -145,6 +145,12 @@ export const queries = {
     list: () => ['muestras-agua'] as const,
     detail: (id: number) => ['muestras-agua', id] as const,
   },
+
+  cotizaciones: {
+    list: (filters: Record<string, unknown> = {}) => ['cotizaciones', filters] as const,
+    detail: (id: number) => ['cotizaciones', id] as const,
+    precios: (filters: Record<string, unknown> = {}) => ['cotizaciones', 'precios', filters] as const,
+  },
 };
 
 /** Centralized TanStack Mutation keys, for cross-component pending-state tracking (useIsMutating). */

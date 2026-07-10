@@ -1420,3 +1420,106 @@ export interface CreateMuestraAguaDto {
 }
 
 export type UpdateMuestraAguaDto = Partial<CreateMuestraAguaDto>;
+
+// ─────────────── Cotizaciones ───────────────
+
+export type CotizacionEstado = 'borrador' | 'enviada' | 'aceptada' | 'rechazada' | 'expirada';
+export type CotizacionTipo = 'paciente' | 'empresa';
+
+export interface CotizacionItem {
+  id: number;
+  cotizacionId: number;
+  practiceId: number | null;
+  practicaNombre: string;
+  precioUnitario: string;
+  cantidad: number;
+  subtotal: string;
+  sort: number;
+  createdAt: string;
+}
+
+export interface CotizacionSummary {
+  id: number;
+  labId: number;
+  tipo: CotizacionTipo;
+  estado: CotizacionEstado;
+  patientId: number | null;
+  empresaNombre: string | null;
+  empresaCuit: string | null;
+  empresaEmail: string | null;
+  empresaTelefono: string | null;
+  empresaContacto: string | null;
+  insurerId: number | null;
+  totalMonto: string;
+  validezDias: number;
+  observaciones: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  patientInfo: { id: number; firstName: string; lastName: string; dni: string } | null;
+  insurerInfo: { id: number; name: string } | null;
+}
+
+export interface CotizacionDetalle extends CotizacionSummary {
+  items: CotizacionItem[];
+  insurerInfo: { id: number; code: string; name: string } | null;
+}
+
+export interface CotizacionPrecio {
+  id: number;
+  labId: number;
+  practiceId: number;
+  insurerId: number | null;
+  precio: string;
+  practicaNombre: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCotizacionDto {
+  tipo: CotizacionTipo;
+  patientId?: number;
+  empresaNombre?: string;
+  empresaCuit?: string;
+  empresaEmail?: string;
+  empresaTelefono?: string;
+  empresaContacto?: string;
+  insurerId?: number;
+  validezDias?: number;
+  observaciones?: string;
+  items: Array<{
+    practiceId?: number;
+    practicaNombre: string;
+    precioUnitario: string;
+    cantidad: number;
+    sort?: number;
+  }>;
+}
+
+export interface CotizacionItemInputDto {
+  practiceId?: number;
+  practicaNombre: string;
+  precioUnitario: string;
+  cantidad: number;
+  sort?: number;
+}
+
+export interface UpdateCotizacionDto {
+  estado?: CotizacionEstado;
+  validezDias?: number;
+  observaciones?: string;
+  /** 0 = Particular (null), >0 = obra social */
+  insurerId?: number;
+  empresaNombre?: string;
+  empresaCuit?: string;
+  empresaEmail?: string;
+  empresaTelefono?: string;
+  empresaContacto?: string;
+  items?: CotizacionItemInputDto[];
+}
+
+export interface UpsertPrecioDto {
+  practiceId: number;
+  insurerId?: number;
+  precio: string;
+}
