@@ -648,7 +648,7 @@ export interface OrderListItem {
     nombre: string;
     especie: string;
     raza: string | null;
-    propietario: string;
+    propietario: string | null;
   } | null;
   insurer: {
     id: number;

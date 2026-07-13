@@ -196,7 +196,7 @@ export default async function OrdersPage({ searchParams }: Props) {
                         <>
                           {o.animalPatient.nombre}
                           <span className="ml-2 text-[10px] text-[var(--color-fg-subtle)]">
-                            {o.animalPatient.especie} · {o.animalPatient.propietario}
+                            {o.animalPatient.especie}{o.animalPatient.propietario ? ` · ${o.animalPatient.propietario}` : ''}
                           </span>
                         </>
                       ) : (
