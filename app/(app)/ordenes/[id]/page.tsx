@@ -139,7 +139,7 @@ export default async function OrdenDetailPage({
           order.patient
             ? `${order.patient.lastName}, ${order.patient.firstName} · DNI ${order.patient.dni}`
             : order.animalPatient
-              ? `${order.animalPatient.nombre} · ${order.animalPatient.especie} · ${order.animalPatient.propietario}`
+              ? [order.animalPatient.nombre, order.animalPatient.especie, order.animalPatient.propietario].filter(Boolean).join(' · ')
               : ''
         }
         actions={
