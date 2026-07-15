@@ -5,9 +5,7 @@ import { getServerApi } from '@/lib/api/server';
 import type { CotizacionEstado, CotizacionSummary } from '@/lib/api/types';
 import { ChevronLeft, ChevronRight, Plus, ScrollText } from 'lucide-react';
 import Link from 'next/link';
-import dynamicImport from 'next/dynamic';
-
-const CatalogoBtn = dynamicImport(() => import('./catalogo-btn').then((m) => m.CatalogoBtn), { ssr: false });
+import { CatalogoBtn } from './catalogo-btn';
 
 export const dynamic = 'force-dynamic';
 
