@@ -13,7 +13,10 @@ export function CatalogoBtn() {
   async function handleClick() {
     setLoading(true);
     try {
-      const res = await apiClient.get('/cotizaciones/precios/pdf', { responseType: 'blob' });
+      const res = await apiClient.get('/cotizaciones/precios/pdf', {
+        responseType: 'blob',
+        timeout: 120_000,
+      });
       const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       window.open(url, '_blank');
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
