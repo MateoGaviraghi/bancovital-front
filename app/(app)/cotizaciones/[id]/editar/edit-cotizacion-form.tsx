@@ -243,6 +243,8 @@ export function EditCotizacionForm({ cot }: { cot: CotizacionDetalle }) {
   const receptorLabel =
     cot.tipo === 'paciente' && cot.patientInfo
       ? `${cot.patientInfo.lastName}, ${cot.patientInfo.firstName} — DNI ${cot.patientInfo.dni}`
+      : cot.tipo === 'generica'
+      ? 'Presupuesto genérico (sin destinatario)'
       : cot.empresaNombre ?? '—';
 
   return (
@@ -250,7 +252,7 @@ export function EditCotizacionForm({ cot }: { cot: CotizacionDetalle }) {
       {/* Receptor */}
       <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-4">
         <h2 className="mb-2 font-medium text-sm text-[var(--color-fg)]">
-          {cot.tipo === 'empresa' ? 'Empresa' : 'Paciente'}
+          {cot.tipo === 'empresa' ? 'Empresa' : cot.tipo === 'generica' ? 'Tipo' : 'Paciente'}
         </h2>
         <p className="text-sm text-[var(--color-fg-muted)]">{receptorLabel}</p>
 

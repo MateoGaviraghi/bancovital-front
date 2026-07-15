@@ -1427,7 +1427,7 @@ export type UpdateMuestraAguaDto = Partial<CreateMuestraAguaDto>;
 // ─────────────── Cotizaciones ───────────────
 
 export type CotizacionEstado = 'borrador' | 'enviada' | 'aceptada' | 'rechazada' | 'expirada';
-export type CotizacionTipo = 'paciente' | 'empresa';
+export type CotizacionTipo = 'paciente' | 'empresa' | 'generica';
 
 export interface CotizacionItem {
   id: number;

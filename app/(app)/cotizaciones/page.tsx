@@ -5,6 +5,7 @@ import { getServerApi } from '@/lib/api/server';
 import type { CotizacionEstado, CotizacionSummary } from '@/lib/api/types';
 import { ChevronLeft, ChevronRight, Plus, ScrollText } from 'lucide-react';
 import Link from 'next/link';
+import { CatalogoBtn } from './catalogo-btn';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,12 +77,15 @@ export default async function CotizacionesPage({ searchParams }: Props) {
         title="Cotizaciones"
         description={`${total} cotización${total !== 1 ? 'es' : ''}`}
         actions={
-          <Button asChild size="sm">
-            <Link href="/cotizaciones/nueva">
-              <Plus className="mr-1.5 h-4 w-4" strokeWidth={2} />
-              Nueva cotización
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <CatalogoBtn />
+            <Button asChild size="sm">
+              <Link href="/cotizaciones/nueva">
+                <Plus className="mr-1.5 h-4 w-4" strokeWidth={2} />
+                Nueva cotización
+              </Link>
+            </Button>
+          </div>
         }
       />
 
@@ -106,7 +110,7 @@ export default async function CotizacionesPage({ searchParams }: Props) {
 
         <span className="mx-1 self-center text-[var(--color-border)]">|</span>
 
-        {(['', 'paciente', 'empresa'] as const).map((t) => {
+        {(['', 'paciente', 'empresa', 'generica'] as const).map((t) => {
           const active = tipo === t;
           return (
             <Link
@@ -118,7 +122,7 @@ export default async function CotizacionesPage({ searchParams }: Props) {
                   : 'border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-fg-muted)] hover:border-[var(--color-border-strong)]'
               }`}
             >
-              {t === '' ? 'Todos' : t === 'paciente' ? 'Paciente' : 'Empresa'}
+              {t === '' ? 'Todos' : t === 'paciente' ? 'Paciente' : t === 'empresa' ? 'Empresa' : 'Genérica'}
             </Link>
           );
         })}
@@ -157,6 +161,8 @@ export default async function CotizacionesPage({ searchParams }: Props) {
                   const receptorNombre =
                     cot.tipo === 'paciente' && cot.patientInfo
                       ? `${cot.patientInfo.lastName}, ${cot.patientInfo.firstName}`
+                      : cot.tipo === 'generica'
+                      ? 'Presupuesto genérico'
                       : cot.empresaNombre ?? '—';
                   return (
                     <tr
