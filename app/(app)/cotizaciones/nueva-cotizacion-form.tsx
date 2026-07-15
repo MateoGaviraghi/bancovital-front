@@ -63,7 +63,7 @@ interface ItemRow {
 export function NuevaCotizacionForm() {
   const router = useRouter();
 
-  const [tipo, setTipo] = useState<'paciente' | 'empresa'>('paciente');
+  const [tipo, setTipo] = useState<'paciente' | 'empresa' | 'generica'>('paciente');
   const [patientSearch, setPatientSearch] = useState('');
   const [patientId, setPatientId] = useState<number | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -229,6 +229,7 @@ export function NuevaCotizacionForm() {
       toast.error('Ingresá el nombre de la empresa');
       return;
     }
+    // tipo 'generica': no requiere validación de receptor
     if (items.length === 0) {
       toast.error('Agregá al menos una práctica');
       return;
@@ -268,26 +269,36 @@ export function NuevaCotizacionForm() {
     <div className="space-y-6">
       {/* Tipo de receptor */}
       <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-4">
-        <h2 className="mb-3 font-medium text-sm text-[var(--color-fg)]">Tipo de receptor</h2>
+        <h2 className="mb-3 font-medium text-sm text-[var(--color-fg)]">Tipo</h2>
         <div className="flex gap-2">
-          {(['paciente', 'empresa'] as const).map((t) => (
+          {([
+            { key: 'paciente', label: 'Paciente' },
+            { key: 'empresa', label: 'Empresa' },
+            { key: 'generica', label: 'Genérica' },
+          ] as const).map(({ key, label }) => (
             <button
-              key={t}
+              key={key}
               type="button"
-              onClick={() => setTipo(t)}
+              onClick={() => setTipo(key)}
               className={`rounded-md border px-4 py-1.5 text-sm transition-colors ${
-                tipo === t
+                tipo === key
                   ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
                   : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg-muted)] hover:border-[var(--color-border-strong)]'
               }`}
             >
-              {t === 'paciente' ? 'Paciente' : 'Empresa'}
+              {label}
             </button>
           ))}
         </div>
 
+        {tipo === 'generica' && (
+          <p className="mt-3 text-xs text-[var(--color-fg-muted)]">
+            Presupuesto sin destinatario específico — ideal para enviar a potenciales clientes o publicar en redes.
+          </p>
+        )}
+
         <div className="mt-4 space-y-3">
-          {tipo === 'paciente' ? (
+          {tipo === 'generica' ? null : tipo === 'paciente' ? (
             <>
               <div>
                 <Label className="mb-1 text-xs">Buscar paciente</Label>
