@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api/client';
+import axios from 'axios';
 import { FileText, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -16,8 +17,16 @@ export function CatalogoBtn() {
       const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       window.open(url, '_blank');
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
-    } catch {
-      toast.error('Error al generar el catálogo');
+    } catch (err) {
+      let msg = 'Error al generar el catálogo';
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 404) msg = 'Endpoint no encontrado — actualizá el backend';
+        else if (status === 500) msg = 'Error del servidor al generar el catálogo';
+        else if (status) msg = `Error ${status} al generar el catálogo`;
+      }
+      toast.error(msg);
+      console.error('[CatalogoBtn]', err);
     } finally {
       setLoading(false);
     }
