@@ -47,6 +47,7 @@ function emptyFields() {
     category: '',
     section: '',
     units: '',
+    precioParticular: '',
     notes: '',
     referenceValue: '',
     defaultUnit: '',
@@ -65,6 +66,7 @@ function practiceToFields(p: Practice) {
     category: p.category ?? '',
     section: p.section ?? '',
     units: p.units ?? '',
+    precioParticular: p.precioParticular ?? '',
     notes: p.notes ?? '',
     referenceValue: p.referenceValue ?? '',
     defaultUnit: p.defaultUnit ?? '',
@@ -147,6 +149,7 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
       category: fields.category.trim() || null,
       section: fields.section.trim() || null,
       units: fields.units.trim() || null,
+      precioParticular: fields.precioParticular.trim() || null,
       notes: fields.notes.trim() || null,
       referenceValue: fields.referenceValue.trim() || null,
       defaultUnit: fields.defaultUnit.trim() || null,
@@ -233,12 +236,28 @@ export function PracticeFormDialog({ open, onOpenChange, mode, onSuccess }: Prop
                 />
               </FormField>
 
-              <FormField label="Valor UB" htmlFor="units" error={errors.units}>
+              <FormField label="UBs nomenclador" htmlFor="units" error={errors.units}>
                 <Input
                   id="units"
                   value={fields.units}
                   onChange={(e) => set('units', e.target.value)}
                   placeholder="ej: 2.50"
+                  className="font-mono"
+                  inputMode="decimal"
+                  disabled={isPending}
+                />
+              </FormField>
+
+              <FormField
+                label="Precio Particular"
+                htmlFor="precioParticular"
+                description="Precio directo para pacientes sin obra social."
+              >
+                <Input
+                  id="precioParticular"
+                  value={fields.precioParticular}
+                  onChange={(e) => set('precioParticular', e.target.value)}
+                  placeholder="ej: 1500.00"
                   className="font-mono"
                   inputMode="decimal"
                   disabled={isPending}

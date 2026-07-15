@@ -34,11 +34,8 @@ const ESTADO_STYLE: Record<CotizacionEstado, string> = {
   expirada: 'bg-[var(--color-bg-subtle)] text-[var(--color-fg-subtle)] border-[var(--color-border)]',
 };
 
-const AR_MONEY = new Intl.NumberFormat('es-AR', {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-  useGrouping: true,
-});
+const AR_MONEY = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true });
+const AR_NUM = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const AR_DATE = new Intl.DateTimeFormat('es-AR', {
   timeZone: 'America/Argentina/Buenos_Aires',
   day: '2-digit',
@@ -46,8 +43,14 @@ const AR_DATE = new Intl.DateTimeFormat('es-AR', {
   year: 'numeric',
 });
 
-function fmtMoney(s: string) {
+function fmtMoney(s: string | null | undefined) {
+  if (!s) return '—';
   return `$ ${AR_MONEY.format(Number(s))}`;
+}
+function fmtNum(s: string | null | undefined) {
+  if (!s) return '—';
+  const n = Number(s);
+  return Number.isNaN(n) ? s : AR_NUM.format(n);
 }
 function fmtDate(d: string) {
   return AR_DATE.format(new Date(d));
@@ -67,8 +70,7 @@ export function CotizacionDetailClient({ cot }: { cot: CotizacionDetalle }) {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const updateMut = useMutation({
-    mutationFn: (dto: UpdateCotizacionDto) =>
-      apiClient.patch(`/cotizaciones/${cot.id}`, dto),
+    mutationFn: (dto: UpdateCotizacionDto) => apiClient.patch(`/cotizaciones/${cot.id}`, dto),
     onSuccess: () => {
       toast.success('Estado actualizado');
       qc.invalidateQueries({ queryKey: queries.cotizaciones.detail(cot.id) });
@@ -85,9 +87,7 @@ export function CotizacionDetailClient({ cot }: { cot: CotizacionDetalle }) {
   async function downloadPdf() {
     setIsDownloading(true);
     try {
-      const res = await apiClient.get(`/cotizaciones/${cot.id}/pdf`, {
-        responseType: 'blob',
-      });
+      const res = await apiClient.get(`/cotizaciones/${cot.id}/pdf`, { responseType: 'blob' });
       const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       const a = document.createElement('a');
       a.href = url;
@@ -105,6 +105,12 @@ export function CotizacionDetailClient({ cot }: { cot: CotizacionDetalle }) {
     cot.tipo === 'paciente' && cot.patientInfo
       ? `${cot.patientInfo.lastName}, ${cot.patientInfo.firstName}`
       : cot.empresaNombre ?? '—';
+
+  const hasUb = cot.items.some((i) => i.ubsSnapshot != null || i.ubValueSnapshot != null);
+  const total = Number(cot.totalMonto);
+  const copagoPorc = cot.copagoPorc ? Number(cot.copagoPorc) : 0;
+  const totalCopago = copagoPorc > 0 ? (total * copagoPorc) / 100 : 0;
+  const totalOs = copagoPorc > 0 ? total - totalCopago : 0;
 
   return (
     <div className="space-y-5">
@@ -150,7 +156,6 @@ export function CotizacionDetailClient({ cot }: { cot: CotizacionDetalle }) {
 
       {/* Info grid */}
       <div className="grid grid-cols-2 gap-4">
-        {/* Receptor */}
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-4">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">
             {cot.tipo === 'empresa' ? 'Empresa' : 'Paciente'}
@@ -164,9 +169,7 @@ export function CotizacionDetailClient({ cot }: { cot: CotizacionDetalle }) {
               <div className="text-xs text-[var(--color-fg-muted)]">CUIT {cot.empresaCuit}</div>
             )}
             {cot.empresaContacto && (
-              <div className="text-xs text-[var(--color-fg-muted)]">
-                Contacto: {cot.empresaContacto}
-              </div>
+              <div className="text-xs text-[var(--color-fg-muted)]">Contacto: {cot.empresaContacto}</div>
             )}
             {cot.empresaEmail && (
               <div className="text-xs text-[var(--color-fg-muted)]">{cot.empresaEmail}</div>
@@ -177,7 +180,6 @@ export function CotizacionDetailClient({ cot }: { cot: CotizacionDetalle }) {
           </div>
         </div>
 
-        {/* Condiciones */}
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-4">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">
             Condiciones
@@ -189,14 +191,18 @@ export function CotizacionDetailClient({ cot }: { cot: CotizacionDetalle }) {
                 {cot.insurerInfo?.name ?? 'Particular'}
               </span>
             </div>
+            {copagoPorc > 0 && (
+              <div className="flex items-baseline justify-between text-sm">
+                <span className="text-[var(--color-fg-muted)]">Copago paciente</span>
+                <span className="font-medium text-[var(--color-fg)]">{copagoPorc}%</span>
+              </div>
+            )}
             <div className="flex items-baseline justify-between text-sm">
               <span className="text-[var(--color-fg-muted)]">Validez</span>
               <span className="font-medium text-[var(--color-fg)]">{cot.validezDias} días</span>
             </div>
             {cot.observaciones && (
-              <p className="mt-2 text-xs text-[var(--color-fg-muted)] italic">
-                {cot.observaciones}
-              </p>
+              <p className="mt-2 text-xs text-[var(--color-fg-muted)] italic">{cot.observaciones}</p>
             )}
           </div>
         </div>
@@ -213,6 +219,8 @@ export function CotizacionDetailClient({ cot }: { cot: CotizacionDetalle }) {
           <thead>
             <tr className="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-fg-muted)]">
               <th className="px-4 py-2 font-medium">Práctica</th>
+              {hasUb && <th className="w-16 px-4 py-2 text-center font-medium">UBs</th>}
+              {hasUb && <th className="w-28 px-4 py-2 text-right font-medium">Valor UB</th>}
               <th className="w-28 px-4 py-2 text-center font-medium">Precio unit.</th>
               <th className="w-16 px-4 py-2 text-center font-medium">Cant.</th>
               <th className="w-28 px-4 py-2 text-right font-medium">Subtotal</th>
@@ -224,6 +232,16 @@ export function CotizacionDetailClient({ cot }: { cot: CotizacionDetalle }) {
                 <td className="px-4 py-2.5 font-medium text-[var(--color-fg)]">
                   {item.practicaNombre}
                 </td>
+                {hasUb && (
+                  <td className="px-4 py-2.5 text-center text-[var(--color-fg-muted)]">
+                    {fmtNum(item.ubsSnapshot)}
+                  </td>
+                )}
+                {hasUb && (
+                  <td className="px-4 py-2.5 text-right text-[var(--color-fg-muted)]">
+                    {fmtMoney(item.ubValueSnapshot)}
+                  </td>
+                )}
                 <td className="px-4 py-2.5 text-center text-[var(--color-fg-muted)]">
                   {fmtMoney(item.precioUnitario)}
                 </td>
@@ -237,14 +255,43 @@ export function CotizacionDetailClient({ cot }: { cot: CotizacionDetalle }) {
             ))}
           </tbody>
           <tfoot>
-            <tr className="border-t-2 border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
-              <td colSpan={3} className="px-4 py-2.5 text-right text-sm font-semibold text-[var(--color-fg)]">
-                TOTAL
-              </td>
-              <td className="px-4 py-2.5 text-right font-bold text-base text-[var(--color-primary)]">
-                {fmtMoney(cot.totalMonto)}
-              </td>
-            </tr>
+            {copagoPorc > 0 ? (
+              <>
+                <tr className="border-t border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+                  <td colSpan={hasUb ? 5 : 3} className="px-4 py-1.5 text-right text-xs text-[var(--color-fg-muted)]">
+                    Cubre obra social ({(100 - copagoPorc).toFixed(0)}%)
+                  </td>
+                  <td className="px-4 py-1.5 text-right text-xs font-medium text-[var(--color-fg-muted)]">
+                    {fmtMoney(totalOs.toFixed(2))}
+                  </td>
+                </tr>
+                <tr className="bg-[var(--color-bg-subtle)]">
+                  <td colSpan={hasUb ? 5 : 3} className="px-4 py-1.5 text-right text-xs text-[var(--color-fg-muted)]">
+                    Copago paciente ({copagoPorc}%)
+                  </td>
+                  <td className="px-4 py-1.5 text-right text-xs font-medium text-[var(--color-fg-muted)]">
+                    {fmtMoney(totalCopago.toFixed(2))}
+                  </td>
+                </tr>
+                <tr className="border-t-2 border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+                  <td colSpan={hasUb ? 5 : 3} className="px-4 py-2.5 text-right text-sm font-semibold text-[var(--color-fg)]">
+                    TOTAL
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-bold text-base text-[var(--color-primary)]">
+                    {fmtMoney(cot.totalMonto)}
+                  </td>
+                </tr>
+              </>
+            ) : (
+              <tr className="border-t-2 border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+                <td colSpan={hasUb ? 5 : 3} className="px-4 py-2.5 text-right text-sm font-semibold text-[var(--color-fg)]">
+                  TOTAL
+                </td>
+                <td className="px-4 py-2.5 text-right font-bold text-base text-[var(--color-primary)]">
+                  {fmtMoney(cot.totalMonto)}
+                </td>
+              </tr>
+            )}
           </tfoot>
         </table>
       </div>

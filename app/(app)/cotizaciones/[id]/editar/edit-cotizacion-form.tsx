@@ -15,14 +15,14 @@ import { queries } from '@/lib/api/queries';
 import type {
   CotizacionDetalle,
   CotizacionItemInputDto,
-  Insurer,
+  InsurerWithUb,
   Practice,
+  PrecioParaPracticaResponse,
   UpdateCotizacionDto,
 } from '@/lib/api/types';
-import { useMutation } from '@tanstack/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -39,22 +39,32 @@ function apiError(err: unknown, fallback: string): string {
 interface ItemRow {
   practiceId: number | null;
   practicaNombre: string;
+  ubsSnapshot: string | null;
+  ubValueSnapshot: string | null;
   precioUnitario: string;
   cantidad: number;
+  sinPrecio: boolean;
 }
 
 const AR_MONEY = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, useGrouping: true });
+const AR_NUM = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
-export function EditCotizacionForm({
-  cot,
-  insurers,
-}: {
-  cot: CotizacionDetalle;
-  insurers: Insurer[];
-}) {
+function fmtMoney(s: string | null | undefined) {
+  if (!s) return '—';
+  const n = Number(s);
+  return Number.isNaN(n) ? s : `$ ${AR_MONEY.format(n)}`;
+}
+function fmtNum(s: string | null | undefined) {
+  if (!s) return '—';
+  const n = Number(s);
+  return Number.isNaN(n) ? s : AR_NUM.format(n);
+}
+
+export function EditCotizacionForm({ cot }: { cot: CotizacionDetalle }) {
   const router = useRouter();
 
   const [insurerId, setInsurerId] = useState<number>(cot.insurerInfo?.id ?? 0);
+  const [copagoPorc, setCopagoPorc] = useState<string>(cot.copagoPorc ?? '');
   const [validezDias, setValidezDias] = useState(cot.validezDias);
   const [observaciones, setObservaciones] = useState(cot.observaciones ?? '');
   const [empresaNombre, setEmpresaNombre] = useState(cot.empresaNombre ?? '');
@@ -67,14 +77,26 @@ export function EditCotizacionForm({
     cot.items.map((i) => ({
       practiceId: i.practiceId ?? null,
       practicaNombre: i.practicaNombre,
+      ubsSnapshot: i.ubsSnapshot ?? null,
+      ubValueSnapshot: i.ubValueSnapshot ?? null,
       precioUnitario: i.precioUnitario,
       cantidad: i.cantidad,
+      sinPrecio: false,
     })),
   );
 
   const [practiceSearch, setPracticeSearch] = useState('');
   const [practicaManual, setPracticaManual] = useState('');
   const [precioManual, setPrecioManual] = useState('');
+
+  const { data: insurers = [] } = useQuery({
+    queryKey: queries.insurers.withUb,
+    queryFn: () =>
+      apiClient
+        .get<InsurerWithUb[]>('/insurers/with-ub')
+        .then((r) => r.data.filter((i) => i.active)),
+    staleTime: 60_000,
+  });
 
   const { data: practiceResults = [] } = useQuery({
     queryKey: queries.practices.list({ search: practiceSearch }),
@@ -86,29 +108,38 @@ export function EditCotizacionForm({
     staleTime: 10_000,
   });
 
-  async function fetchPrecio(pId: number, insId: number): Promise<string> {
+  async function fetchPrecioInfo(pId: number, insId: number): Promise<PrecioParaPracticaResponse> {
     try {
       const qs = insId > 0 ? `?insurerId=${insId}` : '';
-      const { data } = await apiClient.get<{ precio: string | null }>(
+      const { data } = await apiClient.get<PrecioParaPracticaResponse>(
         `/cotizaciones/precios/practica/${pId}${qs}`,
       );
-      return data.precio ?? '';
+      return data;
     } catch {
-      return '';
+      return { precio: null, ubsSnapshot: null, ubValueSnapshot: null };
     }
   }
 
   async function addPractice(p: Practice) {
-    const precio = await fetchPrecio(p.id, insurerId);
-    if (!precio) {
+    const info = await fetchPrecioInfo(p.id, insurerId);
+    const sinPrecio = !info.precio;
+    if (sinPrecio) {
       const insName = insurerId > 0
         ? (insurers.find((i) => i.id === insurerId)?.name ?? 'esta obra social')
         : 'Particular';
-      toast.warning(`Sin precio cargado para "${p.name}" — ${insName}. Podés ingresarlo manualmente.`);
+      toast.warning(`Sin precio para "${p.name}" — ${insName}. Ingresalo manualmente.`);
     }
     setItems((prev) => [
       ...prev,
-      { practiceId: p.id, practicaNombre: p.name, precioUnitario: precio, cantidad: 1 },
+      {
+        practiceId: p.id,
+        practicaNombre: p.name,
+        ubsSnapshot: info.ubsSnapshot,
+        ubValueSnapshot: info.ubValueSnapshot,
+        precioUnitario: info.precio ?? '',
+        cantidad: 1,
+        sinPrecio,
+      },
     ]);
     setPracticeSearch('');
   }
@@ -117,7 +148,15 @@ export function EditCotizacionForm({
     if (!practicaManual.trim()) return;
     setItems((prev) => [
       ...prev,
-      { practiceId: null, practicaNombre: practicaManual.trim(), precioUnitario: precioManual.trim() || '0', cantidad: 1 },
+      {
+        practiceId: null,
+        practicaNombre: practicaManual.trim(),
+        ubsSnapshot: null,
+        ubValueSnapshot: null,
+        precioUnitario: precioManual.trim() || '0',
+        cantidad: 1,
+        sinPrecio: false,
+      },
     ]);
     setPracticaManual('');
     setPrecioManual('');
@@ -127,26 +166,39 @@ export function EditCotizacionForm({
     setItems((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  function updateItem(idx: number, field: keyof ItemRow, value: string | number) {
+  function updateItem(idx: number, field: 'precioUnitario' | 'cantidad', value: string | number) {
     setItems((prev) => prev.map((item, i) => (i === idx ? { ...item, [field]: value } : item)));
   }
 
   async function handleInsurerChange(newVal: string) {
     const newId = Number(newVal);
     setInsurerId(newId);
-    const itemsWithPractice = items.filter((item) => item.practiceId !== null);
-    if (itemsWithPractice.length === 0) return;
+    if (items.filter((i) => i.practiceId !== null).length === 0) return;
     const updated = await Promise.all(
       items.map(async (item) => {
         if (!item.practiceId) return item;
-        const precio = await fetchPrecio(item.practiceId, newId);
-        return { ...item, precioUnitario: precio };
+        const info = await fetchPrecioInfo(item.practiceId, newId);
+        return {
+          ...item,
+          ubsSnapshot: info.ubsSnapshot,
+          ubValueSnapshot: info.ubValueSnapshot,
+          precioUnitario: info.precio ?? item.precioUnitario,
+          sinPrecio: !info.precio,
+        };
       }),
     );
     setItems(updated);
   }
 
   const total = items.reduce((acc, item) => acc + (Number(item.precioUnitario) || 0) * item.cantidad, 0);
+  const copagoPorcNum = Number(copagoPorc) || 0;
+  const totalCopago = copagoPorcNum > 0 ? (total * copagoPorcNum) / 100 : 0;
+  const totalOs = copagoPorcNum > 0 ? total - totalCopago : 0;
+  const hasUb = items.some((i) => i.ubsSnapshot != null);
+
+  const selectedInsurer = insurerId
+    ? insurers.find((i) => i.id === insurerId)
+    : insurers.find((i) => i.code === 'PARTICULAR');
 
   const updateMut = useMutation({
     mutationFn: (dto: UpdateCotizacionDto) =>
@@ -167,6 +219,7 @@ export function EditCotizacionForm({
     const dto: UpdateCotizacionDto = {
       insurerId,
       validezDias,
+      copagoPorc: copagoPorcNum > 0 ? copagoPorcNum : undefined,
       observaciones: observaciones.trim() || undefined,
       ...(cot.tipo === 'empresa' && {
         empresaNombre: empresaNombre.trim() || undefined,
@@ -194,14 +247,13 @@ export function EditCotizacionForm({
 
   return (
     <div className="space-y-6">
-      {/* Receptor (read-only info) */}
+      {/* Receptor */}
       <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-4">
         <h2 className="mb-2 font-medium text-sm text-[var(--color-fg)]">
           {cot.tipo === 'empresa' ? 'Empresa' : 'Paciente'}
         </h2>
         <p className="text-sm text-[var(--color-fg-muted)]">{receptorLabel}</p>
 
-        {/* Editable only for empresa */}
         {cot.tipo === 'empresa' && (
           <div className="mt-3 grid grid-cols-2 gap-3">
             <div className="col-span-2">
@@ -231,19 +283,55 @@ export function EditCotizacionForm({
       {/* Obra social */}
       <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-4">
         <h2 className="mb-3 font-medium text-sm text-[var(--color-fg)]">Obra social</h2>
-        <Select value={String(insurerId)} onValueChange={handleInsurerChange}>
-          <SelectTrigger className="max-w-sm">
-            <SelectValue placeholder="Particular" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="0">Particular</SelectItem>
-            {insurers.map((ins) => (
-              <SelectItem key={ins.id} value={String(ins.id)}>
-                {ins.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <Select value={String(insurerId)} onValueChange={handleInsurerChange}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Particular" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Particular</SelectItem>
+                {insurers.map((ins) => (
+                  <SelectItem key={ins.id} value={String(ins.id)}>
+                    {ins.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {insurerId === 0 ? (
+            <div className="text-xs text-[var(--color-fg-muted)]">
+              Precios tomados del{' '}
+              <span className="font-semibold text-[var(--color-fg)]">precio particular</span>{' '}
+              de cada práctica.
+            </div>
+          ) : selectedInsurer?.currentUbValue ? (
+            <div className="text-xs text-[var(--color-fg-muted)]">
+              Valor UB vigente:{' '}
+              <span className="font-semibold text-[var(--color-fg)]">
+                $ {AR_MONEY.format(Number(selectedInsurer.currentUbValue))}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 rounded-md border border-[var(--color-warning)]/30 bg-[var(--color-warning-soft)] px-3 py-1.5 text-xs text-[var(--color-warning)]">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+              Sin valor UB configurado — los precios no se calcularán automáticamente.
+            </div>
+          )}
+          <div>
+            <Label className="mb-1 text-xs text-[var(--color-fg-muted)]">Copago paciente (%)</Label>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              step={0.5}
+              placeholder="0"
+              value={copagoPorc}
+              onChange={(e) => setCopagoPorc(e.target.value)}
+              className="w-24"
+            />
+          </div>
+        </div>
       </section>
 
       {/* Prácticas */}
@@ -260,18 +348,55 @@ export function EditCotizacionForm({
           />
           {practiceResults.length > 0 && (
             <ul className="mt-1 max-w-sm divide-y divide-[var(--color-border)] overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-sm">
-              {practiceResults.map((p) => (
-                <li key={p.id}>
-                  <button
-                    type="button"
-                    onClick={() => addPractice(p)}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left text-xs hover:bg-[var(--color-bg-subtle)]"
-                  >
-                    <span className="font-medium">{p.name}</span>
-                    <Plus className="h-3.5 w-3.5 text-[var(--color-primary)]" strokeWidth={2} />
-                  </button>
-                </li>
-              ))}
+              {practiceResults.map((p) => {
+                const isParticular = insurerId === 0;
+                const estimatedPrice = isParticular
+                  ? (p.precioParticular ? Number(p.precioParticular) : null)
+                  : p.units && selectedInsurer?.currentUbValue
+                  ? Number(p.units) * Number(selectedInsurer.currentUbValue)
+                  : null;
+                return (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() => addPractice(p)}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left text-xs hover:bg-[var(--color-bg-subtle)]"
+                    >
+                      <div>
+                        <span className="font-medium text-[var(--color-fg)]">{p.name}</span>
+                        {p.nbuCode && (
+                          <span className="ml-1.5 font-mono text-[10px] text-[var(--color-fg-subtle)]">
+                            {p.nbuCode}
+                          </span>
+                        )}
+                      </div>
+                      <span className="flex items-center gap-2 text-[var(--color-fg-subtle)]">
+                        {isParticular ? (
+                          estimatedPrice != null ? (
+                            <span className="font-semibold text-[var(--color-fg)]">
+                              {fmtMoney(String(estimatedPrice))}
+                            </span>
+                          ) : (
+                            <span className="text-[var(--color-warning)]">Sin precio particular</span>
+                          )
+                        ) : p.units ? (
+                          <span className="text-right">
+                            <span className="text-[var(--color-fg-muted)]">{fmtNum(p.units)} UBs</span>
+                            {estimatedPrice != null && (
+                              <span className="ml-1.5 font-semibold text-[var(--color-fg)]">
+                                {fmtMoney(String(estimatedPrice))}
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--color-fg-subtle)]">Sin UBs</span>
+                        )}
+                        <Plus className="h-3.5 w-3.5 text-[var(--color-primary)]" strokeWidth={2} />
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -279,11 +404,7 @@ export function EditCotizacionForm({
         <div className="mb-4 flex items-end gap-2">
           <div className="flex-1">
             <Label className="mb-1 text-xs text-[var(--color-fg-muted)]">Práctica manual</Label>
-            <Input
-              placeholder="Nombre libre"
-              value={practicaManual}
-              onChange={(e) => setPracticaManual(e.target.value)}
-            />
+            <Input placeholder="Nombre libre" value={practicaManual} onChange={(e) => setPracticaManual(e.target.value)} />
           </div>
           <div className="w-28">
             <Label className="mb-1 text-xs text-[var(--color-fg-muted)]">Precio</Label>
@@ -307,8 +428,10 @@ export function EditCotizacionForm({
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]">
                   <th className="px-3 py-2 text-left font-medium">Práctica</th>
+                  {hasUb && <th className="w-16 px-3 py-2 text-center font-medium">UBs</th>}
+                  {hasUb && <th className="w-24 px-3 py-2 text-right font-medium">Valor UB</th>}
                   <th className="w-28 px-3 py-2 text-center font-medium">Precio unit.</th>
-                  <th className="w-20 px-3 py-2 text-center font-medium">Cant.</th>
+                  <th className="w-16 px-3 py-2 text-center font-medium">Cant.</th>
                   <th className="w-24 px-3 py-2 text-right font-medium">Subtotal</th>
                   <th className="w-8 px-2 py-2" />
                 </tr>
@@ -318,9 +441,24 @@ export function EditCotizacionForm({
                   const sub = (Number(item.precioUnitario) || 0) * item.cantidad;
                   return (
                     <tr key={idx} className="bg-[var(--color-bg-elevated)]">
-                      <td className="px-3 py-2 font-medium text-[var(--color-fg)]">
-                        {item.practicaNombre}
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-1.5">
+                          {item.sinPrecio && (
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-[var(--color-warning)]" strokeWidth={2} />
+                          )}
+                          <span className="font-medium text-[var(--color-fg)]">{item.practicaNombre}</span>
+                        </div>
                       </td>
+                      {hasUb && (
+                        <td className="px-3 py-2 text-center text-[var(--color-fg-muted)]">
+                          {fmtNum(item.ubsSnapshot)}
+                        </td>
+                      )}
+                      {hasUb && (
+                        <td className="px-3 py-2 text-right text-[var(--color-fg-muted)]">
+                          {fmtMoney(item.ubValueSnapshot)}
+                        </td>
+                      )}
                       <td className="px-3 py-2">
                         <Input
                           type="number"
@@ -328,7 +466,7 @@ export function EditCotizacionForm({
                           step="0.01"
                           value={item.precioUnitario}
                           onChange={(e) => updateItem(idx, 'precioUnitario', e.target.value)}
-                          className="h-8 text-center text-xs"
+                          className="h-7 text-center text-xs"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -337,7 +475,7 @@ export function EditCotizacionForm({
                           min={1}
                           value={item.cantidad}
                           onChange={(e) => updateItem(idx, 'cantidad', Number(e.target.value))}
-                          className="h-8 w-16 text-center text-sm"
+                          className="h-7 w-14 text-center text-xs"
                         />
                       </td>
                       <td className="px-3 py-2 text-right font-mono font-semibold text-[var(--color-fg)]">
@@ -357,10 +495,29 @@ export function EditCotizacionForm({
                 })}
               </tbody>
             </table>
-            <div className="flex justify-end border-t border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-3 py-2">
-              <span className="text-sm font-semibold text-[var(--color-fg)]">
-                Total: $ {AR_MONEY.format(total)}
-              </span>
+            <div className="border-t border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-3 py-2">
+              {copagoPorcNum > 0 ? (
+                <div className="space-y-1">
+                  <div className="flex justify-end gap-6 text-xs text-[var(--color-fg-muted)]">
+                    <span>Cubre OS ({(100 - copagoPorcNum).toFixed(0)}%)</span>
+                    <span className="w-24 text-right font-mono">$ {AR_MONEY.format(totalOs)}</span>
+                  </div>
+                  <div className="flex justify-end gap-6 text-xs text-[var(--color-fg-muted)]">
+                    <span>Copago paciente ({copagoPorcNum}%)</span>
+                    <span className="w-24 text-right font-mono">$ {AR_MONEY.format(totalCopago)}</span>
+                  </div>
+                  <div className="flex justify-end border-t border-[var(--color-border)] pt-1 text-sm font-semibold text-[var(--color-fg)]">
+                    <span className="mr-4">Total</span>
+                    <span className="w-24 text-right font-mono">$ {AR_MONEY.format(total)}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-end">
+                  <span className="text-sm font-semibold text-[var(--color-fg)]">
+                    Total: $ {AR_MONEY.format(total)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         )}

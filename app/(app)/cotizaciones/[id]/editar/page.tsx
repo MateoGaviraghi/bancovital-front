@@ -1,6 +1,6 @@
 import { PageHeader } from '@/components/layout/page-header';
 import { getServerApi } from '@/lib/api/server';
-import type { CotizacionDetalle, Insurer } from '@/lib/api/types';
+import type { CotizacionDetalle } from '@/lib/api/types';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { EditCotizacionForm } from './edit-cotizacion-form';
@@ -15,13 +15,10 @@ export default async function EditCotizacionPage({ params }: Props) {
   if (Number.isNaN(numId)) notFound();
 
   const api = await getServerApi();
-  const [cot, insurers] = await Promise.all([
-    api
-      .get<CotizacionDetalle>(`/cotizaciones/${numId}`)
-      .then((r) => r.data)
-      .catch(() => null),
-    api.get<Insurer[]>('/insurers?active=true').then((r) => r.data).catch(() => [] as Insurer[]),
-  ]);
+  const cot = await api
+    .get<CotizacionDetalle>(`/cotizaciones/${numId}`)
+    .then((r) => r.data)
+    .catch(() => null);
 
   if (!cot) notFound();
 
@@ -39,7 +36,7 @@ export default async function EditCotizacionPage({ params }: Props) {
           </Link>
         }
       />
-      <EditCotizacionForm cot={cot} insurers={insurers} />
+      <EditCotizacionForm cot={cot} />
     </div>
   );
 }
