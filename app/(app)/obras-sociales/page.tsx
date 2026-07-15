@@ -1,18 +1,22 @@
+import { MoneyDisplay } from '@/components/domain/money-display';
+import { UbHistoryDialog } from '@/components/domain/ub-history-dialog';
+import { UbValueDialog } from '@/components/domain/ub-value-dialog';
 import { EmptyState } from '@/components/layout/empty-state';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { getServerApi } from '@/lib/api/server';
-import type { Insurer } from '@/lib/api/types';
+import type { InsurerWithUb } from '@/lib/api/types';
+import { getSessionUser } from '@/lib/auth/session';
 import { cn } from '@/lib/cn';
 import { Plus, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-async function fetchInsurers(): Promise<Insurer[]> {
+async function fetchInsurers(): Promise<InsurerWithUb[]> {
   try {
     const api = await getServerApi();
-    const { data } = await api.get<Insurer[]>('/insurers');
+    const { data } = await api.get<InsurerWithUb[]>('/insurers/with-ub');
     return data;
   } catch {
     return [];
@@ -20,13 +24,14 @@ async function fetchInsurers(): Promise<Insurer[]> {
 }
 
 export default async function ObrasSocialesPage() {
-  const rows = await fetchInsurers();
+  const [rows, me] = await Promise.all([fetchInsurers(), getSessionUser()]);
+  const isAdmin = me?.role === 'admin';
 
   return (
     <div>
       <PageHeader
         title="Obras sociales"
-        description="Aseguradoras y convenios."
+        description="Aseguradoras y convenios. El valor UB determina el precio de las cotizaciones."
         actions={
           <Button asChild>
             <Link href="/obras-sociales/nuevo">
@@ -51,6 +56,8 @@ export default async function ObrasSocialesPage() {
                 <tr className="border-[var(--color-border)] border-b bg-[var(--color-bg-subtle)] text-[10px] text-[var(--color-fg-muted)] uppercase tracking-wide">
                   <th className="px-5 py-2.5 text-left font-medium">Código</th>
                   <th className="px-5 py-2.5 text-left font-medium">Nombre</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Valor UB</th>
+                  <th className="px-5 py-2.5 text-left font-medium">Vigente desde</th>
                   <th className="px-5 py-2.5 text-left font-medium">Autorización</th>
                   <th className="px-5 py-2.5 text-left font-medium">Estado</th>
                   <th className="px-5 py-2.5 text-right font-medium">Acciones</th>
@@ -63,7 +70,17 @@ export default async function ObrasSocialesPage() {
                     className="border-[var(--color-border)] border-b last:border-b-0 hover:bg-[var(--color-bg-subtle)]"
                   >
                     <td className="tabular px-5 py-3 font-mono text-[var(--color-fg)]">{i.code}</td>
-                    <td className="px-5 py-3 text-[var(--color-fg)]">{i.name}</td>
+                    <td className="px-5 py-3 font-medium text-[var(--color-fg)]">{i.name}</td>
+                    <td className="px-5 py-3 text-right">
+                      {i.currentUbValue ? (
+                        <MoneyDisplay value={i.currentUbValue} emphasis className="text-xs" />
+                      ) : (
+                        <span className="text-xs text-[var(--color-warning)]">Sin valor UB</span>
+                      )}
+                    </td>
+                    <td className="tabular px-5 py-3 font-mono text-[var(--color-fg-muted)] text-xs">
+                      {i.currentUbValidFrom ? i.currentUbValidFrom.slice(0, 10) : '—'}
+                    </td>
                     <td className="px-5 py-3 text-[var(--color-fg-muted)]">
                       {i.requiresAuthorization ? 'Requerida' : 'No requiere'}
                     </td>
@@ -80,12 +97,20 @@ export default async function ObrasSocialesPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <Link
-                        href={`/obras-sociales/${i.id}`}
-                        className="font-medium text-[var(--color-primary)] hover:underline"
-                      >
-                        Editar
-                      </Link>
+                      <div className="flex items-center justify-end gap-2">
+                        {isAdmin && (
+                          <>
+                            <UbHistoryDialog insurerId={i.id} insurerName={i.name} />
+                            <UbValueDialog insurer={i} />
+                          </>
+                        )}
+                        <Link
+                          href={`/obras-sociales/${i.id}`}
+                          className="font-medium text-[var(--color-primary)] text-xs hover:underline"
+                        >
+                          Editar
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

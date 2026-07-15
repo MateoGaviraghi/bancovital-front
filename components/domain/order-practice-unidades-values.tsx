@@ -45,21 +45,10 @@ function apiError(err: unknown, fallback: string): string {
   return fallback;
 }
 
-/**
- * Decide si una cadena parsea como decimal valido para el back (`valueNumeric`).
- * El back acepta solo `valueNumeric` o `valueText` — no ambos. Si el usuario
- * tipea algo que parece numero, lo mandamos como `valueNumeric`. Si no, `valueText`.
- */
 function isNumericString(s: string): boolean {
   const trimmed = s.trim().replace(',', '.');
   if (trimmed === '') return false;
   return !Number.isNaN(Number(trimmed)) && /^-?\d+(\.\d+)?$/.test(trimmed);
-}
-
-function stripTrailingZeros(s: string): string {
-  if (!/^-?\d+\.\d+$/.test(s)) return s;
-  const trimmed = s.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
-  return trimmed || '0';
 }
 
 function initialInputValue(item: OrderPracticeUnidadItem): string {
@@ -81,16 +70,12 @@ const UnidadValueInput = memo(function UnidadValueInput({
 }: UnidadValueInputProps) {
   const qc = useQueryClient();
   const inputId = useId();
-  // El valor inicial se fija al montar. Si el server devuelve un valor distinto
-  // tras un refetch, no pisamos lo que esta tipeando el usuario; el componente
-  // se re-monta solo cuando cambia el `key` (associationId) en el padre.
   const [value, setValue] = useState(() => initialInputValue(item));
   const dirty = value !== initialInputValue(item);
 
   const upsertMutation = useMutation({
     mutationFn: async () => {
       const trimmed = value.trim();
-      // Vacio → si existe valor previo, borrarlo. Si no, no hacer nada.
       if (trimmed === '') {
         if (item.value) {
           await apiClient.delete(`/order-practices/${orderPracticeId}/unidades/${item.unidadId}`);
@@ -123,14 +108,6 @@ const UnidadValueInput = memo(function UnidadValueInput({
   const opciones = item.opcionesPredeterminadas;
   const hasOpciones = opciones && opciones.length > 0;
 
-  function handleSelectChange(v: string) {
-    setValue(v);
-    const trimmed = v.trim();
-    if (!trimmed) return;
-    const payload: UpsertOrderPracticeUnidadDto = { unidadId: item.unidadId, valueText: trimmed };
-    upsertMutation.mutate();
-  }
-
   return (
     <div className="flex items-center gap-2">
       <label
@@ -145,14 +122,14 @@ const UnidadValueInput = memo(function UnidadValueInput({
           <Loader2 className="h-3 w-3 animate-spin text-[var(--color-fg-muted)]" strokeWidth={2} />
         )}
       </label>
+
       {hasOpciones ? (
         <Select
           value={value}
           onValueChange={(v) => {
             setValue(v);
             setTimeout(() => {
-              const trimmed = v.trim();
-              if (!trimmed) return;
+              if (!v.trim()) return;
               upsertMutation.mutate();
             }, 0);
           }}
@@ -176,10 +153,17 @@ const UnidadValueInput = memo(function UnidadValueInput({
           disabled={disabled}
           onChange={(e) => setValue(e.target.value)}
           onBlur={handleBlur}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !disabled && dirty) {
+              e.preventDefault();
+              upsertMutation.mutate();
+            }
+          }}
           className="h-8 w-32 text-sm"
           placeholder="—"
         />
       )}
+
       {(item.rangeLow || item.rangeHigh || item.referenceText) && (
         <span className="text-[10px] text-[var(--color-fg-subtle)]">
           {item.rangeLow || item.rangeHigh
@@ -193,7 +177,6 @@ const UnidadValueInput = memo(function UnidadValueInput({
 
 type Props = {
   orderPracticeId: number;
-  /** Si null, no se puede gestionar unidades dinamicas (linea sin practiceId). */
   practiceId: number | null;
   initialUnidades: OrderPracticeUnidadItem[];
   disabled?: boolean;

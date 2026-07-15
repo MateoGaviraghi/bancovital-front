@@ -387,7 +387,9 @@ export interface Practice {
   shortName: string | null;
   category: string | null;
   section: string | null;
-  units: string;
+  units: string | null;
+  /** Precio directo para pacientes Particulares (sin obra social). */
+  precioParticular: string | null;
   parentId: number | null;
   requiresAuthorization: boolean;
   referenceValueTemplate: unknown | null;
@@ -415,6 +417,7 @@ export interface CreatePracticeDto {
   category?: string | null;
   section?: string | null;
   units?: string | null;
+  precioParticular?: string | null;
   notes?: string | null;
   referenceValue?: string | null;
   defaultUnit?: string | null;
@@ -1431,6 +1434,10 @@ export interface CotizacionItem {
   cotizacionId: number;
   practiceId: number | null;
   practicaNombre: string;
+  /** Snapshot de las UBs de la práctica al momento de crear la cotización. */
+  ubsSnapshot: string | null;
+  /** Snapshot del valor UB vigente de la OS al momento de crear la cotización. */
+  ubValueSnapshot: string | null;
   precioUnitario: string;
   cantidad: number;
   subtotal: string;
@@ -1451,6 +1458,8 @@ export interface CotizacionSummary {
   empresaContacto: string | null;
   insurerId: number | null;
   totalMonto: string;
+  /** Porcentaje de copago a cargo del paciente. NULL = OS cubre 100%. */
+  copagoPorc: string | null;
   validezDias: number;
   observaciones: string | null;
   createdAt: string;
@@ -1465,15 +1474,11 @@ export interface CotizacionDetalle extends CotizacionSummary {
   insurerInfo: { id: number; code: string; name: string } | null;
 }
 
-export interface CotizacionPrecio {
-  id: number;
-  labId: number;
-  practiceId: number;
-  insurerId: number | null;
-  precio: string;
-  practicaNombre: string;
-  createdAt: string;
-  updatedAt: string;
+
+export interface PrecioParaPracticaResponse {
+  precio: string | null;
+  ubsSnapshot: string | null;
+  ubValueSnapshot: string | null;
 }
 
 export interface CreateCotizacionDto {
@@ -1486,6 +1491,8 @@ export interface CreateCotizacionDto {
   empresaContacto?: string;
   insurerId?: number;
   validezDias?: number;
+  /** Porcentaje de copago a cargo del paciente, ej: 20 = 20%. */
+  copagoPorc?: number;
   observaciones?: string;
   items: Array<{
     practiceId?: number;
@@ -1510,6 +1517,7 @@ export interface UpdateCotizacionDto {
   observaciones?: string;
   /** 0 = Particular (null), >0 = obra social */
   insurerId?: number;
+  copagoPorc?: number;
   empresaNombre?: string;
   empresaCuit?: string;
   empresaEmail?: string;
@@ -1518,8 +1526,3 @@ export interface UpdateCotizacionDto {
   items?: CotizacionItemInputDto[];
 }
 
-export interface UpsertPrecioDto {
-  practiceId: number;
-  insurerId?: number;
-  precio: string;
-}

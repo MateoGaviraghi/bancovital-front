@@ -63,8 +63,16 @@ export default async function PracticaDetailPage({
             <dd className="text-[var(--color-fg)]">{practice.category ?? '—'}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-[var(--color-fg-muted)]">UB</dt>
-            <dd className="tabular font-mono text-[var(--color-fg)]">{practice.units}</dd>
+            <dt className="text-[var(--color-fg-muted)]">UBs (nomenclador)</dt>
+            <dd className="tabular font-mono text-[var(--color-fg)]">{practice.units ?? '—'}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-[var(--color-fg-muted)]">Precio Particular</dt>
+            <dd className="tabular font-mono text-[var(--color-fg)]">
+              {practice.precioParticular
+                ? `$ ${Number(practice.precioParticular).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
+                : '—'}
+            </dd>
           </div>
           <div className="flex justify-between gap-3">
             <dt className="text-[var(--color-fg-muted)]">Estado</dt>
