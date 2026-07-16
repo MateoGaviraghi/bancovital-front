@@ -86,8 +86,6 @@ export function EditCotizacionForm({ cot }: { cot: CotizacionDetalle }) {
   );
 
   const [practiceSearch, setPracticeSearch] = useState('');
-  const [practicaManual, setPracticaManual] = useState('');
-  const [precioManual, setPrecioManual] = useState('');
 
   const { data: insurers = [] } = useQuery({
     queryKey: queries.insurers.withUb,
@@ -142,24 +140,6 @@ export function EditCotizacionForm({ cot }: { cot: CotizacionDetalle }) {
       },
     ]);
     setPracticeSearch('');
-  }
-
-  function addManual() {
-    if (!practicaManual.trim()) return;
-    setItems((prev) => [
-      ...prev,
-      {
-        practiceId: null,
-        practicaNombre: practicaManual.trim(),
-        ubsSnapshot: null,
-        ubValueSnapshot: null,
-        precioUnitario: precioManual.trim() || '0',
-        cantidad: 1,
-        sinPrecio: false,
-      },
-    ]);
-    setPracticaManual('');
-    setPrecioManual('');
   }
 
   function removeItem(idx: number) {
@@ -401,27 +381,6 @@ export function EditCotizacionForm({ cot }: { cot: CotizacionDetalle }) {
               })}
             </ul>
           )}
-        </div>
-
-        <div className="mb-4 flex items-end gap-2">
-          <div className="flex-1">
-            <Label className="mb-1 text-xs text-[var(--color-fg-muted)]">Práctica manual</Label>
-            <Input placeholder="Nombre libre" value={practicaManual} onChange={(e) => setPracticaManual(e.target.value)} />
-          </div>
-          <div className="w-28">
-            <Label className="mb-1 text-xs text-[var(--color-fg-muted)]">Precio</Label>
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              placeholder="0.00"
-              value={precioManual}
-              onChange={(e) => setPrecioManual(e.target.value)}
-            />
-          </div>
-          <Button type="button" variant="outline" size="sm" onClick={addManual}>
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
         </div>
 
         {items.length > 0 && (

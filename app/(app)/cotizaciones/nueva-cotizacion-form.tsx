@@ -63,7 +63,7 @@ interface ItemRow {
 export function NuevaCotizacionForm() {
   const router = useRouter();
 
-  const [tipo, setTipo] = useState<'paciente' | 'empresa' | 'generica'>('paciente');
+  const [tipo, setTipo] = useState<'paciente' | 'empresa'>('paciente');
   const [patientSearch, setPatientSearch] = useState('');
   const [patientId, setPatientId] = useState<number | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -79,8 +79,6 @@ export function NuevaCotizacionForm() {
   const [items, setItems] = useState<ItemRow[]>([]);
 
   const [practiceSearch, setPracticeSearch] = useState('');
-  const [practicaManual, setPracticaManual] = useState('');
-  const [precioManual, setPrecioManual] = useState('');
 
   const { data: patients = [] } = useQuery({
     queryKey: queries.patients.list({ search: patientSearch }),
@@ -182,24 +180,6 @@ export function NuevaCotizacionForm() {
     setItems(updated);
   }
 
-  function addManual() {
-    if (!practicaManual.trim() || !precioManual.trim()) return;
-    setItems((prev) => [
-      ...prev,
-      {
-        practiceId: null,
-        practicaNombre: practicaManual.trim(),
-        ubsSnapshot: null,
-        ubValueSnapshot: null,
-        precioUnitario: precioManual.trim(),
-        cantidad: 1,
-        sinPrecio: false,
-      },
-    ]);
-    setPracticaManual('');
-    setPrecioManual('');
-  }
-
   function removeItem(idx: number) {
     setItems((prev) => prev.filter((_, i) => i !== idx));
   }
@@ -229,7 +209,6 @@ export function NuevaCotizacionForm() {
       toast.error('Ingresá el nombre de la empresa');
       return;
     }
-    // tipo 'generica': no requiere validación de receptor
     if (items.length === 0) {
       toast.error('Agregá al menos una práctica');
       return;
@@ -274,7 +253,6 @@ export function NuevaCotizacionForm() {
           {([
             { key: 'paciente', label: 'Paciente' },
             { key: 'empresa', label: 'Empresa' },
-            { key: 'generica', label: 'Genérica' },
           ] as const).map(({ key, label }) => (
             <button
               key={key}
@@ -291,14 +269,8 @@ export function NuevaCotizacionForm() {
           ))}
         </div>
 
-        {tipo === 'generica' && (
-          <p className="mt-3 text-xs text-[var(--color-fg-muted)]">
-            Presupuesto sin destinatario específico — ideal para enviar a potenciales clientes o publicar en redes.
-          </p>
-        )}
-
         <div className="mt-4 space-y-3">
-          {tipo === 'generica' ? null : tipo === 'paciente' ? (
+          {tipo === 'paciente' ? (
             <>
               <div>
                 <Label className="mb-1 text-xs">Buscar paciente</Label>
@@ -509,27 +481,6 @@ export function NuevaCotizacionForm() {
               })}
             </ul>
           )}
-        </div>
-
-        <div className="mb-4 flex items-end gap-2">
-          <div className="flex-1">
-            <Label className="mb-1 text-xs text-[var(--color-fg-muted)]">Práctica manual</Label>
-            <Input placeholder="Nombre libre" value={practicaManual} onChange={(e) => setPracticaManual(e.target.value)} />
-          </div>
-          <div className="w-28">
-            <Label className="mb-1 text-xs text-[var(--color-fg-muted)]">Precio</Label>
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              placeholder="0.00"
-              value={precioManual}
-              onChange={(e) => setPrecioManual(e.target.value)}
-            />
-          </div>
-          <Button type="button" variant="outline" size="sm" onClick={addManual}>
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
         </div>
 
         {items.length > 0 && (
