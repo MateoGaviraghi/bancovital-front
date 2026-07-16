@@ -79,6 +79,8 @@ export function NuevaCotizacionForm() {
   const [items, setItems] = useState<ItemRow[]>([]);
 
   const [practiceSearch, setPracticeSearch] = useState('');
+  const [practicaManual, setPracticaManual] = useState('');
+  const [precioManual, setPrecioManual] = useState('');
 
   const { data: patients = [] } = useQuery({
     queryKey: queries.patients.list({ search: patientSearch }),
@@ -178,6 +180,24 @@ export function NuevaCotizacionForm() {
       }),
     );
     setItems(updated);
+  }
+
+  function addManual() {
+    if (!practicaManual.trim() || !precioManual.trim()) return;
+    setItems((prev) => [
+      ...prev,
+      {
+        practiceId: null,
+        practicaNombre: practicaManual.trim(),
+        ubsSnapshot: null,
+        ubValueSnapshot: null,
+        precioUnitario: precioManual.trim(),
+        cantidad: 1,
+        sinPrecio: false,
+      },
+    ]);
+    setPracticaManual('');
+    setPrecioManual('');
   }
 
   function removeItem(idx: number) {
@@ -481,6 +501,34 @@ export function NuevaCotizacionForm() {
               })}
             </ul>
           )}
+        </div>
+
+        {/* ── Práctica manual ── */}
+        <div className="mt-3 flex items-end gap-2 border-t border-[var(--color-border)] pt-3">
+          <div className="flex-1">
+            <Label className="mb-1 text-xs text-[var(--color-fg-muted)]">Práctica no incluida en catálogo</Label>
+            <Input
+              placeholder="Nombre libre…"
+              value={practicaManual}
+              onChange={(e) => setPracticaManual(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addManual()}
+            />
+          </div>
+          <div className="w-32">
+            <Label className="mb-1 text-xs text-[var(--color-fg-muted)]">Precio</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              placeholder="0.00"
+              value={precioManual}
+              onChange={(e) => setPrecioManual(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addManual()}
+            />
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={addManual} disabled={!practicaManual.trim() || !precioManual.trim()}>
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
         </div>
 
         {items.length > 0 && (
