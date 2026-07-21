@@ -1,5 +1,6 @@
 'use client';
 
+import { CreatePatientDialog } from '@/components/domain/create-patient-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,6 +82,7 @@ export function NuevaCotizacionForm() {
   const [practiceSearch, setPracticeSearch] = useState('');
   const [practicaManual, setPracticaManual] = useState('');
   const [precioManual, setPrecioManual] = useState('');
+  const [createPatientOpen, setCreatePatientOpen] = useState(false);
 
   const { data: patients = [] } = useQuery({
     queryKey: queries.patients.list({ search: patientSearch }),
@@ -294,12 +296,23 @@ export function NuevaCotizacionForm() {
             <>
               <div>
                 <Label className="mb-1 text-xs">Buscar paciente</Label>
-                <Input
-                  placeholder="Nombre, apellido o DNI…"
-                  value={patientSearch}
-                  onChange={(e) => setPatientSearch(e.target.value)}
-                  className="max-w-sm"
-                />
+                <div className="flex max-w-sm items-center gap-2">
+                  <Input
+                    placeholder="Nombre, apellido o DNI…"
+                    value={patientSearch}
+                    onChange={(e) => setPatientSearch(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    title="Crear nuevo paciente"
+                    onClick={() => setCreatePatientOpen(true)}
+                    className="shrink-0"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               {patients.length > 0 && !selectedPatient && (
                 <ul className="max-w-sm divide-y divide-[var(--color-border)] overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-sm">
@@ -668,6 +681,16 @@ export function NuevaCotizacionForm() {
           Crear cotización
         </Button>
       </div>
+
+      <CreatePatientDialog
+        open={createPatientOpen}
+        onOpenChange={setCreatePatientOpen}
+        onCreated={(p) => {
+          setPatientId(p.id);
+          setSelectedPatient(p);
+          setPatientSearch('');
+        }}
+      />
     </div>
   );
 }
