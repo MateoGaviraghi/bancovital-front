@@ -1,12 +1,15 @@
+import { EditOrderAguaForm } from '@/components/domain/edit-order-agua-form';
 import { EditOrderForm } from '@/components/domain/edit-order-form';
 import { PageHeader } from '@/components/layout/page-header';
 import { getServerApi } from '@/lib/api/server';
 import type {
   Doctor,
+  MuestraAgua,
   OrderDetail,
   OrderLine,
   Patient,
   PracticeWithChildren,
+  SolicitanteAgua,
 } from '@/lib/api/types';
 import axios from 'axios';
 import { notFound, redirect } from 'next/navigation';
@@ -41,15 +44,7 @@ export default async function EditOrderPage({
 
   if (order.status !== 'borrador') redirect(`/ordenes/${numId}`);
 
-  const [patientRes, doctorRes] = await Promise.all([
-    order.patientId ? api.get<Patient>(`/patients/${order.patientId}`) : Promise.resolve(null),
-    order.referringDoctorId
-      ? api.get<Doctor>(`/doctors/${order.referringDoctorId}`).catch(() => null)
-      : Promise.resolve(null),
-  ]);
-
-  const initialPatient = patientRes?.data ?? null;
-  const initialDoctor = doctorRes?.data ?? null;
+  const isAgua = !!(order.solicitanteAguaId || order.solicitante);
 
   const initialPractices: PracticeWithChildren[] = lines
     .filter((l) => l.practiceId !== null)
@@ -78,6 +73,41 @@ export default async function EditOrderPage({
       updatedAt: '',
       children: [],
     }));
+
+  if (isAgua) {
+    const [solicitanteRes, muestraRes] = await Promise.all([
+      order.solicitanteAguaId
+        ? api.get<SolicitanteAgua>(`/solicitantes-agua/${order.solicitanteAguaId}`).catch(() => null)
+        : Promise.resolve(null),
+      order.muestraAguaId
+        ? api.get<MuestraAgua>(`/muestras-agua/${order.muestraAguaId}`).catch(() => null)
+        : Promise.resolve(null),
+    ]);
+    return (
+      <div>
+        <PageHeader
+          title={`Editar orden #${order.protocolNumber}`}
+          description={order.solicitante?.nombreApellido ?? ''}
+        />
+        <EditOrderAguaForm
+          order={order}
+          initialSolicitante={solicitanteRes?.data ?? null}
+          initialMuestra={muestraRes?.data ?? null}
+          initialPractices={initialPractices}
+        />
+      </div>
+    );
+  }
+
+  const [patientRes, doctorRes] = await Promise.all([
+    order.patientId ? api.get<Patient>(`/patients/${order.patientId}`) : Promise.resolve(null),
+    order.referringDoctorId
+      ? api.get<Doctor>(`/doctors/${order.referringDoctorId}`).catch(() => null)
+      : Promise.resolve(null),
+  ]);
+
+  const initialPatient = patientRes?.data ?? null;
+  const initialDoctor = doctorRes?.data ?? null;
 
   return (
     <div>
