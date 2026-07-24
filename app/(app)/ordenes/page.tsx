@@ -199,6 +199,15 @@ export default async function OrdersPage({ searchParams }: Props) {
                             {o.animalPatient.especie}{o.animalPatient.propietario ? ` · ${o.animalPatient.propietario}` : ''}
                           </span>
                         </>
+                      ) : o.solicitante ? (
+                        <>
+                          {o.solicitante.razonSocial ?? o.solicitante.nombreApellido}
+                          {o.solicitante.razonSocial && (
+                            <span className="ml-2 text-[10px] text-[var(--color-fg-subtle)]">
+                              {o.solicitante.nombreApellido}
+                            </span>
+                          )}
+                        </>
                       ) : (
                         '—'
                       )}

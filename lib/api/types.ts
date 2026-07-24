@@ -237,7 +237,7 @@ export interface Propietario {
 }
 
 export interface CreatePropietarioDto {
-  dni: string;
+  dni?: string | null;
   firstName: string;
   lastName: string;
   phone?: string | null;
@@ -652,6 +652,10 @@ export interface OrderListItem {
     especie: string;
     raza: string | null;
     propietario: string | null;
+  } | null;
+  solicitante?: {
+    nombreApellido: string;
+    razonSocial: string | null;
   } | null;
   insurer: {
     id: number;
