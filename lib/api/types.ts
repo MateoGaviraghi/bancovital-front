@@ -447,6 +447,7 @@ export interface UnidadMedida {
   simbolo: string | null;
   active: boolean;
   opcionesPredeterminadas: string[] | null;
+  metodologia: string | null;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
@@ -463,6 +464,7 @@ export interface CreateUnidadMedidaDto {
   nombre: string;
   simbolo?: string | null;
   opcionesPredeterminadas?: string[] | null;
+  metodologia?: string | null;
 }
 
 export type UpdateUnidadMedidaDto = Partial<CreateUnidadMedidaDto>;
@@ -657,6 +659,8 @@ export interface OrderListItem {
     nombreApellido: string;
     razonSocial: string | null;
   } | null;
+  solicitanteAguaId?: number | null;
+  muestraAguaId?: number | null;
   insurer: {
     id: number;
     code: string;
@@ -708,6 +712,8 @@ export interface UpdateOrderDto {
   isUrgent?: boolean;
   notes?: string | null;
   practices?: OrderPracticeInputDto[];
+  solicitanteAguaId?: number | null;
+  muestraAguaId?: number | null;
 }
 
 export interface CancelOrderDto {

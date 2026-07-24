@@ -5,15 +5,8 @@ function trimDecimals(v: string | null | undefined): string | null {
   return v.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
 }
 
-import { PracticeUnidadesSection } from '@/components/domain/practice-unidades-section';
+import { UnidadesDialog } from '@/components/domain/practice-unidades-section';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -211,12 +204,12 @@ export function OrderPracticeUnidadesValues({
       {sorted.length === 0 ? (
         <div className="flex items-center justify-between gap-3">
           <p className="text-[var(--color-fg-subtle)] text-xs">
-            Esta práctica no tiene unidades de medida configuradas.
+            Esta práctica no tiene sub-prácticas configuradas.
           </p>
           {canConfigure && (
             <Button type="button" size="sm" variant="outline" onClick={() => setDialogOpen(true)}>
               <Settings className="h-3.5 w-3.5" strokeWidth={2} />
-              Configurar unidades
+              Configurar prácticas
             </Button>
           )}
         </div>
@@ -237,7 +230,7 @@ export function OrderPracticeUnidadesValues({
               variant="outline"
               className="h-8"
               onClick={() => setDialogOpen(true)}
-              title="Configurar unidades de esta práctica"
+              title="Configurar prácticas de este análisis"
             >
               <Settings className="h-3.5 w-3.5" strokeWidth={2} />
             </Button>
@@ -246,18 +239,11 @@ export function OrderPracticeUnidadesValues({
       )}
 
       {practiceId !== null && (
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-xl">
-            <DialogHeader>
-              <DialogTitle>Unidades de la práctica</DialogTitle>
-              <DialogDescription>
-                Los cambios se aplican al catálogo de la práctica y se reflejan en todas las
-                órdenes.
-              </DialogDescription>
-            </DialogHeader>
-            <PracticeUnidadesSection practiceId={practiceId} />
-          </DialogContent>
-        </Dialog>
+        <UnidadesDialog
+          practiceId={practiceId}
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+        />
       )}
     </div>
   );
