@@ -40,7 +40,7 @@ function toFormValues(p?: Partial<Propietario>): FormValues {
 function toPayload(v: FormValues): CreatePropietarioDto {
   const nullify = (s: string) => (s.trim() === '' ? null : s.trim());
   return {
-    dni: v.dni.trim(),
+    dni: nullify(v.dni) ?? undefined,
     firstName: v.firstName.trim(),
     lastName: v.lastName.trim(),
     phone: nullify(v.phone),
@@ -91,13 +91,12 @@ export function PropietarioForm({ propietario }: { propietario?: Propietario }) 
   return (
     <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-6" noValidate>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FormField label="DNI" htmlFor="dni" required error={errors.dni?.message}>
+        <FormField label="DNI" htmlFor="dni" error={errors.dni?.message}>
           <Input
             id="dni"
             inputMode="numeric"
             autoComplete="off"
             {...register('dni', {
-              required: 'Requerido',
               pattern: { value: /^\d{6,12}$/, message: '6 a 12 dígitos' },
             })}
           />
