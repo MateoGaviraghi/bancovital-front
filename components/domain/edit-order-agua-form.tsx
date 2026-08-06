@@ -18,7 +18,7 @@ import type {
 } from '@/lib/api/types';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
-import { Loader2, Plus } from 'lucide-react';
+import { AlertCircle, Loader2, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -39,6 +39,7 @@ type Props = {
   initialSolicitante: SolicitanteAgua | null;
   initialMuestra: MuestraAgua | null;
   initialPractices: PracticeWithChildren[];
+  hasResults?: boolean;
 };
 
 export function EditOrderAguaForm({
@@ -46,6 +47,7 @@ export function EditOrderAguaForm({
   initialSolicitante,
   initialMuestra,
   initialPractices,
+  hasResults = false,
 }: Props) {
   const router = useRouter();
 
@@ -56,6 +58,8 @@ export function EditOrderAguaForm({
   const [errors, setErrors] = useState<Errors>({});
   const [solicitanteDialogOpen, setSolicitanteDialogOpen] = useState(false);
   const [muestraDialogOpen, setMuestraDialogOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<UpdateOrderDto | null>(null);
 
   const updateMut = useMutation({
     mutationFn: async (dto: UpdateOrderDto) => {
@@ -82,15 +86,27 @@ export function EditOrderAguaForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    updateMut.mutate({
+    const payload: UpdateOrderDto = {
       solicitanteAguaId: solicitante!.id,
       muestraAguaId: muestra!.id,
       notes: notes.trim() || null,
       practices: practices.map((p, idx) => ({ practiceId: p.id, sortOrder: idx })),
-    });
+    };
+    if (hasResults) {
+      setPendingPayload(payload);
+      setConfirmOpen(true);
+    } else {
+      updateMut.mutate(payload);
+    }
+  }
+
+  function handleConfirm() {
+    if (pendingPayload) updateMut.mutate(pendingPayload);
+    setConfirmOpen(false);
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Solicitante y muestra */}
       <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-[var(--shadow-xs)]">
@@ -211,5 +227,41 @@ export function EditOrderAguaForm({
         }}
       />
     </form>
+
+    {confirmOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-lg">
+          <div className="mb-4 flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-warning)]" strokeWidth={2} />
+            <div>
+              <p className="font-semibold text-[var(--color-fg)]">Esta orden tiene resultados cargados</p>
+              <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
+                Modificar las prácticas puede afectar los resultados existentes. ¿Querés continuar de todas formas?
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-md border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-fg)] hover:bg-[var(--color-bg-subtle)]"
+              onClick={() => setConfirmOpen(false)}
+              disabled={updateMut.isPending}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-4 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50"
+              onClick={handleConfirm}
+              disabled={updateMut.isPending}
+            >
+              {updateMut.isPending && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
+              Confirmar cambios
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
