@@ -101,6 +101,14 @@ export default async function PracticaDetailPage({
           </div>
           <PracticeInlineField
             practiceId={practice.id}
+            field="defaultObservation"
+            value={labConfig?.defaultObservation ?? null}
+            label="Observación predeterminada"
+            placeholder="Se incluirá automáticamente en el informe…"
+            rows={2}
+          />
+          <PracticeInlineField
+            practiceId={practice.id}
             field="notes"
             value={labConfig?.notes ?? null}
             label="Notas internas"

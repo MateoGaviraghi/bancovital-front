@@ -26,7 +26,7 @@ import { formatNumericAR } from '@/lib/money';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Loader2, Settings } from 'lucide-react';
-import { memo, useId, useState } from 'react';
+import { memo, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 function apiError(err: unknown, fallback: string): string {
@@ -50,21 +50,179 @@ function initialInputValue(item: OrderPracticeUnidadItem): string {
   return item.value.valueText ?? '';
 }
 
+// ── Hemograma auto-calculation ───────────────────────────────────────
+
+interface HemogramaIds {
+  hctoId: number | null;
+  rbcId: number | null;
+  hbId: number | null;
+  vcmId: number | null;
+  hcmId: number | null;
+  chcmId: number | null;
+  derivedIds: Set<number>;
+}
+
+function detectHemogramaIds(items: OrderPracticeUnidadItem[]): HemogramaIds | null {
+  const find = (pred: (n: string) => boolean) => items.find((u) => pred(u.nombre));
+
+  const hcto = find((n) => /hematocrito/i.test(n));
+  const rbc = find((n) => /gl[oó]bulos?\s*rojos?|eritrocit|\bGR\b|\bRBC\b/i.test(n));
+  const hb = find((n) => /hemoglobin[ao]/i.test(n) && !/corpuscular/i.test(n));
+  const vcm = find((n) => /\bVCM\b/i.test(n) && !/CHCM/i.test(n));
+  const hcm = find((n) => /\bHCM\b/i.test(n) && !/CHCM/i.test(n));
+  const chcm = find((n) => /\bCHCM\b/i.test(n));
+
+  if (!vcm && !hcm && !chcm) return null;
+
+  const derivedIds = new Set<number>();
+  if (vcm) derivedIds.add(vcm.unidadId);
+  if (hcm) derivedIds.add(hcm.unidadId);
+  if (chcm) derivedIds.add(chcm.unidadId);
+
+  return {
+    hctoId: hcto?.unidadId ?? null,
+    rbcId: rbc?.unidadId ?? null,
+    hbId: hb?.unidadId ?? null,
+    vcmId: vcm?.unidadId ?? null,
+    hcmId: hcm?.unidadId ?? null,
+    chcmId: chcm?.unidadId ?? null,
+    derivedIds,
+  };
+}
+
+function parseNumAR(s: string | null | undefined): number | null {
+  if (!s) return null;
+  const n = Number(String(s).replace(',', '.'));
+  return Number.isNaN(n) ? null : n;
+}
+
+function computeHemogramaValues(
+  items: OrderPracticeUnidadItem[],
+  ids: HemogramaIds,
+): Map<number, string> {
+  const result = new Map<number, string>();
+  const getVal = (id: number | null) => {
+    if (!id) return null;
+    const u = items.find((u) => u.unidadId === id);
+    if (!u?.value) return null;
+    return parseNumAR(u.value.valueNumeric ?? u.value.valueText ?? null);
+  };
+
+  const hcto = getVal(ids.hctoId);
+  const rbc = getVal(ids.rbcId);
+  const hb = getVal(ids.hbId);
+
+  const fmt = (n: number) => {
+    const rounded = Math.round(n * 10) / 10;
+    return String(rounded).replace('.', ',');
+  };
+
+  if (hcto != null && rbc != null && rbc !== 0 && ids.vcmId) {
+    result.set(ids.vcmId, fmt((hcto * 10) / rbc));
+  }
+  if (hb != null && rbc != null && rbc !== 0 && ids.hcmId) {
+    result.set(ids.hcmId, fmt((hb * 10) / rbc));
+  }
+  if (hb != null && hcto != null && hcto !== 0 && ids.chcmId) {
+    result.set(ids.chcmId, fmt((hb * 100) / hcto));
+  }
+
+  return result;
+}
+
+// ── Bilirrubina Indirecta auto-calculation ───────────────────────────
+
+interface BilirrubinaIds {
+  directaId: number | null;
+  totalId: number | null;
+  indirectaId: number | null;
+  derivedIds: Set<number>;
+}
+
+function detectBilirrubinaIds(items: OrderPracticeUnidadItem[]): BilirrubinaIds | null {
+  const find = (pred: (n: string) => boolean) => items.find((u) => pred(u.nombre));
+
+  const directa = find((n) => /bilirrub.*(directa)/i.test(n) && !/indirecta/i.test(n));
+  const total = find((n) => /bilirrub.*total/i.test(n));
+
+  if (!directa || !total) return null;
+
+  // Try to find indirecta by name first
+  let indirecta = find((n) => /indirecta/i.test(n));
+
+  // Fallback: if there's exactly one remaining field, it must be the indirecta
+  if (!indirecta) {
+    const others = items.filter(
+      (u) => u.unidadId !== directa.unidadId && u.unidadId !== total.unidadId,
+    );
+    if (others.length === 1) indirecta = others[0];
+  }
+
+  if (!indirecta) return null;
+
+  const derivedIds = new Set<number>([indirecta.unidadId]);
+  return {
+    directaId: directa.unidadId,
+    totalId: total.unidadId,
+    indirectaId: indirecta.unidadId,
+    derivedIds,
+  };
+}
+
+function computeBilirrubinaValues(
+  items: OrderPracticeUnidadItem[],
+  ids: BilirrubinaIds,
+): Map<number, string> {
+  const result = new Map<number, string>();
+  const getVal = (id: number | null) => {
+    if (!id) return null;
+    const u = items.find((u) => u.unidadId === id);
+    if (!u?.value) return null;
+    return parseNumAR(u.value.valueNumeric ?? u.value.valueText ?? null);
+  };
+
+  const directa = getVal(ids.directaId);
+  const total = getVal(ids.totalId);
+
+  if (directa != null && total != null && ids.indirectaId != null) {
+    const indirecta = total - directa;
+    if (indirecta >= 0) {
+      const rounded = Math.round(indirecta * 100) / 100;
+      result.set(ids.indirectaId, String(rounded).replace('.', ','));
+    }
+  }
+
+  return result;
+}
+
+// ── UnidadValueInput ─────────────────────────────────────────────────
+
 type UnidadValueInputProps = {
   orderPracticeId: number;
   item: OrderPracticeUnidadItem;
   disabled: boolean;
+  /** Valor calculado automáticamente — muestra el campo como solo lectura */
+  computedValue?: string | null;
 };
 
 const UnidadValueInput = memo(function UnidadValueInput({
   orderPracticeId,
   item,
   disabled,
+  computedValue,
 }: UnidadValueInputProps) {
   const qc = useQueryClient();
   const inputId = useId();
   const [value, setValue] = useState(() => initialInputValue(item));
-  const dirty = value !== initialInputValue(item);
+
+  const isComputed = computedValue != null;
+  const effectiveDisabled = disabled || isComputed;
+  const dirty = !isComputed && value !== initialInputValue(item);
+
+  // Sync computed value into local state when it changes
+  useEffect(() => {
+    if (computedValue != null) setValue(computedValue);
+  }, [computedValue]);
 
   const upsertMutation = useMutation({
     mutationFn: async () => {
@@ -94,7 +252,7 @@ const UnidadValueInput = memo(function UnidadValueInput({
   });
 
   function handleBlur() {
-    if (!dirty || disabled || upsertMutation.isPending) return;
+    if (!dirty || effectiveDisabled || upsertMutation.isPending) return;
     upsertMutation.mutate();
   }
 
@@ -120,13 +278,14 @@ const UnidadValueInput = memo(function UnidadValueInput({
         <Select
           value={value}
           onValueChange={(v) => {
+            if (effectiveDisabled) return;
             setValue(v);
             setTimeout(() => {
               if (!v.trim()) return;
               upsertMutation.mutate();
             }, 0);
           }}
-          disabled={disabled}
+          disabled={effectiveDisabled}
         >
           <SelectTrigger id={inputId} className="h-8 w-40 text-sm">
             <SelectValue placeholder="Seleccionar…" />
@@ -143,16 +302,16 @@ const UnidadValueInput = memo(function UnidadValueInput({
         <Input
           id={inputId}
           value={value}
-          disabled={disabled}
+          disabled={effectiveDisabled}
           onChange={(e) => setValue(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !disabled && dirty) {
+            if (e.key === 'Enter' && !effectiveDisabled && dirty) {
               e.preventDefault();
               upsertMutation.mutate();
             }
           }}
-          className="h-8 w-32 text-sm"
+          className={`h-8 w-32 text-sm${isComputed ? ' bg-[var(--color-bg)] font-mono text-[var(--color-fg-muted)]' : ''}`}
           placeholder="—"
         />
       )}
@@ -164,9 +323,15 @@ const UnidadValueInput = memo(function UnidadValueInput({
             : item.referenceText}
         </span>
       )}
+
+      {isComputed && (
+        <span className="text-[9px] text-[var(--color-fg-subtle)] italic">auto</span>
+      )}
     </div>
   );
 });
+
+// ── OrderPracticeUnidadesValues ──────────────────────────────────────
 
 type Props = {
   orderPracticeId: number;
@@ -181,6 +346,7 @@ export function OrderPracticeUnidadesValues({
   initialUnidades,
   disabled = false,
 }: Props) {
+  const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: unidades = initialUnidades } = useQuery({
@@ -196,6 +362,81 @@ export function OrderPracticeUnidadesValues({
 
   const canConfigure = practiceId !== null && !disabled;
   const sorted = [...unidades].sort((a, b) => a.sortOrder - b.sortOrder);
+
+  // Detect auto-calc rules (only recompute when the set of unidad IDs changes)
+  const unidadIdsKey = unidades.map((u) => u.unidadId).join(',');
+  const hemogramaIds = useMemo(() => detectHemogramaIds(sorted), [unidadIdsKey]);
+  const bilirrubinaIds = useMemo(() => detectBilirrubinaIds(sorted), [unidadIdsKey]);
+
+  // All derived unidad IDs across all rules
+  const allDerivedIds = useMemo(() => {
+    const s = new Set<number>();
+    hemogramaIds?.derivedIds.forEach((id) => s.add(id));
+    bilirrubinaIds?.derivedIds.forEach((id) => s.add(id));
+    return s;
+  }, [hemogramaIds, bilirrubinaIds]);
+
+  // Stable key of source values — recompute derived only when sources change
+  const sourceValKey = useMemo(() => {
+    const sourceIds = new Set<number>();
+    if (hemogramaIds) {
+      [hemogramaIds.hctoId, hemogramaIds.rbcId, hemogramaIds.hbId]
+        .filter((id): id is number => id != null)
+        .forEach((id) => sourceIds.add(id));
+    }
+    if (bilirrubinaIds) {
+      [bilirrubinaIds.directaId, bilirrubinaIds.totalId]
+        .filter((id): id is number => id != null)
+        .forEach((id) => sourceIds.add(id));
+    }
+    return [...sourceIds]
+      .map((id) => {
+        const u = unidades.find((u) => u.unidadId === id);
+        return `${id}:${u?.value?.valueNumeric ?? u?.value?.valueText ?? ''}`;
+      })
+      .join('|');
+  }, [unidades, hemogramaIds, bilirrubinaIds]);
+
+  // Computed values for derived fields (shown in inputs)
+  const computedMap = useMemo(() => {
+    const merged = new Map<number, string>();
+    if (hemogramaIds) {
+      computeHemogramaValues(sorted, hemogramaIds).forEach((v, k) => merged.set(k, v));
+    }
+    if (bilirrubinaIds) {
+      computeBilirrubinaValues(sorted, bilirrubinaIds).forEach((v, k) => merged.set(k, v));
+    }
+    return merged;
+  }, [sourceValKey, hemogramaIds, bilirrubinaIds]);
+
+  // Auto-save derived values when sources change
+  const lastSaved = useRef<Map<number, string>>(new Map());
+
+  const autoSaveMut = useMutation({
+    mutationFn: async ({ unidadId, value }: { unidadId: number; value: string }) => {
+      const payload: UpsertOrderPracticeUnidadDto = {
+        unidadId,
+        valueNumeric: value.replace(',', '.'),
+      };
+      await apiClient.post<OrderPracticeUnidadValue>(
+        `/order-practices/${orderPracticeId}/unidades`,
+        payload,
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queries.orderPracticeUnidades(orderPracticeId) });
+    },
+  });
+
+  useEffect(() => {
+    if (disabled || computedMap.size === 0) return;
+    for (const [unidadId, value] of computedMap) {
+      if (lastSaved.current.get(unidadId) !== value) {
+        lastSaved.current.set(unidadId, value);
+        autoSaveMut.mutate({ unidadId, value });
+      }
+    }
+  }, [sourceValKey]);
 
   if (sorted.length === 0 && !canConfigure) return null;
 
@@ -221,6 +462,11 @@ export function OrderPracticeUnidadesValues({
               orderPracticeId={orderPracticeId}
               item={item}
               disabled={disabled}
+              computedValue={
+                allDerivedIds.has(item.unidadId)
+                  ? (computedMap.get(item.unidadId) ?? null)
+                  : null
+              }
             />
           ))}
           {canConfigure && (

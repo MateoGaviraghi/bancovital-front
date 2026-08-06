@@ -108,13 +108,12 @@ export function ResultRow({
     mutationKey: mutations.saveResult(),
     mutationFn: async () => {
       const raw = resultado.trim();
-      if (!raw) throw new Error('Cargá un resultado.');
       const normalized = raw.replace(',', '.');
-      const numericValue = /^-?\d+(\.\d+)?$/.test(normalized) ? normalized : undefined;
+      const numericValue = raw && /^-?\d+(\.\d+)?$/.test(normalized) ? normalized : undefined;
       const payload: UpsertResultDto = {
         orderPracticeId: line.orderPractice.id,
         valueNumeric: numericValue,
-        valueText: numericValue ? undefined : raw,
+        valueText: !numericValue && raw ? raw : undefined,
         unit: (line.defaultUnit ?? '').trim() || undefined,
         notes: notes.trim() || undefined,
       };
@@ -141,7 +140,7 @@ export function ResultRow({
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally only fires on saveTrigger change; other deps are read from closure
   useEffect(() => {
     if (saveTrigger > 0 && dirty && !mutation.isPending) {
-      if (resultado.trim()) mutation.mutate();
+      mutation.mutate();
     }
   }, [saveTrigger]);
 
@@ -195,7 +194,7 @@ export function ResultRow({
 
       <div className="flex items-center gap-3">
         <Input
-          placeholder="Notas (opcional)"
+          placeholder="Observaciones (opcional)"
           value={notes}
           disabled={disabled}
           onChange={(e) => setNotes(e.target.value)}
