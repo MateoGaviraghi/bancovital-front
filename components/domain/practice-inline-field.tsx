@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-type EditableField = 'notes' | 'referenceValue' | 'methodology';
+type EditableField = 'notes' | 'referenceValue' | 'methodology' | 'defaultObservation';
 
 type Props = {
   practiceId: number;

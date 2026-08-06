@@ -21,7 +21,7 @@ import type {
 import { cn } from '@/lib/cn';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Check, Loader2, Pencil, Plus, Ruler, Search, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Loader2, Pencil, Plus, Ruler, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { UnidadRefEspecieSection } from './unidad-ref-especie-section';
@@ -662,6 +662,7 @@ type Props = {
 };
 
 export function PracticeUnidadesSection({ practiceId, readOnly = false, onChange }: Props) {
+  const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const listQuery = useQuery({
@@ -674,7 +675,18 @@ export function PracticeUnidadesSection({ practiceId, readOnly = false, onChange
     },
   });
 
-  const items = listQuery.data ?? [];
+  const items = [...(listQuery.data ?? [])].sort((a, b) => a.sortOrder - b.sortOrder || a.associationId - b.associationId);
+
+  const moveMut = useMutation({
+    mutationFn: async ({ id1, so1, id2, so2 }: { id1: number; so1: number; id2: number; so2: number }) => {
+      await Promise.all([
+        apiClient.patch(`/practices/${practiceId}/unidades/${id1}`, { sortOrder: so1 }),
+        apiClient.patch(`/practices/${practiceId}/unidades/${id2}`, { sortOrder: so2 }),
+      ]);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: queries.practices.unidades(practiceId) }),
+    onError: () => toast.error('No se pudo reordenar'),
+  });
 
   return (
     <section className="space-y-3">
@@ -713,27 +725,57 @@ export function PracticeUnidadesSection({ practiceId, readOnly = false, onChange
         </div>
       ) : (
         <div className="space-y-1.5">
-          {items.map((item) => (
+          {items.map((item, idx) => (
             <div
               key={item.associationId}
-              className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-3 py-2 text-xs"
+              className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-subtle)] px-3 py-2 text-xs"
             >
-              <span className="font-medium text-[var(--color-fg)]">
-                {item.unidad.nombre}
-                {item.unidad.simbolo && (
-                  <span className="ml-1 font-mono text-[var(--color-fg-muted)]">
-                    ({item.unidad.simbolo})
+              {!readOnly && (
+                <div className="flex shrink-0 flex-col gap-0.5">
+                  <button
+                    type="button"
+                    disabled={idx === 0 || moveMut.isPending}
+                    onClick={() => {
+                      const a = items[idx - 1];
+                      const b = items[idx];
+                      moveMut.mutate({ id1: a.unidad.id, so1: idx, id2: b.unidad.id, so2: idx - 1 });
+                    }}
+                    className="rounded p-0.5 text-[var(--color-fg-subtle)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-fg)] disabled:opacity-30"
+                  >
+                    <ArrowUp className="h-3 w-3" strokeWidth={2} />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={idx === items.length - 1 || moveMut.isPending}
+                    onClick={() => {
+                      const a = items[idx];
+                      const b = items[idx + 1];
+                      moveMut.mutate({ id1: a.unidad.id, so1: idx + 1, id2: b.unidad.id, so2: idx });
+                    }}
+                    className="rounded p-0.5 text-[var(--color-fg-subtle)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-fg)] disabled:opacity-30"
+                  >
+                    <ArrowDown className="h-3 w-3" strokeWidth={2} />
+                  </button>
+                </div>
+              )}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <span className="font-medium text-[var(--color-fg)]">
+                  {item.unidad.nombre}
+                  {item.unidad.simbolo && (
+                    <span className="ml-1 font-mono text-[var(--color-fg-muted)]">
+                      ({item.unidad.simbolo})
+                    </span>
+                  )}
+                </span>
+                {(item.rangeLow || item.rangeHigh) && (
+                  <span className="text-[var(--color-fg-muted)]">
+                    Ref: {cleanNum(item.rangeLow)} – {cleanNum(item.rangeHigh)}
                   </span>
                 )}
-              </span>
-              {(item.rangeLow || item.rangeHigh) && (
-                <span className="text-[var(--color-fg-muted)]">
-                  Ref: {cleanNum(item.rangeLow)} – {cleanNum(item.rangeHigh)}
-                </span>
-              )}
-              {item.referenceText && (
-                <span className="text-[var(--color-fg-muted)] italic">{item.referenceText}</span>
-              )}
+                {item.referenceText && (
+                  <span className="text-[var(--color-fg-muted)] italic">{item.referenceText}</span>
+                )}
+              </div>
             </div>
           ))}
         </div>

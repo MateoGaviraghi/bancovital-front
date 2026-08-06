@@ -37,7 +37,7 @@ type Props = { order: OrderDetail; userRole?: string | null };
 // borrador: editable + can be explicitly accepted (→ confirmada)
 // confirmada / en_proceso: can be finalized in one step (→ resultados_cargados)
 const EDITABLE: OrderStatus[] = ['borrador'];
-const FINALIZABLE: OrderStatus[] = ['confirmada', 'en_proceso'];
+const FINALIZABLE: OrderStatus[] = ['borrador', 'confirmada', 'en_proceso'];
 const CANCELABLE: OrderStatus[] = ['borrador', 'confirmada', 'en_proceso', 'resultados_cargados'];
 const REVERTIBLE: OrderStatus[] = ['confirmada', 'en_proceso', 'resultados_cargados', 'emitida'];
 
@@ -56,8 +56,10 @@ export function OrderActions({ order, userRole }: Props) {
 
   const finalizeMut = useMutation({
     mutationFn: async () => {
-      // confirmada needs /start first; en_proceso goes straight to /finalize
-      if (order.status === 'confirmada') {
+      if (order.status === 'borrador') {
+        await apiClient.patch(endpoint('confirm'));
+        await apiClient.patch(endpoint('start'));
+      } else if (order.status === 'confirmada') {
         await apiClient.patch(endpoint('start'));
       }
       await apiClient.patch(endpoint('finalize'));
@@ -152,7 +154,7 @@ export function OrderActions({ order, userRole }: Props) {
         open={finalizeOpen}
         onOpenChange={setFinalizeOpen}
         title="¿Confirmar orden?"
-        description="Verificá que todos los resultados estén cargados. La orden quedará lista para emitir el informe."
+        description="La orden quedará en estado 'resultados cargados' y lista para emitir el informe."
         tone="info"
         confirmLabel="Confirmar"
         loading={finalizeMut.isPending}

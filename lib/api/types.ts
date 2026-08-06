@@ -301,6 +301,7 @@ export interface LabPracticeConfig {
   methodology: string | null;
   referenceValue: string | null;
   notes: string | null;
+  defaultObservation: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -309,6 +310,7 @@ export interface UpdateLabPracticeConfigDto {
   methodology?: string | null;
   referenceValue?: string | null;
   notes?: string | null;
+  defaultObservation?: string | null;
 }
 
 // ─────────────── Valores de referencia por especie ───────────────
