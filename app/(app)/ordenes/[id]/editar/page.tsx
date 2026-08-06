@@ -42,7 +42,9 @@ export default async function EditOrderPage({
     throw err;
   }
 
-  if (order.status !== 'borrador') redirect(`/ordenes/${numId}`);
+  if (order.status !== 'borrador' && order.status !== 'resultados_cargados') redirect(`/ordenes/${numId}`);
+
+  const hasResults = order.status === 'resultados_cargados';
 
   const isAgua = !!(order.solicitanteAguaId || order.solicitante);
 
@@ -94,6 +96,7 @@ export default async function EditOrderPage({
           initialSolicitante={solicitanteRes?.data ?? null}
           initialMuestra={muestraRes?.data ?? null}
           initialPractices={initialPractices}
+          hasResults={hasResults}
         />
       </div>
     );
@@ -126,6 +129,7 @@ export default async function EditOrderPage({
         initialPatient={initialPatient}
         initialDoctor={initialDoctor}
         initialPractices={initialPractices}
+        hasResults={hasResults}
       />
     </div>
   );

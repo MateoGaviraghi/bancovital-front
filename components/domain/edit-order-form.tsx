@@ -56,9 +56,10 @@ type Props = {
   initialPatient: Patient | null;
   initialDoctor: Doctor | null;
   initialPractices: PracticeWithChildren[];
+  hasResults?: boolean;
 };
 
-export function EditOrderForm({ order, initialPatient, initialDoctor, initialPractices }: Props) {
+export function EditOrderForm({ order, initialPatient, initialDoctor, initialPractices, hasResults = false }: Props) {
   const router = useRouter();
 
   const isExternalInit = order.referringDoctorId === null && order.referringDoctorName !== null;
@@ -111,14 +112,12 @@ export function EditOrderForm({ order, initialPatient, initialDoctor, initialPra
     return e;
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const errs = validate();
-    setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
-    if (!patient || !insurerId || !origin) return;
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<UpdateOrderDto | null>(null);
 
-    const payload: UpdateOrderDto = {
+  function buildPayload(): UpdateOrderDto | null {
+    if (!patient || !insurerId || !origin) return null;
+    return {
       patientId: patient.id,
       insurerId: Number(insurerId),
       insuranceAffiliateNumber: affiliateNumber.trim() || null,
@@ -134,7 +133,26 @@ export function EditOrderForm({ order, initialPatient, initialDoctor, initialPra
         sortOrder: idx,
       })),
     };
-    mutation.mutate(payload);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+    const payload = buildPayload();
+    if (!payload) return;
+    if (hasResults) {
+      setPendingPayload(payload);
+      setConfirmOpen(true);
+    } else {
+      mutation.mutate(payload);
+    }
+  }
+
+  function handleConfirm() {
+    if (pendingPayload) mutation.mutate(pendingPayload);
+    setConfirmOpen(false);
   }
 
   return (
@@ -371,6 +389,31 @@ export function EditOrderForm({ order, initialPatient, initialDoctor, initialPra
         onOpenChange={setDoctorDialogOpen}
         onCreated={(d) => setDoctor(d)}
       />
+
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 shadow-lg">
+            <div className="mb-4 flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-warning)]" strokeWidth={2} />
+              <div>
+                <p className="font-semibold text-[var(--color-fg)]">Esta orden tiene resultados cargados</p>
+                <p className="mt-1 text-[var(--color-fg-muted)] text-sm">
+                  Modificar las prácticas puede afectar los resultados existentes. ¿Querés continuar de todas formas?
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={mutation.isPending}>
+                Cancelar
+              </Button>
+              <Button onClick={handleConfirm} disabled={mutation.isPending}>
+                {mutation.isPending && <Loader2 className="animate-spin" strokeWidth={2} />}
+                Confirmar cambios
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
