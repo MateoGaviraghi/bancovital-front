@@ -393,6 +393,7 @@ export interface Practice {
   /** Precio directo para pacientes Particulares (sin obra social). */
   precioParticular: string | null;
   parentId: number | null;
+  standalone: boolean;
   requiresAuthorization: boolean;
   referenceValueTemplate: unknown | null;
   isSpecialAct: boolean;

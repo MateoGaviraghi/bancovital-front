@@ -61,6 +61,7 @@ export default async function EditOrderPage({
       units: l.unitsSnapshot,
       precioParticular: l.priceParticular,
       parentId: null,
+      standalone: true,
       requiresAuthorization: false,
       referenceValueTemplate: null,
       isSpecialAct: false,

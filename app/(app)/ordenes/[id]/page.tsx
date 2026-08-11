@@ -1,5 +1,6 @@
 import { DownloadPdfButton } from '@/components/domain/download-pdf-button';
 import { EmitPdfButton } from '@/components/domain/emit-pdf-button';
+import { WhatsAppPdfButton } from '@/components/domain/whatsapp-pdf-button';
 import { MoneyDisplay } from '@/components/domain/money-display';
 import { OrderActions } from '@/components/domain/order-actions';
 import { ResultsForm } from '@/components/domain/results-form';
@@ -391,10 +392,15 @@ export default async function OrdenDetailPage({
             <div className="mt-5 flex flex-wrap items-center gap-2">
               {canEmitNow && canEmit && <EmitPdfButton orderId={order.id} />}
               {(hasPdf || isEmitted) && (
-                <DownloadPdfButton
-                  orderId={order.id}
-                  variant={canEmitNow ? 'outline' : 'default'}
-                />
+                <>
+                  <DownloadPdfButton
+                    orderId={order.id}
+                    variant={canEmitNow ? 'outline' : 'default'}
+                  />
+                  {order.patientId && (
+                    <WhatsAppPdfButton orderId={order.id} patientId={order.patientId} />
+                  )}
+                </>
               )}
               {!canEmitNow && !hasPdf && !isEmitted && (
                 <span className="text-[var(--color-fg-subtle)] text-xs">
