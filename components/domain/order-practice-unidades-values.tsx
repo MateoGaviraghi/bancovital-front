@@ -109,8 +109,12 @@ function computeHemogramaValues(
   };
 
   const hcto = getVal(ids.hctoId);
-  const rbc = getVal(ids.rbcId);
+  const rbcRaw = getVal(ids.rbcId);
   const hb = getVal(ids.hbId);
+
+  // GR puede ingresarse en /mm³ absoluto (ej: 4720000) o en millones (ej: 4.72).
+  // Las fórmulas VCM/HCM esperan millones, así que normalizamos si el valor > 1000.
+  const rbc = rbcRaw != null && rbcRaw > 1000 ? rbcRaw / 1_000_000 : rbcRaw;
 
   const fmt = (n: number) => {
     const rounded = Math.round(n * 10) / 10;
