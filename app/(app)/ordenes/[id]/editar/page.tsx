@@ -7,6 +7,7 @@ import type {
   MuestraAgua,
   OrderDetail,
   OrderLine,
+  OrderMuestraRow,
   Patient,
   PracticeWithChildren,
   SolicitanteAgua,
@@ -78,14 +79,36 @@ export default async function EditOrderPage({
     }));
 
   if (isAgua) {
-    const [solicitanteRes, muestraRes] = await Promise.all([
+    const [solicitanteRes, muestrasRes] = await Promise.all([
       order.solicitanteAguaId
         ? api.get<SolicitanteAgua>(`/solicitantes-agua/${order.solicitanteAguaId}`).catch(() => null)
         : Promise.resolve(null),
-      order.muestraAguaId
-        ? api.get<MuestraAgua>(`/muestras-agua/${order.muestraAguaId}`).catch(() => null)
-        : Promise.resolve(null),
+      api.get<OrderMuestraRow[]>(`/orders/${numId}/muestras`).catch(() => null),
     ]);
+
+    // Build initialMuestras from the multi-muestra endpoint
+    const muestrasData = muestrasRes?.data ?? [];
+    let initialMuestras: Array<{ key: string; muestraAguaId: number; tipoMuestra: string; identificador: string }> = [];
+    if (muestrasData.length > 0) {
+      initialMuestras = muestrasData.map((m) => ({
+        key: String(m.id),
+        muestraAguaId: m.muestraAguaId,
+        tipoMuestra: m.tipoMuestra,
+        identificador: m.identificador ?? '',
+      }));
+    } else if (order.muestraAguaId) {
+      // Legacy fallback: load from the deprecated field
+      const muestraRes = await api.get<MuestraAgua>(`/muestras-agua/${order.muestraAguaId}`).catch(() => null);
+      if (muestraRes?.data) {
+        initialMuestras = [{
+          key: '1',
+          muestraAguaId: muestraRes.data.id,
+          tipoMuestra: muestraRes.data.tipoMuestra,
+          identificador: '',
+        }];
+      }
+    }
+
     return (
       <div>
         <PageHeader
@@ -95,7 +118,7 @@ export default async function EditOrderPage({
         <EditOrderAguaForm
           order={order}
           initialSolicitante={solicitanteRes?.data ?? null}
-          initialMuestra={muestraRes?.data ?? null}
+          initialMuestras={initialMuestras}
           initialPractices={initialPractices}
           hasResults={hasResults}
         />

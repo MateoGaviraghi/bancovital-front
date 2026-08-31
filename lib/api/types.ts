@@ -680,6 +680,12 @@ export interface OrderPracticeInputDto {
   sortOrder?: number;
 }
 
+export interface OrderMuestraInputDto {
+  muestraAguaId: number;
+  identificador?: string;
+  sortOrder?: number;
+}
+
 export interface CreateOrderDto {
   servicioId: number;
   patientId?: number | null;
@@ -697,7 +703,9 @@ export interface CreateOrderDto {
   practices: OrderPracticeInputDto[];
   customData?: Record<string, unknown>;
   solicitanteAguaId?: number;
+  /** @deprecated usar muestras[] */
   muestraAguaId?: number;
+  muestras?: OrderMuestraInputDto[];
 }
 
 export interface UpdateOrderDto {
@@ -716,11 +724,23 @@ export interface UpdateOrderDto {
   notes?: string | null;
   practices?: OrderPracticeInputDto[];
   solicitanteAguaId?: number | null;
+  /** @deprecated usar muestras[] */
   muestraAguaId?: number | null;
+  muestras?: OrderMuestraInputDto[];
 }
 
 export interface CancelOrderDto {
   reason: string;
+}
+
+export interface OrderMuestraRow {
+  id: number;
+  orderId: number;
+  muestraAguaId: number;
+  identificador: string | null;
+  sortOrder: number;
+  createdAt: string;
+  tipoMuestra: string;
 }
 
 export interface OrderLine {
