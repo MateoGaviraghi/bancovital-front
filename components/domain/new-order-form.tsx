@@ -123,7 +123,9 @@ export function NewOrderForm() {
 
   // Agua state
   const [solicitanteAgua, setSolicitanteAgua] = useState<SolicitanteAgua | null>(null);
-  const [muestraAgua, setMuestraAgua] = useState<MuestraAgua | null>(null);
+  const [muestras, setMuestras] = useState<Array<{ key: string; muestra: MuestraAgua | null; identificador: string }>>([
+    { key: '1', muestra: null, identificador: '' },
+  ]);
   const [solicitanteAguaDialogOpen, setSolicitanteAguaDialogOpen] = useState(false);
   const [muestraAguaDialogOpen, setMuestraAguaDialogOpen] = useState(false);
 
@@ -172,7 +174,7 @@ export function NewOrderForm() {
     if (showHumanPatient && !patient) e.patient = 'Seleccioná un paciente.';
     if (showHumanPatient && !insurerId) e.insurer = 'Seleccioná una obra social.';
     if (showSolicitanteAgua && !solicitanteAgua) e.solicitanteAgua = 'Seleccioná un solicitante.';
-    if (showMuestraAgua && !muestraAgua) e.muestraAgua = 'Seleccioná una muestra.';
+    if (showMuestraAgua && muestras.some((m) => !m.muestra)) e.muestraAgua = 'Seleccioná el tipo de muestra para cada entrada.';
     if (showDatosClinicos && !origin) e.origin = 'Seleccioná un origen.';
     if (practices.length === 0) e.practices = 'Agregá al menos una práctica.';
     return e;
@@ -192,7 +194,13 @@ export function NewOrderForm() {
       animalPatientId: showAnimalPatient ? (animalPatient?.id ?? undefined) : undefined,
       veterinarioId: showVeterinario ? (veterinario?.id ?? null) : null,
       solicitanteAguaId: showSolicitanteAgua ? (solicitanteAgua?.id ?? undefined) : undefined,
-      muestraAguaId: showMuestraAgua ? (muestraAgua?.id ?? undefined) : undefined,
+      muestras: showMuestraAgua
+        ? muestras.map((m, idx) => ({
+            muestraAguaId: m.muestra!.id,
+            identificador: m.identificador.trim() || undefined,
+            sortOrder: idx,
+          }))
+        : undefined,
       insurerId: insurerId ? Number(insurerId) : 0,
       insuranceAffiliateNumber: affiliateNumber.trim() || null,
       referringDoctorId: showDoctor && !externalDoctor ? (doctor?.id ?? null) : null,
@@ -242,7 +250,7 @@ export function NewOrderForm() {
       setSolicitanteAgua(null);
     }
     if (!s.usaMuestraAgua) {
-      setMuestraAgua(null);
+      setMuestras([{ key: '1', muestra: null, identificador: '' }]);
     }
   }
 
@@ -308,35 +316,82 @@ export function NewOrderForm() {
                 </div>
               </FormField>
               {showMuestraAgua && (
-                <FormField
-                  label="Muestra"
-                  htmlFor="muestraAgua"
-                  required
-                  error={errors.muestraAgua}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="min-w-0 flex-1">
-                      <MuestraAguaCombobox
-                        id="muestraAgua"
-                        value={muestraAgua}
-                        onChange={(m) => {
-                          setMuestraAgua(m);
-                          if (m) setErrors((prev) => ({ ...prev, muestraAgua: undefined }));
-                        }}
-                        invalid={!!errors.muestraAgua}
-                      />
-                    </div>
+                <div className="col-span-full">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="font-medium text-[var(--color-fg)] text-sm">
+                      Muestras <span className="text-[var(--color-fg-muted)]">*</span>
+                    </span>
                     <Button
                       type="button"
                       variant="outline"
-                      size="icon"
-                      title="Crear muestra"
+                      size="sm"
                       onClick={() => setMuestraAguaDialogOpen(true)}
                     >
-                      <Plus strokeWidth={2} />
+                      <Plus strokeWidth={2} className="mr-1 h-3 w-3" />
+                      Crear tipo
                     </Button>
                   </div>
-                </FormField>
+                  {errors.muestraAgua && (
+                    <p className="mb-2 text-[var(--color-danger)] text-xs">{errors.muestraAgua}</p>
+                  )}
+                  <div className="space-y-2">
+                    {muestras.map((entry, idx) => (
+                      <div key={entry.key} className="flex items-center gap-2">
+                        <span className="w-5 shrink-0 text-center text-[var(--color-fg-muted)] text-xs">{idx + 1}</span>
+                        <div className="min-w-0 flex-1">
+                          <MuestraAguaCombobox
+                            value={entry.muestra}
+                            onChange={(m) => {
+                              setMuestras((prev) =>
+                                prev.map((x) => (x.key === entry.key ? { ...x, muestra: m } : x)),
+                              );
+                              if (m) setErrors((prev) => ({ ...prev, muestraAgua: undefined }));
+                            }}
+                            invalid={!!errors.muestraAgua && !entry.muestra}
+                          />
+                        </div>
+                        <Input
+                          placeholder="Etiqueta (ej: Punto A)"
+                          value={entry.identificador}
+                          onChange={(e) =>
+                            setMuestras((prev) =>
+                              prev.map((x) =>
+                                x.key === entry.key ? { ...x, identificador: e.target.value } : x,
+                              ),
+                            )
+                          }
+                          className="w-36 shrink-0"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={muestras.length <= 1}
+                          onClick={() =>
+                            setMuestras((prev) => prev.filter((x) => x.key !== entry.key))
+                          }
+                        >
+                          <span className="text-[var(--color-fg-muted)]">×</span>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() =>
+                      setMuestras((prev) => [
+                        ...prev,
+                        { key: String(Date.now()), muestra: null, identificador: '' },
+                      ])
+                    }
+                  >
+                    <Plus strokeWidth={2} className="mr-1 h-3 w-3" />
+                    Agregar muestra
+                  </Button>
+                </div>
               )}
             </div>
           </section>
@@ -685,10 +740,7 @@ export function NewOrderForm() {
         <CreateMuestraAguaDialog
           open={muestraAguaDialogOpen}
           onOpenChange={setMuestraAguaDialogOpen}
-          onCreated={(m) => {
-            setMuestraAgua(m);
-            setErrors((prev) => ({ ...prev, muestraAgua: undefined }));
-          }}
+          onCreated={() => setMuestraAguaDialogOpen(false)}
         />
       )}
     </>

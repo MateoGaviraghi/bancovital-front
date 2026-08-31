@@ -7,6 +7,7 @@ import { NbuGrid } from '@/components/domain/nbu-grid';
 import { SolicitanteAguaCombobox } from '@/components/domain/solicitante-agua-combobox';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { apiClient } from '@/lib/api/client';
 import type {
@@ -34,10 +35,12 @@ function apiError(err: unknown, fallback: string): string {
 
 type Errors = Partial<Record<'solicitante' | 'muestra' | 'practices', string>>;
 
+type MuestraEntry = { key: string; muestra: MuestraAgua | null; identificador: string };
+
 type Props = {
   order: OrderDetail;
   initialSolicitante: SolicitanteAgua | null;
-  initialMuestra: MuestraAgua | null;
+  initialMuestras: Array<{ key: string; muestraAguaId: number; tipoMuestra: string; identificador: string }>;
   initialPractices: PracticeWithChildren[];
   hasResults?: boolean;
 };
@@ -45,14 +48,22 @@ type Props = {
 export function EditOrderAguaForm({
   order,
   initialSolicitante,
-  initialMuestra,
+  initialMuestras,
   initialPractices,
   hasResults = false,
 }: Props) {
   const router = useRouter();
 
   const [solicitante, setSolicitante] = useState<SolicitanteAgua | null>(initialSolicitante);
-  const [muestra, setMuestra] = useState<MuestraAgua | null>(initialMuestra);
+  const [muestras, setMuestras] = useState<MuestraEntry[]>(
+    initialMuestras.length > 0
+      ? initialMuestras.map((m) => ({
+          key: m.key,
+          muestra: { id: m.muestraAguaId, tipoMuestra: m.tipoMuestra } as MuestraAgua,
+          identificador: m.identificador,
+        }))
+      : [{ key: '1', muestra: null, identificador: '' }],
+  );
   const [notes, setNotes] = useState(order.notes ?? '');
   const [practices, setPractices] = useState<PracticeWithChildren[]>(initialPractices);
   const [errors, setErrors] = useState<Errors>({});
@@ -77,7 +88,7 @@ export function EditOrderAguaForm({
   function validate(): boolean {
     const e: Errors = {};
     if (!solicitante) e.solicitante = 'Seleccioná un solicitante.';
-    if (!muestra) e.muestra = 'Seleccioná una muestra.';
+    if (muestras.some((m) => !m.muestra)) e.muestra = 'Seleccioná el tipo de muestra para cada entrada.';
     if (practices.length === 0) e.practices = 'Agregá al menos un análisis.';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -88,7 +99,11 @@ export function EditOrderAguaForm({
     if (!validate()) return;
     const payload: UpdateOrderDto = {
       solicitanteAguaId: solicitante!.id,
-      muestraAguaId: muestra!.id,
+      muestras: muestras.map((m, idx) => ({
+        muestraAguaId: m.muestra!.id,
+        identificador: m.identificador.trim() || undefined,
+        sortOrder: idx,
+      })),
       notes: notes.trim() || null,
       practices: practices.map((p, idx) => ({ practiceId: p.id, sortOrder: idx })),
     };
@@ -139,30 +154,82 @@ export function EditOrderAguaForm({
             </div>
           </FormField>
 
-          <FormField label="Muestra" htmlFor="muestra" required error={errors.muestra}>
-            <div className="flex items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <MuestraAguaCombobox
-                  id="muestra"
-                  value={muestra}
-                  onChange={(m) => {
-                    setMuestra(m);
-                    if (m) setErrors((prev) => ({ ...prev, muestra: undefined }));
-                  }}
-                  invalid={!!errors.muestra}
-                />
-              </div>
+          <div className="col-span-full">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="font-medium text-[var(--color-fg)] text-sm">
+                Muestras <span className="text-[var(--color-fg-muted)]">*</span>
+              </span>
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                title="Crear muestra"
+                size="sm"
                 onClick={() => setMuestraDialogOpen(true)}
               >
-                <Plus strokeWidth={2} />
+                <Plus strokeWidth={2} className="mr-1 h-3 w-3" />
+                Crear tipo
               </Button>
             </div>
-          </FormField>
+            {errors.muestra && (
+              <p className="mb-2 text-[var(--color-danger)] text-xs">{errors.muestra}</p>
+            )}
+            <div className="space-y-2">
+              {muestras.map((entry, idx) => (
+                <div key={entry.key} className="flex items-center gap-2">
+                  <span className="w-5 shrink-0 text-center text-[var(--color-fg-muted)] text-xs">{idx + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <MuestraAguaCombobox
+                      value={entry.muestra}
+                      onChange={(m) => {
+                        setMuestras((prev) =>
+                          prev.map((x) => (x.key === entry.key ? { ...x, muestra: m } : x)),
+                        );
+                        if (m) setErrors((prev) => ({ ...prev, muestra: undefined }));
+                      }}
+                      invalid={!!errors.muestra && !entry.muestra}
+                    />
+                  </div>
+                  <Input
+                    placeholder="Etiqueta (ej: Punto A)"
+                    value={entry.identificador}
+                    onChange={(e) =>
+                      setMuestras((prev) =>
+                        prev.map((x) =>
+                          x.key === entry.key ? { ...x, identificador: e.target.value } : x,
+                        ),
+                      )
+                    }
+                    className="w-36 shrink-0"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={muestras.length <= 1}
+                    onClick={() =>
+                      setMuestras((prev) => prev.filter((x) => x.key !== entry.key))
+                    }
+                  >
+                    <span className="text-[var(--color-fg-muted)]">×</span>
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() =>
+                setMuestras((prev) => [
+                  ...prev,
+                  { key: String(Date.now()), muestra: null, identificador: '' },
+                ])
+              }
+            >
+              <Plus strokeWidth={2} className="mr-1 h-3 w-3" />
+              Agregar muestra
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -221,10 +288,7 @@ export function EditOrderAguaForm({
       <CreateMuestraAguaDialog
         open={muestraDialogOpen}
         onOpenChange={setMuestraDialogOpen}
-        onCreated={(m) => {
-          setMuestra(m);
-          setMuestraDialogOpen(false);
-        }}
+        onCreated={() => setMuestraDialogOpen(false)}
       />
     </form>
 
