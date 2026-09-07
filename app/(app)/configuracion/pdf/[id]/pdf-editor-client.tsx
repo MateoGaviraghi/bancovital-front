@@ -15,7 +15,7 @@ import type {
 import { cn } from '@/lib/cn';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Eye, FileImage, ImageOff, Loader2, Trash2, Upload } from 'lucide-react';
+import { Download, Eye, FileImage, ImageOff, Loader2, Trash2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -48,6 +48,7 @@ function FondoTab({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const { data: signedUrlData, isLoading: loadingUrl } = useQuery({
     queryKey: queries.preferenciaPdf.fondoUrl(formatoId),
@@ -111,6 +112,25 @@ function FondoTab({
     },
     onError: (err) => toast.error(apiError(err, 'Error al cambiar el estado del fondo')),
   });
+
+  async function handleDownload() {
+    if (!signedUrlData?.url) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(signedUrlData.url);
+      const blob = await res.blob();
+      const ext = blob.type === 'image/png' ? 'png' : 'jpg';
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `fondo-pdf.${ext}`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
+    } catch {
+      toast.error('No se pudo descargar la imagen');
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   function pickFile(file: File | null) {
     if (!file) return;
@@ -193,6 +213,22 @@ function FondoTab({
               )}
               Subir imagen
             </Button>
+
+            {hasFondo && signedUrlData?.url && !pendingFile && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownload}
+                disabled={downloading}
+              >
+                {downloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                ) : (
+                  <Download className="h-4 w-4" strokeWidth={2} />
+                )}
+                Descargar
+              </Button>
+            )}
 
             {hasFondo && (
               <Button
